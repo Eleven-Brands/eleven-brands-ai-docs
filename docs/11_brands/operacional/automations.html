@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Automações — Equipe de Dados</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./automations.css">
+</head>
+<body>
+<div class="page-header">
+  <div class="page-label">Equipe de Dados · Eleven Brands</div>
+  <h1 class="page-title">Automações Ativas</h1>
+  <p class="page-sub">Visão geral dos processos automatizados, horários de execução e fluxo de dados.</p>
+</div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-dot" style="background:#185FA5;"></div>
+      <span class="section-name">BigQuery</span>
+      <span class="section-count">6 automaçãos</span>
+    </div>
+    <div class="grid">
+    <div class="card">
+      <div class="card-top">
+        <div class="card-names">
+          <div class="card-name">Log de Shipments</div>
+          <div class="card-id">log_inbound_shipments</div>
+        </div>
+        <span class="badge badge-bq">BigQuery</span>
+      </div>
+      <div class="card-desc">Atualiza tabela com log dos Shipments na Amazon.</div>
+      <div class="card-meta">
+        <span class="chip"><span>⏱</span> Diário · 07h e 12h</span>
+        <span class="io-flow">BQ <span class="io-arrow">→</span> BQ</span>
+        <span class="chip-status">Ativa</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-top">
+        <div class="card-names">
+          <div class="card-name">IT - Order & Transfer Details</div>
+          <div class="card-id">atualizar_order_transfer_details</div>
+        </div>
+        <span class="badge badge-bq">BigQuery</span>
+      </div>
+      <div class="card-desc">Atualiza tabela que alimenta a base Inbound Shipments com dados do Inventory Tracker.</div>
+      <div class="card-meta">
+        <span class="chip"><span>⏱</span> Diário · 10h</span>
+        <span class="io-flow">GSheets / BQ <span class="io-arrow">→</span> BQ</span>
+        <span class="chip-status">Ativa</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-top">
+        <div class="card-names">
+          <div class="card-name">IT - Order Records</div>
+          <div class="card-id">atualizar_order_records</div>
+        </div>
+        <span class="badge badge-bq">BigQuery</span>
+      </div>
+      <div class="card-desc">Atualiza os registros de pedidos do Inventory para a base Inbound Shipments.</div>
+      <div class="card-meta">
+        <span class="chip"><span>⏱</span> Diário · 10h</span>
+        <span class="io-flow">GSheets / BQ <span class="io-arrow">→</span> BQ</span>
+        <span class="chip-status">Ativa</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-top">
+        <div class="card-names">
+          <div class="card-name">Lista de SKUs</div>
+          <div class="card-id">Scheduler - Incremental Load - td_full_sku_list_scd</div>
+        </div>
+        <span class="badge badge-bq">BigQuery</span>
+      </div>
+      <div class="card-desc">Atualiza o cruzamento entre todos os SKUs e datas. Base para cálculos de rateio (Slowly Changing Dimension).</div>
+      <div class="card-meta">
+        <span class="chip"><span>⏱</span> Diário · 22h</span>
+        <span class="io-flow">BQ <span class="io-arrow">→</span> BQ</span>
+        <span class="chip-status">Ativa</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-top">
+        <div class="card-names">
+          <div class="card-name">Rateio: Removal Orders</div>
+          <div class="card-id">CTAS - Apportionment - Removal Orders</div>
+        </div>
+        <span class="badge badge-bq">BigQuery</span>
+      </div>
+      <div class="card-desc">Calcula e atualiza os rateios de custos de Removal Orders.</div>
+      <div class="card-meta">
+        <span class="chip"><span>⏱</span> Diário · 02h</span>
+        <span class="io-flow">BQ <span class="io-arrow">→</span> BQ</span>
+        <span class="chip-status">Ativa</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-top">
+        <div class="card-names">
+          <div class="card-name">Rateio: Returns Processing Fee</div>
+          <div class="card-id">CTAS - Apportionment - Returns Processing Fee</div>
+        </div>
+        <span class="badge badge-bq">BigQuery</span>
+      </div>
+      <div class="card-desc">Calcula os rateios de Returns Processing Fees com base nos retornos recebidos.</div>
+      <div class="card-meta">
+        <span class="chip"><span>⏱</span> Diário · 02h</span>
+        <span class="io-flow">BQ <span class="io-arrow">→</span> BQ</span>
+        <span class="chip-status">Ativa</span>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-dot" style="background:#7A3FA0;"></div>
+      <span class="section-name">MS Power Automate</span>
+      <span class="section-count">5 automaçãos</span>
+    </div>
+    <div class="grid">
+    <div class="card">
+      <div class="card-top">
+        <div class="card-names">
+          <div class="card-name">Status PBI Profitability → ClickUp</div>
+          <div class="card-id">PBI OH Profitability → ClickUp | Refresh Status Automation</div>
+        </div>
+        <span class="badge badge-pa">Power Automate</span>
+      </div>
+      <div class="card-desc">Monitora o Power BI OH Profitability e atualiza o status de refresh no ClickUp.</div>
+      <div class="card-meta">
+        <span class="chip"><span>⏱</span> A cada hora</span>
+        <span class="io-flow">PBI <span class="io-arrow">→</span> ClickUp</span>
+        <span class="chip-status">Ativa</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-top">
+        <div class="card-names">
+          <div class="card-name">Status PBI Market Research → ClickUp</div>
+          <div class="card-id">PBI OH Market Research → ClickUp | Refresh Status Automation</div>
+        </div>
+        <span class="badge badge-pa">Power Automate</span>
+      </div>
+      <div class="card-desc">Monitora o Power BI OH Market Research e atualiza o status de refresh no ClickUp.</div>
+      <div class="card-meta">
+        <span class="chip"><span>⏱</span> A cada hora</span>
+        <span class="io-flow">PBI <span class="io-arrow">→</span> ClickUp</span>
+        <span class="chip-status">Ativa</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-top">
+        <div class="card-names">
+          <div class="card-name">Status PBI Logistics → ClickUp</div>
+          <div class="card-id">PBI OH Logistics → ClickUp | Refresh Status Automation</div>
+        </div>
+        <span class="badge badge-pa">Power Automate</span>
+      </div>
+      <div class="card-desc">Monitora o Power BI OH Logistics e atualiza o status de refresh no ClickUp.</div>
+      <div class="card-meta">
+        <span class="chip"><span>⏱</span> A cada hora</span>
+        <span class="io-flow">PBI <span class="io-arrow">→</span> ClickUp</span>
+        <span class="chip-status">Ativa</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-top">
+        <div class="card-names">
+          <div class="card-name">Status PBI Base Tables → ClickUp</div>
+          <div class="card-id">PBI OH Base Tables → ClickUp | Refresh Status Automation</div>
+        </div>
+        <span class="badge badge-pa">Power Automate</span>
+      </div>
+      <div class="card-desc">Monitora o Power BI OH Base Tables e atualiza o status de refresh no ClickUp.</div>
+      <div class="card-meta">
+        <span class="chip"><span>⏱</span> A cada hora</span>
+        <span class="io-flow">PBI <span class="io-arrow">→</span> ClickUp</span>
+        <span class="chip-status">Ativa</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-top">
+        <div class="card-names">
+          <div class="card-name">Relatório Semanal de Vendas</div>
+          <div class="card-id">General Weekly Report</div>
+        </div>
+        <span class="badge badge-pa">Power Automate</span>
+      </div>
+      <div class="card-desc">Envia um resumo de vendas da semana anterior comparado à semana atual toda segunda-feira.</div>
+      <div class="card-meta">
+        <span class="chip"><span>⏱</span> Segunda · 17h50</span>
+        <span class="io-flow">PBI <span class="io-arrow">→</span> Slack</span>
+        <span class="chip-status">Ativa</span>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-dot" style="background:#3B6D11;"></div>
+      <span class="section-name">Python</span>
+      <span class="section-count">10 automaçãos</span>
+    </div>
+    <div class="grid">
+    <div class="card">
+      <div class="card-top">
+        <div class="card-names">
+          <div class="card-name">MAE - Espanha</div>
+          <div class="card-id">MAE - ES</div>
+        </div>
+        <span class="badge badge-py">Python</span>
+      </div>
+      <div class="card-desc">Extrai dados de preço e posicionamento dos produtos OH e concorrentes na Amazon Espanha.</div>
+      <div class="card-meta">
+        <span class="chip"><span>⏱</span> Diário · 06h</span>
+        <span class="io-flow">Excel <span class="io-arrow">→</span> CSV / PBI</span>
+        <span class="chip-status">Ativa</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-top">
+        <div class="card-names">
+          <div class="card-name">MAE - Germany</div>
+          <div class="card-id">MAE - DE</div>
+        </div>
+        <span class="badge badge-py">Python</span>
+      </div>
+      <div class="card-desc">Extrai dados de preço e posicionamento dos produtos OH e concorrentes na Amazon Alemanha.</div>
+      <div class="card-meta">
+        <span class="chip"><span>⏱</span> Diário · 07h</span>
+        <span class="io-flow">Excel <span class="io-arrow">→</span> CSV / PBI</span>
+        <span class="chip-status">Ativa</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-top">
+        <div class="card-names">
+          <div class="card-name">MAE - GB</div>
+          <div class="card-id">MAE - GB</div>
+        </div>
+        <span class="badge badge-py">Python</span>
+      </div>
+      <div class="card-desc">Extrai dados de preço e posicionamento dos produtos OH e concorrentes na Amazon Reino Unido.</div>
+      <div class="card-meta">
+        <span class="chip"><span>⏱</span> Diário · 08h</span>
+        <span class="io-flow">Excel <span class="io-arrow">→</span> CSV / PBI</span>
+        <span class="chip-status">Ativa</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-top">
+        <div class="card-names">
+          <div class="card-name">MAE - France</div>
+          <div class="card-id">MAE - FR</div>
+        </div>
+        <span class="badge badge-py">Python</span>
+      </div>
+      <div class="card-desc">Extrai dados de preço e posicionamento dos produtos OH e concorrentes na Amazon França.</div>
+      <div class="card-meta">
+        <span class="chip"><span>⏱</span> Diário · 09h</span>
+        <span class="io-flow">Excel <span class="io-arrow">→</span> CSV / PBI</span>
+        <span class="chip-status">Ativa</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-top">
+        <div class="card-names">
+          <div class="card-name">MAE - Italy</div>
+          <div class="card-id">MAE - IT</div>
+        </div>
+        <span class="badge badge-py">Python</span>
+      </div>
+      <div class="card-desc">Extrai dados de preço e posicionamento dos produtos OH e concorrentes na Amazon Itália.</div>
+      <div class="card-meta">
+        <span class="chip"><span>⏱</span> Diário · 10h</span>
+        <span class="io-flow">Excel <span class="io-arrow">→</span> CSV / PBI</span>
+        <span class="chip-status">Ativa</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-top">
+        <div class="card-names">
+          <div class="card-name">MAE - Canada</div>
+          <div class="card-id">MAE - CA</div>
+        </div>
+        <span class="badge badge-py">Python</span>
+      </div>
+      <div class="card-desc">Extrai dados de preço e posicionamento dos produtos OH e concorrentes na Amazon Canadá.</div>
+      <div class="card-meta">
+        <span class="chip"><span>⏱</span> Diário · 11h30</span>
+        <span class="io-flow">Excel <span class="io-arrow">→</span> CSV / PBI</span>
+        <span class="chip-status">Ativa</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-top">
+        <div class="card-names">
+          <div class="card-name">MAE - US</div>
+          <div class="card-id">MAE - US</div>
+        </div>
+        <span class="badge badge-py">Python</span>
+      </div>
+      <div class="card-desc">Extrai dados de preço e posicionamento dos produtos OH e concorrentes na Amazon EUA.</div>
+      <div class="card-meta">
+        <span class="chip"><span>⏱</span> Diário · 12h30</span>
+        <span class="io-flow">Excel <span class="io-arrow">→</span> CSV / PBI</span>
+        <span class="chip-status">Ativa</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-top">
+        <div class="card-names">
+          <div class="card-name">Cotações de Moeda</div>
+          <div class="card-id">FrankfurterFX</div>
+        </div>
+        <span class="badge badge-py">Python</span>
+      </div>
+      <div class="card-desc">Busca cotações de câmbio atualizadas via API Frankfurter e salva em CSV.</div>
+      <div class="card-meta">
+        <span class="chip"><span>⏱</span> Diário · 08h</span>
+        <span class="io-flow">API <span class="io-arrow">→</span> CSV</span>
+        <span class="chip-status">Ativa</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-top">
+        <div class="card-names">
+          <div class="card-name">Monitoramentos de Shipments</div>
+          <div class="card-id">Shipment Delivery Watcher</div>
+        </div>
+        <span class="badge badge-py">Python</span>
+      </div>
+      <div class="card-desc">Envia notificações no ClickUp quando novos Shipments chegam na Amazon (exceto AWD).</div>
+      <div class="card-meta">
+        <span class="chip"><span>⏱</span> Diário · 06h35, 12h15 e 15h30</span>
+        <span class="chip-dep">⚠ Depende: log_inbound_shipments</span>
+        <span class="io-flow">BQ <span class="io-arrow">→</span> ClickUp</span>
+        <span class="chip-status">Ativa</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-top">
+        <div class="card-names">
+          <div class="card-name">Customer Support ClickUp Extractor</div>
+          <div class="card-id">nao_lembro</div>
+        </div>
+        <span class="badge badge-py">Python</span>
+      </div>
+      <div class="card-desc">Extrai tasks e seus dados da lista de Customer Support do ClickUp, trata os dados e salva em CSV para consumo do PBI</div>
+      <div class="card-meta">
+        <span class="chip"><span>⏱</span> Diário - 08h</span>
+        <span class="io-flow">CU <span class="io-arrow">→</span> CSV</span>
+        <span class="chip-status">Ativa</span>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-dot" style="background:#B45C0B;"></div>
+      <span class="section-name">n8n</span>
+      <span class="section-count">1 automação</span>
+    </div>
+    <div class="grid">
+    <div class="card">
+      <div class="card-top">
+        <div class="card-names">
+          <div class="card-name">Email Helpdesk → IA → ClickUp</div>
+          <div class="card-id">Gmail → IA → ClickUp (OrganiHaus)</div>
+        </div>
+        <span class="badge badge-n8n">n8n</span>
+      </div>
+      <div class="card-desc">Monitora o e-mail do Helpdesk, usa IA para classificar e criar tarefas automaticamente no ClickUp.</div>
+      <div class="card-meta">
+        <span class="chip"><span>⏱</span> Contínuo (24/7)</span>
+        <span class="io-flow">Gmail <span class="io-arrow">→</span> ClickUp</span>
+        <span class="chip-status">Ativa</span>
+      </div>
+    </div>
+    </div>
+  </div>
+<div class="page-footer">
+  <span class="footer-text">Eleven Brands · Equipe de Dados</span>
+  <span class="footer-text">22 automações ativas</span>
+</div>
+</body>
+</html>

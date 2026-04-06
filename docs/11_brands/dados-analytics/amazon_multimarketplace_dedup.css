@@ -1,0 +1,43 @@
+/* ══ AMAZON MULTIMARKETPLACE DEDUP ══ */
+
+/* TWO-COLUMN LAYOUT */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+
+/* GOV CARDS */
+.gov-card { background: var(--bg-visual); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.gov-card-header { padding: 10px 16px; font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.04em; }
+.gov-card-header.can { background: rgba(76,175,122,0.08); color: #2a7a52; border-bottom: 1px solid rgba(76,175,122,0.2); }
+.gov-card-header.cannot { background: rgba(227,160,8,0.08); color: #8a5c00; border-bottom: 1px solid rgba(227,160,8,0.2); }
+.gov-card-body { padding: 16px; }
+.gov-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.gov-list li { font-size: 12px; color: var(--text-label); display: flex; gap: 8px; }
+.gov-list li::before { content: "→"; color: var(--gray-mid); font-family: var(--font-mono); flex-shrink: 0; }
+
+/* FLOW DIAGRAM */
+.flow { display: flex; align-items: center; gap: 12px; padding: 24px; background: var(--bg-visual); border: 1px solid var(--border); border-radius: 10px; margin-top: 16px; overflow-x: auto; }
+.flow-step { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; min-width: 80px; }
+.flow-step.highlight .flow-step-label { color: var(--sage); }
+.flow-step-icon { font-size: 22px; }
+.flow-step-label { font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--text-title); text-align: center; }
+.flow-step-sub { font-size: 11px; color: var(--gray-mid); text-align: center; line-height: 1.4; }
+.flow-arrow { font-size: 18px; color: var(--gray-mid); flex-shrink: 0; }
+
+/* CODE BLOCK */
+.code-block { background: #1e2228; border-radius: 8px; padding: 20px 24px; margin-top: 16px; font-family: var(--font-mono); font-size: 12px; line-height: 1.8; color: #cdd4db; overflow-x: auto; white-space: pre; }
+.code-block .c { color: #6a737d; }
+.code-block .k { color: #79b8ff; }
+.code-block .f { color: #b392f0; }
+.code-block .s { color: #f97583; }
+
+/* STATUS BADGES (strategies table) */
+.badge-ok { display: inline-block; font-family: var(--font-mono); font-size: 11px; padding: 3px 10px; border-radius: 4px; background: rgba(76,175,122,0.1); color: #2a7a52; font-weight: 500; }
+.badge-warn { display: inline-block; font-family: var(--font-mono); font-size: 11px; padding: 3px 10px; border-radius: 4px; background: rgba(227,160,8,0.1); color: #8a5c00; font-weight: 500; }
+.badge-block { display: inline-block; font-family: var(--font-mono); font-size: 11px; padding: 3px 10px; border-radius: 4px; background: rgba(214,69,69,0.1); color: #9a2020; font-weight: 500; }
+
+/* REFERENCES */
+.ref-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.ref-item { background: var(--bg-visual); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; }
+.ref-source { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gray-mid); margin-bottom: 4px; }
+.ref-title { font-size: 14px; font-weight: 500; color: var(--text-title); margin-bottom: 8px; }
+.ref-link { font-family: var(--font-mono); font-size: 11px; color: var(--blue-gray); text-decoration: none; word-break: break-all; }
+.ref-link:hover { text-decoration: underline; }

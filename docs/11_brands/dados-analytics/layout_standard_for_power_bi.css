@@ -1,0 +1,86 @@
+/* ══ LAYOUT STANDARD FOR POWER BI ══ */
+
+/* GRID HELPERS */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+/* FORMAT CARDS */
+.format-card { background: var(--bg-visual); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.format-card-header { padding: 16px 20px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.format-card-name { font-weight: 600; font-size: 14px; color: var(--text-title); }
+.format-badge { font-family: var(--font-mono); font-size: 10px; padding: 3px 8px; border-radius: 4px; background: rgba(104,144,126,0.1); color: var(--sage); text-transform: uppercase; letter-spacing: 0.06em; }
+.format-badge.secondary { background: rgba(102,129,151,0.1); color: var(--blue-gray); }
+.format-preview { padding: 20px; display: flex; justify-content: center; background: var(--bg-page); }
+.preview-landscape { width: 180px; height: 88px; background: white; border: 1.5px solid var(--border); border-radius: 4px; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+.preview-header { height: 12px; background: var(--graphite); opacity: 0.15; flex-shrink: 0; }
+.preview-body { flex: 1; padding: 4px; display: flex; flex-direction: column; gap: 3px; }
+.preview-kpis { display: flex; gap: 3px; height: 14px; }
+.preview-kpi { flex: 1; background: var(--blue-gray); opacity: 0.2; border-radius: 2px; }
+.preview-blocks { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; flex: 1; }
+.preview-block { background: var(--sage); opacity: 0.15; border-radius: 2px; }
+.preview-portrait { width: 90px; height: 130px; background: white; border: 1.5px solid var(--border); border-radius: 4px; display: flex; flex-direction: column; overflow: hidden; }
+.preview-portrait .preview-body { display: flex; flex-direction: column; gap: 3px; padding: 4px; }
+.preview-portrait .preview-block-tall { background: var(--blue-gray); opacity: 0.15; border-radius: 2px; height: 20px; }
+.format-body { padding: 16px 20px; }
+.format-dim { font-family: var(--font-mono); font-size: 12px; color: var(--gray-mid); margin-bottom: 12px; }
+.format-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.format-list li { font-size: 12px; color: var(--text-label); display: flex; align-items: flex-start; gap: 8px; }
+.format-list li::before { content: "—"; color: var(--gray-mid); flex-shrink: 0; font-family: var(--font-mono); }
+.format-rule { margin-top: 14px; padding: 10px 12px; background: rgba(71,81,90,0.05); border-left: 2px solid var(--blue-gray); border-radius: 0 6px 6px 0; font-size: 12px; color: var(--text-label); font-style: italic; }
+
+/* SPACING DIAGRAM */
+.spacing-diagram { background: var(--bg-visual); border: 1px solid var(--border); border-radius: 10px; padding: 28px; margin-top: 16px; }
+.diagram-inner { position: relative; width: 100%; aspect-ratio: 2.5 / 1; background: var(--bg-page); border: 2px dashed var(--border); border-radius: 6px; display: flex; align-items: stretch; overflow: hidden; }
+.diagram-content-area { position: absolute; top: 20px; left: 20px; right: 20px; bottom: 20px; border: 1.5px solid rgba(198,128,101,0.35); background: rgba(198,128,101,0.04); border-radius: 4px; display: flex; flex-direction: column; gap: 0; padding: 8px; }
+.diagram-header-block { background: var(--graphite); opacity: 0.18; border-radius: 3px; height: 22px; margin-bottom: 6px; flex-shrink: 0; }
+.diagram-kpi-row { display: flex; gap: 6px; height: 18px; flex-shrink: 0; margin-bottom: 6px; }
+.diagram-kpi { flex: 1; background: var(--blue-gray); opacity: 0.25; border-radius: 3px; }
+.diagram-content-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; flex: 1; }
+.diagram-content-block { background: var(--sage); opacity: 0.2; border-radius: 3px; }
+.diagram-annotation { display: flex; align-items: center; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.annotation-item { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 11px; color: var(--gray-mid); }
+.annotation-dot { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
+
+/* METRIC CARDS */
+.metric-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px; }
+.metric-card { background: var(--bg-visual); border: 1px solid var(--border); border-radius: 10px; padding: 18px 16px; text-align: center; }
+.metric-value { font-family: var(--font-serif); font-size: 32px; color: var(--text-title); line-height: 1; margin-bottom: 6px; }
+.metric-unit { font-family: var(--font-mono); font-size: 12px; color: var(--gray-mid); }
+.metric-label { font-size: 12px; color: var(--text-label); margin-top: 4px; }
+
+/* HEADER ANATOMY */
+.header-anatomy { background: var(--bg-visual); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-top: 16px; }
+.anatomy-preview { background: var(--bg-page); padding: 24px; display: flex; flex-direction: column; gap: 10px; }
+.anatomy-header-mock { height: 56px; background: var(--graphite); border-radius: 6px; display: flex; align-items: center; padding: 0 20px; gap: 16px; position: relative; }
+.anatomy-title-mock { font-family: var(--font-serif); font-size: 18px; color: white; opacity: 0.85; }
+.anatomy-logo-mock { width: 28px; height: 28px; border-radius: 4px; background: rgba(255,255,255,0.15); margin-left: auto; }
+.anatomy-badge { position: absolute; top: -8px; left: 16px; font-family: var(--font-mono); font-size: 10px; background: var(--blue-gray); color: white; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.06em; }
+.anatomy-body-mock { display: flex; gap: 8px; height: 40px; }
+.anatomy-kpi-mock { flex: 1; background: rgba(102,129,151,0.18); border-radius: 4px; }
+.anatomy-meta { padding: 16px 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; border-top: 1px solid var(--border); }
+.anatomy-meta-label { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gray-mid); margin-bottom: 4px; }
+.anatomy-meta-value { font-size: 13px; color: var(--text-label); line-height: 1.5; }
+.dim-badge { display: inline-block; font-family: var(--font-mono); font-size: 11px; padding: 2px 8px; background: rgba(71,81,90,0.08); border-radius: 4px; color: var(--graphite); margin-top: 3px; }
+
+/* HIERARCHY */
+.hierarchy { display: flex; flex-direction: column; gap: 0; margin-top: 16px; }
+.hierarchy-step { display: flex; align-items: center; gap: 14px; padding: 14px 20px; background: var(--bg-visual); border: 1px solid var(--border); border-bottom: none; }
+.hierarchy-step:first-child { border-radius: 10px 10px 0 0; }
+.hierarchy-step:last-child { border-radius: 0 0 10px 10px; border-bottom: 1px solid var(--border); }
+.hierarchy-num { width: 28px; height: 28px; border-radius: 50%; background: var(--blue-gray); color: white; font-family: var(--font-mono); font-size: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 500; }
+.hierarchy-num.dim { background: rgba(102,129,151,0.25); color: var(--blue-gray); }
+.hierarchy-label { font-weight: 500; font-size: 14px; color: var(--text-title); flex: 1; }
+.hierarchy-desc { font-size: 12px; color: var(--gray-mid); text-align: right; }
+
+/* GOVERNANCE GRID */
+.gov-two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+.gov-card { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+.gov-card-header { padding: 12px 16px; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
+.gov-card-header.can { background: rgba(76,175,122,0.1); color: var(--positive); }
+.gov-card-header.cannot { background: rgba(214,69,69,0.08); color: var(--negative); }
+.gov-card-body { background: var(--bg-visual); }
+.gov-list { list-style: none; }
+.gov-list li { padding: 10px 16px; font-size: 13px; color: var(--text-label); border-bottom: 1px solid var(--bg-page); display: flex; align-items: center; gap: 10px; }
+.gov-list li:last-child { border-bottom: none; }
+.gov-list li::before { content: "✓"; color: var(--positive); font-size: 12px; flex-shrink: 0; }
+.gov-list.no li::before { content: "✕"; color: var(--negative); }

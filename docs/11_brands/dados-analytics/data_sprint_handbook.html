@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sprint Handbook — Data Team · Eleven Brands</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="./data_sprint_handbook.css">
+</head>
+<body>
+
+<!-- HEADER + NAV -->
+<header class="site-header">
+  <div class="nav-logo" id="nav-logo">
+    Sprint Handbook
+    <span id="nav-subtitle">Data Team · Eleven Brands</span>
+  </div>
+  <nav class="nav">
+    <div class="nav-links">
+      <a href="#intro"><span class="nav-dot"></span> Introdução</a>
+      <a href="#estrutura"><span class="nav-dot"></span> Estrutura</a>
+      <a href="#fibonacci"><span class="nav-dot"></span> Sprint Points</a>
+      
+      <a href="#backlog"><span class="nav-dot"></span> Backlog</a>
+      <a href="#cerimonias"><span class="nav-dot"></span> Cerimônias</a>
+      <a href="#convencoes"><span class="nav-dot"></span> Convenções</a>
+      <a href="#eos"><span class="nav-dot"></span> EOS</a>
+    </div>
+  </nav>
+</header>
+
+<!-- MAIN -->
+<div class="main">
+
+
+  <!-- COVER -->
+  <div class="cover">
+    <div class="cover-label">Data Team · Eleven Brands</div>
+    <h1>Sprint<br>Handbook</h1>
+    <div class="cover-sub">Guia de operação do time de Data — sprints, cerimônias e convenções.</div>
+    <div class="cover-tags">
+      <span class="cover-tag">Sprints de 2 semanas</span>
+      <span class="cover-tag">Fibonacci</span>
+      <span class="cover-tag">ClickUp</span>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="doc-body">
+
+    <!-- 01 INTRODUÇÃO -->
+    <div class="section" id="intro">
+      <div class="section-header">
+        <span class="section-number">01</span>
+        <h2 class="section-title">Introdução</h2>
+      </div>
+      <div class="prose">
+        <p>O time de Data da Eleven Brands opera em ciclos de sprint de duas semanas, com o objetivo de trazer previsibilidade, visibilidade e ritmo para o trabalho de engenharia, ciência e análise de dados.</p>
+        <p>As tarefas residem no <strong>ToDo List - Data</strong> como backlog oficial. As sprints são listas dentro do <strong>Data Sprint Folder</strong> no ClickUp, e as tarefas são adicionadas às sprints sem sair do backlog original — usando o mecanismo nativo de sprint do ClickUp.</p>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-title">Fluxo de trabalho</div>
+        <div class="flow">
+          <div class="flow-step">
+            <div class="flow-step-icon">📋</div>
+            <div class="flow-step-label">ToDo List</div>
+            <div class="flow-step-sub">Backlog oficial</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step highlight">
+            <div class="flow-step-icon">🗓</div>
+            <div class="flow-step-label">Planning / FUP</div>
+            <div class="flow-step-sub">Seg 10h · Sem 1</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-step-icon">🔄</div>
+            <div class="flow-step-label">FUP</div>
+            <div class="flow-step-sub">Seg 11h · Sem 2</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-step-icon">✅</div>
+            <div class="flow-step-label">Review + Retro</div>
+            <div class="flow-step-sub">Sex 14h · Sem 2</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step highlight">
+            <div class="flow-step-icon">🔁</div>
+            <div class="flow-step-label">Próxima Sprint</div>
+            <div class="flow-step-sub">Auto-criada</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 02 ESTRUTURA -->
+    <div class="section" id="estrutura">
+      <div class="section-header">
+        <span class="section-number">02</span>
+        <h2 class="section-title">Estrutura do Sprint Folder</h2>
+      </div>
+      <div class="prose">
+        <p>As sprints vivem dentro do folder <strong>Data Sprint</strong> no espaço SP - Data. Cada sprint é uma lista nomeada no padrão abaixo, criada automaticamente pelo ClickUp ao final de cada ciclo.</p>
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Campo</th>
+            <th>Configuração</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Folder</td><td>Data Sprint</td></tr>
+          <tr><td>Nomenclatura</td><td class="mono">Data Spr {INDEX} ({START_DATE} - {END_DATE})</td></tr>
+          <tr><td>Duração</td><td>2 semanas</td></tr>
+          <tr><td>Início</td><td>Segunda-feira</td></tr>
+          <tr><td>Medida de esforço</td><td>Sprint Points (Fibonacci)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="info-card" style="margin-top:20px;">
+        <div class="info-card-title">Automações</div>
+        <div class="rules-list" style="margin-top:0;">
+          <div class="rule-item"><div class="rule-dot"></div><span><strong>When Sprint ends → Mark Sprint as done</strong> — Encerra automaticamente a sprint na data de fim</span></div>
+          <div class="rule-item"><div class="rule-dot"></div><span><strong>When Sprint is done → Create new Sprint</strong> — Cria as próximas 2 sprints automaticamente</span></div>
+          <div class="rule-item"><div class="rule-dot red"></div><span><strong>Move incomplete tasks to next Sprint</strong> — Desativado. Spillover é tratado manualmente no planning.</span></div>
+        </div>
+      </div>
+
+      <div class="info-card" style="margin-top:16px;">
+        <div class="info-card-title">Campos padrão de cada sprint</div>
+        <table class="data-table" style="margin-top:0; border:none;">
+          <thead>
+            <tr><th>Campo</th><th>Função</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Assignee</td><td>Responsável pela tarefa</td></tr>
+            <tr><td>bid_requester</td><td>Quem solicitou a tarefa</td></tr>
+            <tr><td>Start date</td><td>Data de início planejada</td></tr>
+            <tr><td>Due date</td><td>Data de entrega planejada</td></tr>
+            <tr><td>Priority</td><td>Urgente / Alta / Normal / Baixa</td></tr>
+            <tr><td>Sprint points</td><td>Esforço estimado em Fibonacci</td></tr>
+            <tr><td>Comments</td><td>Discussões e atualizações da tarefa</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 03 SPRINT POINTS -->
+    <div class="section" id="fibonacci">
+      <div class="section-header">
+        <span class="section-number">03</span>
+        <h2 class="section-title">Sprint Points — Escala Fibonacci</h2>
+      </div>
+      <div class="prose">
+        <p>Sprint Points medem <strong>esforço + complexidade + incerteza</strong>, não horas. A escala Fibonacci reflete que quanto mais complexa a tarefa, maior a incerteza na estimativa.</p>
+      </div>
+
+      <div class="fib-grid">
+        <div class="fib-card">
+          <div class="fib-number">1</div>
+          <div class="fib-content">
+            <div class="fib-label">Trivial</div>
+            <div class="fib-desc">Tarefa clara e isolada, executável em até 2h sem investigação prévia</div>
+          </div>
+        </div>
+        <div class="fib-card">
+          <div class="fib-number">2</div>
+          <div class="fib-content">
+            <div class="fib-label">Pequeno</div>
+            <div class="fib-desc">Bem definida, mas exige alguma decisão pequena ou verificação — até meio dia</div>
+          </div>
+        </div>
+        <div class="fib-card">
+          <div class="fib-number">3</div>
+          <div class="fib-content">
+            <div class="fib-label">Médio</div>
+            <div class="fib-desc">Entendida em linhas gerais, com pelo menos um ponto a investigar ou coordenar — até 1 dia</div>
+          </div>
+        </div>
+        <div class="fib-card">
+          <div class="fib-number">5</div>
+          <div class="fib-content">
+            <div class="fib-label">Considerável</div>
+            <div class="fib-desc">Tarefa complexa com múltiplos componentes ou incertezas — 2 a 3 dias</div>
+          </div>
+        </div>
+        <div class="fib-card">
+          <div class="fib-number">8</div>
+          <div class="fib-content">
+            <div class="fib-label">Grande</div>
+            <div class="fib-desc">Incerteza relevante — vários dias, pode impactar outras partes do sistema</div>
+          </div>
+        </div>
+        <div class="fib-card">
+          <div class="fib-number">13</div>
+          <div class="fib-content">
+            <div class="fib-label">Épico</div>
+            <div class="fib-desc">Muito grande ou mal definida — quebrar antes de executar</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rules-list" style="margin-top:20px;">
+        <div class="rule-item"><div class="rule-dot red"></div><span>Nunca usar 0 — se é trivial demais, não entra na sprint</span></div>
+        <div class="rule-item"><div class="rule-dot red"></div><span>Se uma tarefa parece 13, quebre em subtarefas antes de pontuar</span></div>
+        <div class="rule-item"><div class="rule-dot"></div><span>Sprint Points são definidos apenas em tarefas pai — subtarefas não recebem pontos individuais</span></div>
+        <div class="rule-item"><div class="rule-dot"></div><span>A velocidade do time emergirá naturalmente após 2–3 sprints</span></div>
+      </div>
+    </div>
+
+    <!-- 04 BACKLOG -->
+    <div class="section" id="backlog">
+      <div class="section-header">
+        <span class="section-number">04</span>
+        <h2 class="section-title">Backlog & Priorização</h2>
+      </div>
+      <div class="prose">
+        <p>O backlog oficial é o <strong>ToDo List - Data</strong>. Todas as tarefas nascem ali e são adicionadas às sprints via campo nativo do ClickUp. A tarefa não sai do backlog ao entrar numa sprint.</p>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-title">Critérios de priorização para o planning</div>
+        <div class="flow" style="display:grid; grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr; align-items:center; gap:0;">
+          <div class="flow-step highlight" style="min-width:0;">
+            <div class="flow-step-icon">🔴</div>
+            <div class="flow-step-label">Urgente + due date vencida</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step" style="min-width:0;">
+            <div class="flow-step-icon">🟡</div>
+            <div class="flow-step-label">On hold com dependências</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step" style="min-width:0;">
+            <div class="flow-step-icon">🔵</div>
+            <div class="flow-step-label">In progress a fechar</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step" style="min-width:0;">
+            <div class="flow-step-icon">⚪</div>
+            <div class="flow-step-label">To do por sprint goal</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rules-list" style="margin-top:16px;">
+        <div class="rule-item"><div class="rule-dot red"></div><span>Tarefas de rotina (tag <strong>routine</strong>) <strong>não entram</strong> nas sprints</span></div>
+        <div class="rule-item"><div class="rule-dot red"></div><span>Tarefas com 13 pts devem ser quebradas antes de entrar no planning</span></div>
+        <div class="rule-item"><div class="rule-dot yellow"></div><span>Spillover (tarefas não concluídas) é tratado manualmente no planning da próxima sprint</span></div>
+        <div class="rule-item"><div class="rule-dot"></div><span>Apenas tarefas pai entram na sprint — subtarefas herdam o contexto da parent</span></div>
+      </div>
+    </div>
+
+    <!-- 05 CERIMÔNIAS -->
+    <div class="section" id="cerimonias">
+      <div class="section-header">
+        <span class="section-number">05</span>
+        <h2 class="section-title">Cerimônias</h2>
+      </div>
+      <div class="prose">
+        <p>O time opera com quatro cerimônias distribuídas ao longo de cada sprint de duas semanas.</p>
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Cerimônia</th>
+            <th>Dia</th>
+            <th>Horário</th>
+            <th>Duração</th>
+            <th>Participantes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge">Sprint Planning</span></td>
+            <td>Segunda de início de sprint</td>
+            <td class="mono">10h00</td>
+            <td>1h</td>
+            <td>Gustavo</td>
+          </tr>
+          <tr>
+            <td><span class="badge blue">Weekly Sync (FUP)</span></td>
+            <td>Toda segunda-feira</td>
+            <td class="mono">11h00</td>
+            <td>30 min</td>
+            <td>Gustavo + Lucca</td>
+          </tr>
+          <tr>
+            <td><span class="badge terracotta">Sprint Review</span></td>
+            <td>Sexta de fim de sprint</td>
+            <td class="mono">14h30</td>
+            <td>30 min</td>
+            <td>Gustavo + Marcelo + Bindi</td>
+          </tr>
+          <tr>
+            <td><span class="badge" style="background:rgba(122,149,163,0.1);color:var(--petrol);">Sprint Retro</span></td>
+            <td>Sexta de fim de sprint</td>
+            <td class="mono">15h00</td>
+            <td>30 min</td>
+            <td>Gustavo + Marcelo + Bindi</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Timeline Visual -->
+      <div class="ceremony-timeline">
+        <div class="timeline-week">
+          <div class="timeline-week-label">Semana 1 — Início da Sprint</div>
+          <div class="timeline-days">
+            <div class="timeline-day">
+              <div class="timeline-day-label">Segunda</div>
+              <div class="timeline-event ev-planning">Sprint Planning<div class="ev-time">10h00 · 1h</div></div>
+              <div class="timeline-event ev-sync">Weekly Sync (FUP)<div class="ev-time">11h00 · 30min</div></div>
+            </div>
+            <div class="timeline-day">
+              <div class="timeline-day-label">Terça</div>
+            </div>
+            <div class="timeline-day">
+              <div class="timeline-day-label">Quarta</div>
+            </div>
+            <div class="timeline-day">
+              <div class="timeline-day-label">Quinta</div>
+            </div>
+            <div class="timeline-day">
+              <div class="timeline-day-label">Sexta</div>
+            </div>
+          </div>
+        </div>
+        <div class="timeline-week">
+          <div class="timeline-week-label">Semana 2 — Fim da Sprint</div>
+          <div class="timeline-days">
+            <div class="timeline-day">
+              <div class="timeline-day-label">Segunda</div>
+              <div class="timeline-event ev-sync">Weekly Sync (FUP)<div class="ev-time">11h00 · 30min</div></div>
+            </div>
+            <div class="timeline-day">
+              <div class="timeline-day-label">Terça</div>
+            </div>
+            <div class="timeline-day">
+              <div class="timeline-day-label">Quarta</div>
+            </div>
+            <div class="timeline-day">
+              <div class="timeline-day-label">Quinta</div>
+            </div>
+            <div class="timeline-day">
+              <div class="timeline-day-label">Sexta</div>
+              <div class="timeline-event ev-review">Sprint Review<div class="ev-time">14h30 · 30min</div></div>
+              <div class="timeline-event ev-retro">Sprint Retro<div class="ev-time">15h00 · 30min</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-card" style="margin-top:8px;">
+        <div class="info-card-title">Detalhamento das cerimônias</div>
+        <div class="rules-list" style="margin-top:0;">
+          <div class="rule-item"><div class="rule-dot" style="background:var(--sage)"></div><span><strong>Sprint Planning (10h)</strong> — Revisar backlog, confirmar tarefas da sprint, atribuir responsáveis e validar sprint points. Ocorre antes do Weekly Sync (FUP).</span></div>
+          <div class="rule-item"><div class="rule-dot" style="background:var(--blue-gray)"></div><span><strong>Weekly Sync / FUP (11h)</strong> — Check de progresso, bloqueios e ajustes de prioridade. O termo FUP (Follow Up) vem do vocabulário EOS adotado pela Eleven Brands. Nas semanas de início de sprint, acontece logo após o Planning.</span></div>
+          <div class="rule-item"><div class="rule-dot" style="background:var(--terracotta)"></div><span><strong>Sprint Review (14h30)</strong> — Apresentar entregas e decidir o que vai para a próxima sprint. Resultados relevantes são levados ao L10 pelo líder do time.</span></div>
+          <div class="rule-item"><div class="rule-dot" style="background:var(--petrol)"></div><span><strong>Sprint Retrospective (15h00)</strong> — Refletir sobre o processo: o que funcionou, o que melhorar na próxima sprint.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 06 CONVENÇÕES -->
+    <div class="section" id="convencoes">
+      <div class="section-header">
+        <span class="section-number">06</span>
+        <h2 class="section-title">Convenções</h2>
+      </div>
+      <div class="prose">
+        <p>Padrões operacionais que garantem consistência no uso do ClickUp pelo time de Data.</p>
+      </div>
+
+      <div class="convention-grid">
+        <div class="convention-card">
+          <div class="convention-card-title">
+            Tarefas pai vs. subtarefas
+            <span class="convention-badge">Estrutura</span>
+          </div>
+          <p>Apenas tarefas pai entram nas sprints e recebem sprint points. Subtarefas herdam o contexto da parent e não recebem campos individuais de sprint.</p>
+        </div>
+        <div class="convention-card">
+          <div class="convention-card-title">
+            Tarefas de rotina
+            <span class="convention-badge red">Exclusão</span>
+          </div>
+          <p>Tarefas com a tag <strong>routine</strong> não fazem parte das sprints. Elas seguem sua própria cadência e não são contabilizadas na velocidade do time.</p>
+        </div>
+        <div class="convention-card">
+          <div class="convention-card-title">
+            bid_requester
+            <span class="convention-badge blue">Campo</span>
+          </div>
+          <p>Se a tarefa tiver um requerente direto externo ao time, preencher com esse requerente. Se for intradepartamental, parte de um processo lógico ou etapa intrínseca à tarefa, preencher com o grupo <strong>Data & Analytics Department - DAD</strong>. O campo não deve ser deixado em branco.</p>
+        </div>
+        <div class="convention-card">
+          <div class="convention-card-title">
+            Backlog como fonte de verdade
+            <span class="convention-badge">ClickUp</span>
+          </div>
+          <p>O <strong>ToDo List - Data</strong> é sempre a fonte de verdade. Tarefas nunca saem do backlog ao entrar numa sprint — o sprint field nativo do ClickUp é usado para o vínculo.</p>
+        </div>
+        <div class="convention-card">
+          <div class="convention-card-title">
+            Spillover
+            <span class="convention-badge blue">Planning</span>
+          </div>
+          <p>Tarefas não concluídas ao fim de uma sprint não são movidas automaticamente. A decisão de reincluir ou descartar é feita manualmente durante o Sprint Planning seguinte.</p>
+        </div>
+        <div class="convention-card">
+          <div class="convention-card-title">
+            Nomenclatura dos sprints
+            <span class="convention-badge">Padrão</span>
+          </div>
+          <p>O ClickUp gera automaticamente: <strong>Data Spr N (MM/DD - MM/DD)</strong>. Não alterar o nome manualmente para manter consistência com o template e as automações.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 07 EOS -->
+    <div class="section" id="eos">
+      <div class="section-header">
+        <span class="section-number">07</span>
+        <h2 class="section-title">Modelo EOS</h2>
+      </div>
+      <div class="prose">
+        <p>O time de Data opera dentro do modelo EOS (Entrepreneurial Operating System) da Eleven Brands. É importante entender a separação entre as cerimônias internas de sprint e o ritmo de liderança da empresa.</p>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-title">Separação de fóruns</div>
+        <table class="data-table" style="margin-top:0; border:none;">
+          <thead>
+            <tr>
+              <th>Fórum</th>
+              <th>Cadência</th>
+              <th>Escopo</th>
+              <th>Participantes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Weekly Sync (FUP)</td>
+              <td>Toda segunda, 11h</td>
+              <td>Atividades internas do time de Data</td>
+              <td>Gustavo + Lucca</td>
+            </tr>
+            <tr>
+              <td>L10 Meeting</td>
+              <td>Toda quarta</td>
+              <td>Rocks, IDS e métricas de liderança</td>
+              <td>Liderança Eleven Brands</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="rules-list" style="margin-top:16px;">
+        <div class="rule-item"><div class="rule-dot red"></div><span>O L10 é exclusivo para <strong>Rocks e IDS</strong> — atividades específicas de sprint não são discutidas ali</span></div>
+        <div class="rule-item"><div class="rule-dot"></div><span>O líder do time (Gustavo) é responsável por traduzir resultados de sprint em Rocks relevantes para o L10 quando aplicável</span></div>
+        <div class="rule-item"><div class="rule-dot"></div><span>As cerimônias de sprint são autônomas e independentes do ritmo do L10</span></div>
+      </div>
+    </div>
+
+  </div><!-- /doc-body -->
+
+  <div class="footer">
+    Eleven Brands · Data Team · Sprint Handbook · 2026
+  </div>
+
+</div><!-- /main -->
+
+<script src="../assets/nav.js"></script>
+
+</body>
+</html>

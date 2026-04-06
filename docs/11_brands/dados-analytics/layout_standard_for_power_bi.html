@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Padrão de Layout — Power BI · Eleven Brands</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="./layout_standard_for_power_bi.css">
+</head>
+<body>
+
+<!-- HEADER + NAV -->
+<header class="site-header">
+  <div class="nav-logo" id="nav-logo">
+    Padrão de Layout
+    <span>Power BI · Eleven Brands</span>
+  </div>
+  <nav class="nav">
+    <div class="nav-links">
+      <a href="#objetivo"><span class="nav-dot"></span> Objetivo</a>
+      <a href="#formatos"><span class="nav-dot"></span> Formatos</a>
+      <a href="#margens"><span class="nav-dot"></span> Margens</a>
+      <a href="#header"><span class="nav-dot"></span> Header</a>
+      <a href="#titulo"><span class="nav-dot"></span> Título</a>
+      <a href="#corpo"><span class="nav-dot"></span> Corpo</a>
+      <a href="#consistencia"><span class="nav-dot"></span> Consistência</a>
+      <a href="#governanca"><span class="nav-dot"></span> Governança</a>
+      <a href="#proibicoes"><span class="nav-dot"></span> Proibições</a>
+    </div>
+  </nav>
+</header>
+
+<div class="cover">
+  <div class="cover-label">Documentação Oficial · Power BI · v1.0</div>
+  <h1>Padrão de Layout<br>e Construção</h1>
+  <p class="cover-sub">Estrutura visual para dashboards Power BI</p>
+  <div class="cover-tags">
+    <span class="cover-tag">Paisagem</span>
+    <span class="cover-tag">Retrato</span>
+    <span class="cover-tag">Margens</span>
+    <span class="cover-tag">Header</span>
+    <span class="cover-tag">KPIs</span>
+  </div>
+</div>
+
+<div class="doc-body">
+
+  <!-- 01 OBJETIVO -->
+  <div class="section" id="objetivo">
+    <div class="section-header">
+      <span class="section-number">01</span>
+      <h2 class="section-title">Objetivo do Dashboard</h2>
+    </div>
+    <div class="prose">
+      <p>Este documento estabelece um padrão estrutural único para construção de páginas no Power BI. O objetivo não é restringir análise, e sim padronizar a forma como ela é apresentada.</p>
+    </div>
+    <div class="three-col" style="margin-top:16px;">
+      <div class="info-card" style="margin-top:0;">
+        <div class="info-card-title">Consistência</div>
+        <div style="font-size:13px; color:var(--text-label);">Visual uniforme entre páginas e relatórios</div>
+      </div>
+      <div class="info-card" style="margin-top:0;">
+        <div class="info-card-title">Previsibilidade</div>
+        <div style="font-size:13px; color:var(--text-label);">Layout estável para manutenção e evolução</div>
+      </div>
+      <div class="info-card" style="margin-top:0;">
+        <div class="info-card-title">Reutilização</div>
+        <div style="font-size:13px; color:var(--text-label);">Facilidade de template via <span style="font-family:var(--font-mono); font-size:11px;">.pbit</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 02 FORMATOS -->
+  <div class="section" id="formatos">
+    <div class="section-header">
+      <span class="section-number">02</span>
+      <h2 class="section-title">Formatos de Página</h2>
+    </div>
+    <div class="two-col">
+
+      <div class="format-card">
+        <div class="format-card-header">
+          <span class="format-card-name">Paisagem</span>
+          <span class="format-badge">Recomendado</span>
+        </div>
+        <div class="format-preview">
+          <div class="preview-landscape">
+            <div class="preview-header"></div>
+            <div class="preview-body">
+              <div class="preview-kpis">
+                <div class="preview-kpi"></div>
+                <div class="preview-kpi"></div>
+                <div class="preview-kpi"></div>
+                <div class="preview-kpi"></div>
+              </div>
+              <div class="preview-blocks">
+                <div class="preview-block"></div>
+                <div class="preview-block"></div>
+                <div class="preview-block" style="grid-column: span 2; height: 18px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="format-body">
+          <div class="format-dim">2040 × 1000 px · Altura fixa</div>
+          <ul class="format-list">
+            <li>Visão geral e páginas executivas</li>
+            <li>Comparações de alto nível</li>
+            <li>Leitura horizontal</li>
+          </ul>
+          <div class="format-rule">Cada página deve ter um propósito claro e único.</div>
+        </div>
+      </div>
+
+      <div class="format-card">
+        <div class="format-card-header">
+          <span class="format-card-name">Retrato</span>
+          <span class="format-badge secondary">Análise detalhada</span>
+        </div>
+        <div class="format-preview">
+          <div class="preview-portrait">
+            <div class="preview-header"></div>
+            <div class="preview-body">
+              <div class="preview-kpis" style="height:12px; margin-bottom:4px;">
+                <div class="preview-kpi"></div>
+                <div class="preview-kpi"></div>
+              </div>
+              <div class="preview-block-tall"></div>
+              <div class="preview-block-tall"></div>
+              <div class="preview-block-tall" style="height:28px;"></div>
+              <div class="preview-block-tall" style="background:var(--terracotta); opacity:0.15;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="format-body">
+          <div class="format-dim">2040 px · Altura variável</div>
+          <ul class="format-list">
+            <li>Análises detalhadas e páginas longas</li>
+            <li>Exploração progressiva do conteúdo</li>
+            <li>Organização vertical dos blocos</li>
+          </ul>
+          <div class="format-rule">Alinhamento lateral e espaçamentos são obrigatórios mesmo com altura variável.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 03 MARGENS -->
+  <div class="section" id="margens">
+    <div class="section-header">
+      <span class="section-number">03</span>
+      <h2 class="section-title">Margens e Espaçamentos</h2>
+    </div>
+
+    <div class="metric-row">
+      <div class="metric-card">
+        <div class="metric-value">32</div>
+        <div class="metric-unit">px</div>
+        <div class="metric-label">Margem externa</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">16</div>
+        <div class="metric-unit">px</div>
+        <div class="metric-label">Entre blocos</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">94</div>
+        <div class="metric-unit">px</div>
+        <div class="metric-label">Altura do header</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">40</div>
+        <div class="metric-unit">px</div>
+        <div class="metric-label">Tamanho do título</div>
+      </div>
+    </div>
+
+    <div class="spacing-diagram">
+      <div class="info-card-title" style="margin-bottom:16px;">Diagrama de estrutura</div>
+      <div class="diagram-inner">
+        <div class="diagram-content-area">
+          <div class="diagram-header-block"></div>
+          <div class="diagram-kpi-row">
+            <div class="diagram-kpi"></div>
+            <div class="diagram-kpi"></div>
+            <div class="diagram-kpi"></div>
+            <div class="diagram-kpi"></div>
+          </div>
+          <div class="diagram-content-row">
+            <div class="diagram-content-block"></div>
+            <div class="diagram-content-block"></div>
+          </div>
+        </div>
+      </div>
+      <div class="diagram-annotation">
+        <div class="annotation-item">
+          <div class="annotation-dot" style="background:rgba(71,81,90,0.25);"></div>
+          Header (94px)
+        </div>
+        <div class="annotation-item">
+          <div class="annotation-dot" style="background:rgba(102,129,151,0.35);"></div>
+          KPIs
+        </div>
+        <div class="annotation-item">
+          <div class="annotation-dot" style="background:rgba(104,144,126,0.35);"></div>
+          Blocos de conteúdo
+        </div>
+        <div class="annotation-item">
+          <div class="annotation-dot" style="background:rgba(198,128,101,0.35); border: 1px dashed var(--terracotta);"></div>
+          Margem 32px
+        </div>
+      </div>
+    </div>
+
+    <div class="rules-list">
+      <div class="rule-item"><div class="rule-dot red"></div><span>Nenhum visual, shape ou texto pode ultrapassar a área de margem</span></div>
+      <div class="rule-item"><div class="rule-dot red"></div><span>Se dois elementos parecem "colados", o layout está incorreto</span></div>
+      <div class="rule-item"><div class="rule-dot red"></div><span>As margens definem o limite físico do layout e não podem ser alteradas</span></div>
+    </div>
+  </div>
+
+  <!-- 04 HEADER -->
+  <div class="section" id="header">
+    <div class="section-header">
+      <span class="section-number">04</span>
+      <h2 class="section-title">Header</h2>
+    </div>
+    <div class="prose">
+      <p>O header é uma área reservada e fixa em todas as páginas. Ele é apenas contextual — não participa da análise.</p>
+    </div>
+
+    <div class="header-anatomy">
+      <div class="anatomy-preview">
+        <div style="position:relative;">
+          <div class="anatomy-badge">Header · 94px</div>
+          <div class="anatomy-header-mock">
+            <div class="anatomy-title-mock">Nome do Dashboard</div>
+            <div class="anatomy-logo-mock"></div>
+          </div>
+        </div>
+        <div class="anatomy-body-mock">
+          <div class="anatomy-kpi-mock"></div>
+          <div class="anatomy-kpi-mock"></div>
+          <div class="anatomy-kpi-mock"></div>
+          <div class="anatomy-kpi-mock"></div>
+        </div>
+      </div>
+      <div class="anatomy-meta">
+        <div class="anatomy-meta-item">
+          <div class="anatomy-meta-label">Conteúdo permitido</div>
+          <div class="anatomy-meta-value">Título do dashboard<br>Elementos institucionais (logo)</div>
+        </div>
+        <div class="anatomy-meta-item">
+          <div class="anatomy-meta-label">Conteúdo não permitido</div>
+          <div class="anatomy-meta-value" style="color:var(--negative);">KPIs · Tabelas · Qualquer elemento analítico</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 05 TÍTULO -->
+  <div class="section" id="titulo">
+    <div class="section-header">
+      <span class="section-number">05</span>
+      <h2 class="section-title">Título do Dashboard</h2>
+    </div>
+    <div class="two-col">
+      <div class="info-card" style="margin-top:0;">
+        <div class="info-card-title">Dimensão estrutural</div>
+        <div style="font-size:32px; font-family:var(--font-serif); color:var(--text-title); line-height:1.1; margin-bottom:8px;">Título</div>
+        <div class="dim-badge">40 px</div>
+      </div>
+      <div>
+        <div class="rules-list" style="margin-top:0;">
+          <div class="rule-item"><div class="rule-dot"></div><span>Um único título por página</span></div>
+          <div class="rule-item"><div class="rule-dot"></div><span>Sempre dentro do header</span></div>
+          <div class="rule-item"><div class="rule-dot red"></div><span>Não competir com filtros ou outros elementos</span></div>
+        </div>
+        <div class="callout amber" style="margin-top:12px;">
+          <div class="callout-icon">⚠️</div>
+          <div class="callout-text">Se o título não cabe confortavelmente no header, ele está longo demais.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 06 CORPO -->
+  <div class="section" id="corpo">
+    <div class="section-header">
+      <span class="section-number">06</span>
+      <h2 class="section-title">Corpo da Página</h2>
+    </div>
+    <div class="prose">
+      <p>O corpo começa imediatamente após o header. A organização deve ir do mais agregado para o mais detalhado.</p>
+    </div>
+
+    <div class="hierarchy" style="margin-top:16px;">
+      <div class="hierarchy-step">
+        <div class="hierarchy-num">1</div>
+        <div class="hierarchy-label">KPIs</div>
+        <div class="hierarchy-desc">Leitura rápida · topo do corpo</div>
+      </div>
+      <div class="hierarchy-step">
+        <div class="hierarchy-num dim">2</div>
+        <div class="hierarchy-label">Blocos principais de conteúdo</div>
+        <div class="hierarchy-desc">Visão agregada</div>
+      </div>
+      <div class="hierarchy-step">
+        <div class="hierarchy-num dim">3</div>
+        <div class="hierarchy-label">Blocos secundários</div>
+        <div class="hierarchy-desc">Suporte à análise</div>
+      </div>
+      <div class="hierarchy-step">
+        <div class="hierarchy-num dim">4</div>
+        <div class="hierarchy-label">Detalhamento</div>
+        <div class="hierarchy-desc">Quando houver</div>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top:20px;">
+      <div class="callout-icon">📊</div>
+      <div class="callout-text"><strong>KPIs</strong> funcionam como elementos de leitura rápida. Devem estar organizados em grid, com alinhamento horizontal e espaçamento uniforme. Nunca posicionados isoladamente no meio da página. KPIs não substituem outros elementos analíticos — eles apenas abrem a leitura.</div>
+    </div>
+  </div>
+
+  <!-- 07 CONSISTÊNCIA -->
+  <div class="section" id="consistencia">
+    <div class="section-header">
+      <span class="section-number">07</span>
+      <h2 class="section-title">Consistência entre Páginas</h2>
+    </div>
+    <div class="prose">
+      <p>O usuário não deve precisar reaprender o layout ao navegar entre páginas.</p>
+    </div>
+    <div class="rules-list">
+      <div class="rule-item"><div class="rule-dot"></div><span>Margens externas de 32 px em todas as páginas</span></div>
+      <div class="rule-item"><div class="rule-dot"></div><span>Espaçamento entre blocos de 16 px em todas as páginas</span></div>
+      <div class="rule-item"><div class="rule-dot"></div><span>Header fixo de 94 px em todas as páginas</span></div>
+      <div class="rule-item"><div class="rule-dot"></div><span>Mesma hierarquia estrutural em todas as páginas</span></div>
+    </div>
+  </div>
+
+  <!-- 08 GOVERNANÇA -->
+  <div class="section" id="governanca">
+    <div class="section-header">
+      <span class="section-number">08</span>
+      <h2 class="section-title">Governança de Layout</h2>
+    </div>
+    <div class="gov-two">
+      <div class="gov-card">
+        <div class="gov-card-header can">O que pode variar</div>
+        <div class="gov-card-body">
+          <ul class="gov-list">
+            <li>Quantidade de blocos no corpo</li>
+            <li>Altura da página (formato retrato)</li>
+            <li>Combinação de componentes internos</li>
+          </ul>
+        </div>
+      </div>
+      <div class="gov-card">
+        <div class="gov-card-header cannot">O que não pode variar</div>
+        <div class="gov-card-body">
+          <ul class="gov-list no">
+            <li>Margens</li>
+            <li>Espaçamentos</li>
+            <li>Header</li>
+            <li>Posição do título</li>
+            <li>Estrutura geral da página</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="callout" style="margin-top:16px;">
+      <div class="callout-icon">🏗️</div>
+      <div class="callout-text">Liberdade analítica existe <strong>dentro</strong> da estrutura, não fora dela.</div>
+    </div>
+  </div>
+
+  <!-- 09 PROIBIÇÕES -->
+  <div class="section" id="proibicoes">
+    <div class="section-header">
+      <span class="section-number">09</span>
+      <h2 class="section-title">O que Não é Permitido</h2>
+    </div>
+    <div class="prohibit-grid">
+      <div class="prohibit-item"><span class="prohibit-x">✕</span> Quebra de margens ou espaçamentos</div>
+      <div class="prohibit-item"><span class="prohibit-x">✕</span> Header diferente entre páginas</div>
+      <div class="prohibit-item"><span class="prohibit-x">✕</span> Elementos fora do grid</div>
+      <div class="prohibit-item"><span class="prohibit-x">✕</span> KPIs fora do topo da página</div>
+      <div class="prohibit-item"><span class="prohibit-x">✕</span> Ajustes manuais "para caber melhor"</div>
+    </div>
+    <div class="callout amber" style="margin-top:16px;">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-text">Exceções exigem justificativa clara e documentada.</div>
+    </div>
+  </div>
+
+  <!-- GOVERNANÇA FINAL -->
+  <div class="gov-box">
+    <div class="gov-icon">📐</div>
+    <div>
+      <div class="gov-title">Estrutura é infraestrutura</div>
+      <div class="gov-text">O padrão de layout garante que qualquer pessoa da equipe possa manter, evoluir ou criar um dashboard sem recomeçar do zero. Desvios do padrão geram retrabalho, inconsistência e ruído visual para o usuário final.</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Eleven Brands · Padrão de Layout · Dashboards Power BI
+</div>
+
+<script src="../assets/nav.js"></script>
+</body>
+</html>
