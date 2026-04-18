@@ -1,6 +1,6 @@
 # eleven-brands-ai-docs
 
-This repository is the centralized AI knowledge base for Eleven Brands. It contains skill instruction files, shared reference knowledge, and build scripts for packaging and distribution.
+This repository is the centralized AI knowledge base for Eleven Brands. It contains skill instruction files, shared reference knowledge, build scripts for packaging, and HTML documentation pages.
 
 ## Repository Structure
 
@@ -11,6 +11,13 @@ eleven-brands-ai-docs/
 │   └── skill-name/
 │       └── SKILL.md     # Main skill instructions and YAML frontmatter
 ├── scripts/             # Build scripts for packaging skills as ZIPs
+├── docs/                # HTML documentation site
+│   ├── index.html       # Knowledge Base index page
+│   └── 11_brands/
+│       ├── assets/      # Shared assets: nav.js, style.css (used by all pages)
+│       ├── dados-analytics/   # Data & analytics docs
+│       ├── lideranca/         # Leadership docs
+│       └── operacional/       # Operations docs
 ├── dist/                # Generated ZIPs — gitignored, never commit
 ├── CLAUDE.md            # This file
 └── README.md            # Human-facing documentation
@@ -30,6 +37,15 @@ Every skill follows the Eleven Brands skill standard defined in `skills/skills-c
 1. `skills/[skill-name]/SKILL.md` — the skill itself
 2. `scripts/build-[skill-name].ps1` — packaging script for browser upload
 3. A corresponding line in `scripts/build-all.ps1`
+
+## Docs Site
+
+HTML documentation pages live in `docs/11_brands/`. Each page follows this pattern:
+- One `.html` file per topic
+- One `.css` file alongside it (page-specific styles)
+- Shared assets (`nav.js`, `style.css`) live in `docs/11_brands/assets/` and are referenced as `../assets/nav.js`
+
+Do not place shared assets directly inside section folders or alongside individual pages — they belong in `assets/` only.
 
 ## References
 
@@ -59,5 +75,6 @@ The `documentation-editor` build script injects extra assets beyond `references/
 |---|---|
 | `agile-management` | Sprint planning, OKRs, backlog, meeting analysis |
 | `documentation-editor` | HTML documentation creation and editing |
+| `presentation-creator` | PowerPoint/Google Slides presentation creation |
 | `task-organizer` | ClickUp task creation and organization |
 | `skills-creator` | Creates and reviews skill files following this standard |
