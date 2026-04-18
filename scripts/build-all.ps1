@@ -7,5 +7,11 @@ Write-Host ""
 & "$PSScriptRoot\build-skills-creator.ps1"
 & "$PSScriptRoot\build-presentation-creator.ps1"
 
+# Sync shared references to Claude Code
+$REFS_DEST = Join-Path $HOME ".claude\references"
+New-Item -ItemType Directory -Force -Path $REFS_DEST | Out-Null
+Copy-Item "$PSScriptRoot\..\references\*" -Destination $REFS_DEST -Force
+Write-Host "SYNCED --> ~/.claude/references/"
+
 Write-Host ""
 Write-Host "DONE! --> All skills built > dist/"

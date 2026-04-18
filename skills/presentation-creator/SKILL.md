@@ -135,16 +135,23 @@ Standard flow:
 
 Standard flow:
 
-1. Identify exactly what needs to change and what must remain untouched
-2. If anything is ambiguous, ask before proceeding
-3. Present the edit confirmation summary and wait for explicit approval
-4. Apply only the listed changes
-5. Run QA on affected slides
-6. Deliver the updated file
+1. **Before any edit**, ask: *"Would you like me to save a backup before making changes?"*
+2. Identify exactly what needs to change and what must remain untouched
+3. If anything is ambiguous, ask before proceeding
+4. Present the edit confirmation summary and wait for explicit approval
+5. Apply only the listed changes
+6. Run QA on affected slides
+7. Deliver the updated file
 
 ### Reference Files
 
 Before creating or editing any presentation, read all files in the `references/` folder bundled with this skill. This includes the color palette, design standards, and brand guidelines.
+
+Also load the layout reference presentation:
+```
+/mnt/user-data/uploads/claude-intro-team.pptx
+```
+If the requester has shared this file, convert it to images and inspect it for layout structure, spacing, and visual style. If not available, proceed without it.
 
 **If no reference files are available:**
 - Do not proceed with visual implementation
@@ -262,3 +269,4 @@ After delivering any output:
 - Always close with: *"Would you like any adjustments before we consider this done?"*
 - Be prepared to iterate on any section based on requester feedback
 - When making revisions, list exactly what will change before editing and wait for confirmation
+
