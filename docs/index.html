@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knowledge Base — Eleven Brands</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ── VARIABLES ── */
+  :root {
+    --sage: #68907E;
+    --graphite: #47515A;
+    --blue-gray: #668197;
+    --terracotta: #C68065;
+    --gray-mid: #A1A9B3;
+    --bg-page: #F4F5F3;
+    --bg-visual: #FFFFFF;
+    --border: #DADDDD;
+    --text-title: #1F2427;
+    --text-label: #47515A;
+    --font-serif: 'DM Serif Display', serif;
+    --font-sans: 'Inter', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg-page);
+    color: var(--text-title);
+    font-size: 14px;
+    line-height: 1.6;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--graphite);
+    min-height: 100vh;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 32px 0;
+    z-index: 10;
+  }
+  .sidebar-logo {
+    padding: 0 24px 28px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 24px;
+  }
+  .sidebar-logo-name {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--sage);
+  }
+  .sidebar-logo-sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    margin-top: 3px;
+  }
+  .sidebar-nav { padding: 0 16px; display: flex; flex-direction: column; gap: 2px; }
+  .sidebar-section-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.25);
+    padding: 0 8px;
+    margin-bottom: 6px;
+    margin-top: 4px;
+  }
+  .sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.45);
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+  }
+  .sidebar-link:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.8); }
+  .sidebar-link.active { background: rgba(104,144,126,0.18); color: #fff; }
+  .sidebar-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--sage);
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .sidebar-link.active .sidebar-dot { opacity: 1; }
+
+  /* ── MAIN ── */
+  .main {
+    margin-left: 220px;
+    flex: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    background: var(--graphite);
+    padding: 56px 56px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: var(--sage);
+    opacity: 0.12;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 300px;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: var(--terracotta);
+    opacity: 0.1;
+  }
+  .hero-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--sage);
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-family: var(--font-serif);
+    font-size: 40px;
+    font-weight: 400;
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 10px;
+  }
+  .hero-sub {
+    font-size: 14px;
+    color: rgba(255,255,255,0.45);
+    font-weight: 300;
+  }
+
+  /* ── CONTENT ── */
+  .content {
+    flex: 1;
+    padding: 48px 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 56px;
+  }
+
+  /* ── GROUP ── */
+  .group-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .group-title {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--text-title);
+  }
+  .group-count {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--gray-mid);
+    letter-spacing: 0.06em;
+  }
+
+  /* ── DOC GRID ── */
+  .doc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+  }
+  .doc-card {
+    background: var(--bg-visual);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 22px;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .doc-card:hover {
+    border-color: var(--sage);
+    box-shadow: 0 2px 12px rgba(104,144,126,0.1);
+  }
+  .doc-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .doc-card-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-title);
+    line-height: 1.35;
+  }
+  .doc-card-tag {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: rgba(104,144,126,0.1);
+    color: var(--sage);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .doc-card-tag.blue { background: rgba(102,129,151,0.1); color: var(--blue-gray); }
+  .doc-card-tag.terra { background: rgba(198,128,101,0.1); color: var(--terracotta); }
+  .doc-card-desc {
+    font-size: 12px;
+    color: var(--gray-mid);
+    line-height: 1.6;
+    flex: 1;
+  }
+  .doc-card-action {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--sage);
+    letter-spacing: 0.04em;
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    padding: 20px 56px;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--gray-mid);
+    letter-spacing: 0.05em;
+    background: var(--bg-visual);
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-name">11 Brands</div>
+    <div class="sidebar-logo-sub">Knowledge Base</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-section-label">Áreas</div>
+    <a href="#operacional" class="sidebar-link" data-section="operacional">
+      <span class="sidebar-dot"></span> Operacional
+    </a>
+    <a href="#dados" class="sidebar-link" data-section="dados">
+      <span class="sidebar-dot"></span> Dados & Analytics
+    </a>
+    <a href="#lideranca" class="sidebar-link" data-section="lideranca">
+      <span class="sidebar-dot"></span> Liderança
+    </a>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-label">Eleven Brands — Documentação Interna</div>
+    <h1>Knowledge Base</h1>
+    <div class="hero-sub">Referências, padrões e processos da equipe</div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- GROUP: OPERACIONAL -->
+    <section class="group" id="operacional">
+      <div class="group-header">
+        <h2 class="group-title">Operacional</h2>
+        <span class="group-count">2 documentos</span>
+      </div>
+      <div class="doc-grid">
+
+        <a class="doc-card" href="./11_brands/operacional/automations.html">
+          <div class="doc-card-top">
+            <h3 class="doc-card-title">Automações Ativas</h3>
+            <span class="doc-card-tag">Operacional</span>
+          </div>
+          <p class="doc-card-desc">Registro das automações ativas da equipe de dados — processos automatizados, horários de execução e fluxo de dados.</p>
+          <span class="doc-card-action">Abrir documento →</span>
+        </a>
+
+        <a class="doc-card" href="./11_brands/operacional/recommended_courses.html">
+          <div class="doc-card-top">
+            <h3 class="doc-card-title">Trilha de Formação — Agentes de IA</h3>
+            <span class="doc-card-tag">Formação</span>
+          </div>
+          <p class="doc-card-desc">Trilha estruturada para formar especialistas em agentes de IA — do zero à construção de agentes autônomos para e-commerce, em 4–5 meses.</p>
+          <span class="doc-card-action">Abrir documento →</span>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- GROUP: DADOS & ANALYTICS -->
+    <section class="group" id="dados">
+      <div class="group-header">
+        <h2 class="group-title">Dados & Analytics</h2>
+        <span class="group-count">4 documentos</span>
+      </div>
+      <div class="doc-grid">
+
+        <a class="doc-card" href="./11_brands/dados-analytics/data_sprint_handbook.html">
+          <div class="doc-card-top">
+            <h3 class="doc-card-title">Sprint Handbook</h3>
+            <span class="doc-card-tag blue">Processo</span>
+          </div>
+          <p class="doc-card-desc">Guia completo de sprints ágeis para o time de dados — cerimônias, pontuação Fibonacci, convenções e integração com o EOS.</p>
+          <span class="doc-card-action">Abrir documento →</span>
+        </a>
+
+        <a class="doc-card" href="./11_brands/dados-analytics/layout_standard_for_power_bi.html">
+          <div class="doc-card-top">
+            <h3 class="doc-card-title">Padrão de Layout — Power BI</h3>
+            <span class="doc-card-tag blue">Padrão</span>
+          </div>
+          <p class="doc-card-desc">Padrão oficial de layout e construção de dashboards no Power BI — formatos, espaçamento, hierarquia visual e governança.</p>
+          <span class="doc-card-action">Abrir documento →</span>
+        </a>
+
+        <a class="doc-card" href="./11_brands/dados-analytics/color_palette.html">
+          <div class="doc-card-top">
+            <h3 class="doc-card-title">Paleta de Cores</h3>
+            <span class="doc-card-tag blue">Design</span>
+          </div>
+          <p class="doc-card-desc">Sistema de cores oficial para dashboards e documentações — paleta categórica, cores de sentimento, superfícies e tipografia.</p>
+          <span class="doc-card-action">Abrir documento →</span>
+        </a>
+
+        <a class="doc-card" href="./11_brands/dados-analytics/amazon_multimarketplace_dedup.html">
+          <div class="doc-card-top">
+            <h3 class="doc-card-title">Deduplicação Amazon SP-API</h3>
+            <span class="doc-card-tag terra">SP-API</span>
+          </div>
+          <p class="doc-card-desc">Documentação técnica para remoção de duplicatas em pedidos Amazon multi-marketplace via SP-API — lógica, regras e casos de borda.</p>
+          <span class="doc-card-action">Abrir documento →</span>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- GROUP: LIDERANÇA -->
+    <section class="group" id="lideranca">
+      <div class="group-header">
+        <h2 class="group-title">Liderança</h2>
+        <span class="group-count">1 documento</span>
+      </div>
+      <div class="doc-grid">
+
+        <a class="doc-card" href="./11_brands/lideranca/l10_meetings.html">
+          <div class="doc-card-top">
+            <h3 class="doc-card-title">Reunião Level 10</h3>
+            <span class="doc-card-tag terra">EOS</span>
+          </div>
+          <p class="doc-card-desc">Metodologia e estrutura da reunião semanal Level 10 — agenda, papéis, IDS e integração com o ritmo de sprints do time de dados.</p>
+          <span class="doc-card-action">Abrir documento →</span>
+        </a>
+
+      </div>
+    </section>
+
+  </div><!-- /content -->
+
+  <div class="footer">
+    Eleven Brands · Knowledge Base · 2026
+  </div>
+
+</div><!-- /main -->
+
+<script>
+  const links = document.querySelectorAll('.sidebar-link[data-section]');
+  const sections = Array.from(links).map(l => document.getElementById(l.dataset.section)).filter(Boolean);
+
+  function setActive() {
+    let current = sections[0];
+    sections.forEach(s => { if (s.getBoundingClientRect().top <= 120) current = s; });
+    links.forEach(l => l.classList.toggle('active', l.dataset.section === current.id));
+  }
+
+  window.addEventListener('scroll', setActive, { passive: true });
+  setActive();
+</script>
+
+</body>
+</html>

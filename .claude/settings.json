@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(**)",
+      "Write(skills/**)",
+      "Write(references/**)",
+      "Write(.claude/**)",
+      "Edit(skills/**)",
+      "Edit(references/**)",
+      "Edit(.claude/**)",
+      "Edit(CLAUDE.md)",
+      "Edit(README.md)",
+      "Glob(**)",
+      "Grep(**)",
+      "Bash(git *)",
+      "Bash(bash scripts/*)"
+    ],
+    "deny": [
+      "Bash(rm *)",
+      "Bash(sudo *)",
+      "Bash(curl *)",
+      "Bash(wget *)"
+    ]
+  }
+}

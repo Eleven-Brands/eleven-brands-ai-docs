@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documentação de Cores — Eleven Brands</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="./color_palette.css">
+</head>
+<body>
+
+<!-- HEADER + NAV -->
+<header class="site-header">
+  <div class="nav-logo" id="nav-logo">
+    Paleta de Cores
+    <span>Documentação · Eleven Brands</span>
+  </div>
+  <nav class="nav">
+    <div class="nav-links">
+      <a href="#tipografia"><span class="nav-dot"></span> Tipografia</a>
+      <a href="#principio"><span class="nav-dot"></span> Princípio</a>
+      <a href="#justificativa"><span class="nav-dot"></span> Justificativa</a>
+      <a href="#institucionais"><span class="nav-dot"></span> Institucionais</a>
+      <a href="#categorica"><span class="nav-dot"></span> Categórica</a>
+      <a href="#sentimento"><span class="nav-dot"></span> Sentimento</a>
+      <a href="#superficies"><span class="nav-dot"></span> Superfícies</a>
+      <a href="#texto"><span class="nav-dot"></span> Texto</a>
+      <a href="#praticas"><span class="nav-dot"></span> Boas Práticas</a>
+      <a href="#proibicoes"><span class="nav-dot"></span> Proibições</a>
+      <a href="#governanca"><span class="nav-dot"></span> Governança</a>
+    </div>
+  </nav>
+</header>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-label">Documentação Oficial · Power BI · v1.0</div>
+  <h1>Paleta de Cores<br>Eleven Brands</h1>
+  <p class="cover-sub">Sistema de cores para dashboards Power BI</p>
+  <div class="cover-tags">
+    <span class="cover-tag">OrganiHaus</span>
+    <span class="cover-tag">MillHouse</span>
+    <span class="cover-tag">Angélique</span>
+  </div>
+</div>
+
+<div class="doc-body">
+
+  <!-- SEÇÃO 1 — TIPOGRAFIA -->
+  <div class="section" id="tipografia">
+    <div class="section-header">
+      <span class="section-number">01</span>
+      <h2 class="section-title">Tipografia</h2>
+    </div>
+    <div class="prose">
+      <p>A tipografia é tratada como infraestrutura de leitura, não como elemento estético. O objetivo é garantir previsibilidade visual, boa renderização em TV e notebook e hierarquia clara da informação.</p>
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-title">Fonte padrão</div>
+      <div style="font-size:22px; font-weight:600; color:var(--text-title); letter-spacing:-0.01em;">Segoe UI</div>
+      <div style="font-size:12px; color:var(--gray-mid); margin-top:4px;">Nativa do Power BI · Não utilizar fontes externas</div>
+    </div>
+
+    <table class="type-table" style="margin-top:16px;">
+      <thead>
+        <tr>
+          <th>Elemento</th>
+          <th>Variação</th>
+          <th>Exemplo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Títulos / KPIs / Headers</td>
+          <td>Semibold</td>
+          <td><span class="font-semibold" style="font-size:16px; color:var(--text-title);">Receita Total</span></td>
+        </tr>
+        <tr>
+          <td>Labels / eixos / tabelas</td>
+          <td>Regular</td>
+          <td><span class="font-regular" style="color:var(--text-label);">Janeiro · Fevereiro · Março</span></td>
+        </tr>
+        <tr>
+          <td>Textos de apoio</td>
+          <td>Regular (menor)</td>
+          <td><span class="font-regular" style="font-size:11px; color:var(--gray-mid);">Fonte: Relatório Interno</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="rules-list" style="margin-top:20px;">
+      <div class="rule-item"><div class="rule-dot red"></div><span>Não utilizar fontes externas</span></div>
+      <div class="rule-item"><div class="rule-dot red"></div><span>Não misturar famílias tipográficas</span></div>
+      <div class="rule-item"><div class="rule-dot red"></div><span>Não utilizar itálico</span></div>
+      <div class="rule-item"><div class="rule-dot red"></div><span>CAPS LOCK apenas para siglas</span></div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 2 — PRINCÍPIO DE USO -->
+  <div class="section" id="principio">
+    <div class="section-header">
+      <span class="section-number">02</span>
+      <h2 class="section-title">Princípio de Uso</h2>
+    </div>
+    <div class="prose">
+      <p>As cores não são decorativas. Cada grupo possui um papel funcional fixo. Misturar papéis compromete a leitura e não é permitido.</p>
+    </div>
+    <div class="principles-grid">
+      <div class="principle-card">
+        <div class="principle-label">Categóricas</div>
+        <div class="principle-text">Diferenciar categorias (marca, canal, país, linha, etc.)</div>
+      </div>
+      <div class="principle-card">
+        <div class="principle-label">Sentimento</div>
+        <div class="principle-text">Indicar estado ou performance do dado</div>
+      </div>
+      <div class="principle-card">
+        <div class="principle-label">Estruturais</div>
+        <div class="principle-text">Garantir leitura, contraste e hierarquia visual</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 3 — JUSTIFICATIVA -->
+  <div class="section" id="justificativa">
+    <div class="section-header">
+      <span class="section-number">03</span>
+      <h2 class="section-title">Justificativa do Sistema</h2>
+    </div>
+    <div class="prose">
+      <p>A paleta foi construída para acomodar as três marcas simultaneamente, sem competir com suas identidades individuais. O desafio da holding é não escolher um dos eixos, mas criar um ponto de interseção entre eles.</p>
+    </div>
+
+    <div class="brand-justify">
+      <div class="brand-card">
+        <div class="brand-bar" style="background: #668197;"></div>
+        <div class="brand-card-name">OrganiHaus</div>
+        <div class="brand-card-desc">Clareza, ordem e racionalidade visual. Tons frios, neutros e controlados.</div>
+      </div>
+      <div class="brand-card">
+        <div class="brand-bar" style="background: #C68065;"></div>
+        <div class="brand-card-name">MillHouse</div>
+        <div class="brand-card-desc">Calor, materialidade e sensação de lar. Tons orgânicos e terrosos.</div>
+      </div>
+      <div class="brand-card">
+        <div class="brand-bar" style="background: #CEBDB0;"></div>
+        <div class="brand-card-name">Angélique</div>
+        <div class="brand-card-desc">Expressão, delicadeza e suavidade estética. Cores dessaturadas e sensoriais.</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <div class="callout-icon">🌿</div>
+      <div class="callout-text">O <strong>verde sálvia dessaturado (#68907E)</strong> cumpre o papel de cor institucional por ser racional o suficiente para OrganiHaus, orgânico o suficiente para MillHouse e suave o suficiente para Angélique. As demais cores orbitam em neutralidade controlada. O sistema comunica governança, estabilidade e leitura executiva, não branding de consumo.</div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 4 — CORES INSTITUCIONAIS -->
+  <div class="section" id="institucionais">
+    <div class="section-header">
+      <span class="section-number">04</span>
+      <h2 class="section-title">Cores Institucionais</h2>
+    </div>
+    <div class="color-pair">
+      <div class="color-card">
+        <div class="color-swatch" style="background:#68907E;"></div>
+        <div class="color-meta">
+          <div class="color-name">Verde Sálvia Dessaturado</div>
+          <div class="color-hex">#68907E · Primária</div>
+          <div class="color-use-label">Uso</div>
+          <ul class="color-use-list">
+            <li>Destaques institucionais</li>
+            <li>Estados ativos / selecionados</li>
+            <li>Ênfase positiva sem comparação direta</li>
+          </ul>
+          <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--bg-page);">
+            <div class="color-use-label" style="color:var(--negative);">Restrições</div>
+            <ul class="color-use-list">
+              <li style="color:var(--negative);">Não usar como fundo dominante</li>
+              <li style="color:var(--negative);">Não usar para alertas</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="color-card">
+        <div class="color-swatch" style="background:#47515A;"></div>
+        <div class="color-meta">
+          <div class="color-name">Grafite Quente</div>
+          <div class="color-hex">#47515A · Secundária</div>
+          <div class="color-use-label">Uso</div>
+          <ul class="color-use-list">
+            <li>Headers</li>
+            <li>KPIs principais</li>
+            <li>Textos de alta hierarquia</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 5 — PALETA CATEGÓRICA -->
+  <div class="section" id="categorica">
+    <div class="section-header">
+      <span class="section-number">05</span>
+      <h2 class="section-title">Paleta Categórica</h2>
+    </div>
+    <div class="prose">
+      <p>Usada exclusivamente para diferenciar categorias (marca, canal, país, linha, etc.). A ordem define prioridade visual no Power BI e não deve ser alterada. A mesma categoria deve manter a mesma cor em todas as páginas.</p>
+    </div>
+
+    <div class="palette-grid">
+      <div class="palette-row">
+        <span class="palette-order">1</span>
+        <div class="palette-dot" style="background:#68907E;"></div>
+        <div class="palette-info">
+          <div class="palette-name">Verde Sálvia Dessaturado</div>
+          <div class="palette-note">Primária — categoria principal</div>
+        </div>
+        <span class="palette-hex">#68907E</span>
+      </div>
+      <div class="palette-row">
+        <span class="palette-order">2</span>
+        <div class="palette-dot" style="background:#668197;"></div>
+        <div class="palette-info">
+          <div class="palette-name">Azul Acinzentado</div>
+        </div>
+        <span class="palette-hex">#668197</span>
+      </div>
+      <div class="palette-row">
+        <span class="palette-order">3</span>
+        <div class="palette-dot" style="background:#C68065;"></div>
+        <div class="palette-info">
+          <div class="palette-name">Terracota Suave</div>
+          <div class="palette-note">Destaque narrativo · storytelling</div>
+        </div>
+        <span class="palette-hex">#C68065</span>
+      </div>
+      <div class="palette-row">
+        <span class="palette-order">4</span>
+        <div class="palette-dot" style="background:#7A95A3;"></div>
+        <div class="palette-info">
+          <div class="palette-name">Azul Petróleo Claro</div>
+        </div>
+        <span class="palette-hex">#7A95A3</span>
+      </div>
+      <div class="palette-row">
+        <span class="palette-order">5</span>
+        <div class="palette-dot" style="background:#8FAF9A;"></div>
+        <div class="palette-info">
+          <div class="palette-name">Verde Claro</div>
+          <div class="palette-note">Apenas como "Outros" ou base comparativa</div>
+        </div>
+        <span class="palette-hex">#8FAF9A</span>
+      </div>
+      <div class="palette-row">
+        <span class="palette-order">6</span>
+        <div class="palette-dot" style="background:#A1A9B3;"></div>
+        <div class="palette-info">
+          <div class="palette-name">Cinza Médio</div>
+        </div>
+        <span class="palette-hex">#A1A9B3</span>
+      </div>
+      <div class="palette-row">
+        <span class="palette-order">7</span>
+        <div class="palette-dot" style="background:#CEBDB0;"></div>
+        <div class="palette-info">
+          <div class="palette-name">Taupe Claro</div>
+        </div>
+        <span class="palette-hex">#CEBDB0</span>
+      </div>
+      <div class="palette-row">
+        <span class="palette-order">8</span>
+        <div class="palette-dot" style="background:#47515A;"></div>
+        <div class="palette-info">
+          <div class="palette-name">Grafite Quente</div>
+        </div>
+        <span class="palette-hex">#47515A</span>
+      </div>
+    </div>
+
+    <div class="rules-list" style="margin-top:20px;">
+      <div class="rule-item"><div class="rule-dot red"></div><span>Não criar cores fora do tema</span></div>
+      <div class="rule-item"><div class="rule-dot red"></div><span>Não reordenar cores manualmente</span></div>
+      <div class="rule-item"><div class="rule-dot red"></div><span>Verde Claro (#8FAF9A): não usar como categoria principal nem junto com a primária no mesmo visual</span></div>
+      <div class="rule-item"><div class="rule-dot red"></div><span>Terracota (#C68065): não usar como default operacional</span></div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 6 — CORES DE SENTIMENTO -->
+  <div class="section" id="sentimento">
+    <div class="section-header">
+      <span class="section-number">06</span>
+      <h2 class="section-title">Cores de Sentimento</h2>
+    </div>
+    <div class="prose">
+      <p>Estas cores não fazem parte da paleta categórica e não devem ser usadas para categorias. Indicam exclusivamente o estado do dado.</p>
+    </div>
+    <div class="sentiment-grid">
+      <div class="sentiment-card">
+        <div class="sentiment-color" style="background:#4CAF7A;"></div>
+        <div>
+          <div class="sentiment-label">Positivo</div>
+          <div class="sentiment-hex">#4CAF7A</div>
+          <div class="sentiment-meaning">Desempenho acima do esperado</div>
+        </div>
+      </div>
+      <div class="sentiment-card">
+        <div class="sentiment-color" style="background:#D64545;"></div>
+        <div>
+          <div class="sentiment-label">Negativo</div>
+          <div class="sentiment-hex">#D64545</div>
+          <div class="sentiment-meaning">Exige ação imediata</div>
+        </div>
+      </div>
+      <div class="sentiment-card">
+        <div class="sentiment-color" style="background:#E3A008;"></div>
+        <div>
+          <div class="sentiment-label">Atenção</div>
+          <div class="sentiment-hex">#E3A008</div>
+          <div class="sentiment-meaning">Risco ou ponto de atenção</div>
+        </div>
+      </div>
+      <div class="sentiment-card">
+        <div class="sentiment-color" style="background:#9AA0A6;"></div>
+        <div>
+          <div class="sentiment-label">Neutro</div>
+          <div class="sentiment-hex">#9AA0A6</div>
+          <div class="sentiment-meaning">Ausência de variação relevante</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 7 — SUPERFÍCIES -->
+  <div class="section" id="superficies">
+    <div class="section-header">
+      <span class="section-number">07</span>
+      <h2 class="section-title">Superfícies</h2>
+    </div>
+    <div class="surfaces-grid">
+      <div class="surface-card">
+        <div class="surface-preview" style="background:#F4F5F3;">Fundo</div>
+        <div class="surface-meta">
+          <div class="surface-name">Fundo da Página</div>
+          <div class="surface-hex">#F4F5F3</div>
+        </div>
+      </div>
+      <div class="surface-card">
+        <div class="surface-preview" style="background:#FBFAFA; border-bottom:1px solid var(--border);">Visual</div>
+        <div class="surface-meta">
+          <div class="surface-name">Fundo do Visual</div>
+          <div class="surface-hex">#FBFAFA</div>
+        </div>
+      </div>
+      <div class="surface-card">
+        <div class="surface-preview" style="background:var(--bg-page); border: 3px solid #DADDDD;">Borda</div>
+        <div class="surface-meta">
+          <div class="surface-name">Borda do Visual</div>
+          <div class="surface-hex">#DADDDD</div>
+        </div>
+      </div>
+    </div>
+    <div class="rules-list" style="margin-top:16px;">
+      <div class="rule-item"><div class="rule-dot red"></div><span>Não usar fundos coloridos em visuais</span></div>
+      <div class="rule-item"><div class="rule-dot red"></div><span>Não remover bordas para fins estéticos</span></div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 8 — TEXTO -->
+  <div class="section" id="texto">
+    <div class="section-header">
+      <span class="section-number">08</span>
+      <h2 class="section-title">Texto</h2>
+    </div>
+    <div class="prose">
+      <p>Contraste é prioritário em relação à estética.</p>
+    </div>
+    <div class="text-color-grid">
+      <div class="text-color-card">
+        <div class="text-color-sample" style="color:#1F2427;">Aa Bb Cc</div>
+        <div class="text-color-role">Títulos</div>
+        <div class="text-color-hex-badge">#1F2427</div>
+      </div>
+      <div class="text-color-card">
+        <div class="text-color-sample" style="color:#47515A;">Aa Bb Cc</div>
+        <div class="text-color-role">Labels / Eixos</div>
+        <div class="text-color-hex-badge">#47515A</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 9 — BOAS PRÁTICAS -->
+  <div class="section" id="praticas">
+    <div class="section-header">
+      <span class="section-number">09</span>
+      <h2 class="section-title">Boas Práticas</h2>
+    </div>
+    <div class="principles-grid">
+      <div class="principle-card">
+        <div class="principle-label">Simplicidade</div>
+        <div class="principle-text">Se um visual ficou confuso, reduza categorias antes de adicionar cores.</div>
+      </div>
+      <div class="principle-card">
+        <div class="principle-label">Hierarquia</div>
+        <div class="principle-text">Posição → Tamanho → Cor. Nessa ordem de prioridade.</div>
+      </div>
+      <div class="principle-card">
+        <div class="principle-label">Economia</div>
+        <div class="principle-text">Se tudo está colorido, nada é importante.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 10 — PROIBIÇÕES -->
+  <div class="section" id="proibicoes">
+    <div class="section-header">
+      <span class="section-number">10</span>
+      <h2 class="section-title">Proibições</h2>
+    </div>
+    <div class="prohibit-grid">
+      <div class="prohibit-item"><span class="prohibit-x">✕</span> Gradientes</div>
+      <div class="prohibit-item"><span class="prohibit-x">✕</span> Sombras</div>
+      <div class="prohibit-item"><span class="prohibit-x">✕</span> Paletas arco-íris</div>
+      <div class="prohibit-item"><span class="prohibit-x">✕</span> Cores saturadas sem função</div>
+      <div class="prohibit-item"><span class="prohibit-x">✕</span> Gráfico com paleta diferente</div>
+    </div>
+  </div>
+
+  <!-- SEÇÃO 11 — GOVERNANÇA -->
+  <div class="section" id="governanca">
+    <div class="section-header">
+      <span class="section-number">11</span>
+      <h2 class="section-title">Governança</h2>
+    </div>
+    <div class="gov-box">
+      <div class="gov-icon">⚖️</div>
+      <div>
+        <div class="gov-title">Consistência acima de preferência</div>
+        <div class="gov-text">Todo dashboard publicado deve utilizar o tema oficial. Exceções só são permitidas quando há justificativa funcional clara. A consistência do sistema é mais importante do que preferência individual.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Eleven Brands · Documentação de Cores · Dashboards Power BI
+</div>
+
+<script src="../assets/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Amazon Multi-Marketplace — Duplicação de Dados via SP-API</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="stylesheet" href="./amazon_multimarketplace_dedup.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div id="nav-logo" class="nav-logo">
+    Multi-Marketplace
+    <span>Referência Técnica · Eleven Brands</span>
+  </div>
+  <nav class="nav">
+    <div class="nav-links">
+      <a href="#conta"><span class="nav-dot"></span> Conta Unificada</a>
+      <a href="#coleta"><span class="nav-dot"></span> Coleta OpenBridge</a>
+      <a href="#impacto"><span class="nav-dot"></span> Exemplo: sp_fba_reimbursements</a>
+      <a href="#estrategias"><span class="nav-dot"></span> Estratégias</a>
+      <a href="#referencias"><span class="nav-dot"></span> Referências</a>
+    </div>
+  </nav>
+</header>
+
+<div class="main">
+
+<div class="cover">
+  <div class="cover-label">Referência Técnica · Data Team · v0.1 · Preliminar</div>
+  <h1>Amazon Multi-Marketplace<br>Duplicação de Dados via SP-API</h1>
+  <p class="cover-sub">Comportamento, impacto e estratégias de deduplicação para contas unificadas</p>
+  <div class="cover-tags">
+    <span class="cover-tag">SP-API</span>
+    <span class="cover-tag">OpenBridge</span>
+    <span class="cover-tag">FBA Reimbursements</span>
+    <span class="cover-tag">BigQuery</span>
+  </div>
+</div>
+
+<div class="doc-body">
+  <!-- 01 -->
+  <div class="section" id="conta">
+    <div class="section-header">
+      <span class="section-number">01</span>
+      <h2 class="section-title">Conta Unificada Multi-Marketplace</h2>
+    </div>
+    <div class="prose">
+      <p>A Amazon define como conta unificada aquela em que um único <strong>seller_id</strong> é compartilhado entre múltiplos marketplaces de uma mesma região geográfica. Nas regiões Europa (EU) e América do Norte (NA), um vendedor registrado em um país principal pode ter outros marketplaces vinculados automaticamente ao mesmo seller_id.</p>
+      <p>Por exemplo: um vendedor registrado na Alemanha (DE) pode ter FR, GB, IT, ES, NL, TR e outros habilitados sob a mesma conta, todos compartilhando um único identificador de vendedor.</p>
+    </div>
+    <div class="callout blue">
+      <div class="callout-icon">⚠️</div>
+      <div class="callout-text"><strong>Nossa conta é multimercado — e isso independe do report consultado.</strong> A duplicação de dados ocorre em qualquer relatório puxado via SP-API enquanto a conta permanecer com múltiplos marketplaces vinculados. O que varia entre reports é o <strong>grau de complexidade para deduplicar</strong>: alguns oferecem identificadores confiáveis que permitem deduplicação determinística; outros tornam o processo mais complexo, demorado ou incerto; e alguns casos — como eventos sem pedido vinculado — podem tornar a deduplicação praticamente impossível.</div>
+    </div>
+    <div class="two-col">
+      <div class="info-card" style="margin-top:0;">
+        <div class="info-card-title">América do Norte (NA)</div>
+        <table class="data-table" style="margin-top:8px;">
+          <thead><tr><th>Código</th><th>País</th></tr></thead>
+          <tbody>
+            <tr><td>US</td><td>Estados Unidos (padrão)</td></tr>
+            <tr><td>CA</td><td>Canadá</td></tr>
+            <tr><td>MX</td><td>México</td></tr>
+            <tr><td>BR</td><td>Brasil</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="info-card" style="margin-top:0;">
+        <div class="info-card-title">Europa (EU)</div>
+        <table class="data-table" style="margin-top:8px;">
+          <thead><tr><th>Código</th><th>País</th></tr></thead>
+          <tbody>
+            <tr><td>DE</td><td>Alemanha (padrão)</td></tr>
+            <tr><td>FR</td><td>França</td></tr>
+            <tr><td>GB</td><td>Reino Unido</td></tr>
+            <tr><td>IT</td><td>Itália</td></tr>
+            <tr><td>ES</td><td>Espanha</td></tr>
+            <tr><td>NL</td><td>Holanda</td></tr>
+            <tr><td>TR</td><td>Turquia</td></tr>
+            <tr><td>SE</td><td>Suécia</td></tr>
+            <tr><td>PL</td><td>Polônia</td></tr>
+            <tr><td>BE</td><td>Bélgica</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 02 -->
+  <div class="section" id="coleta">
+    <div class="section-header">
+      <span class="section-number">02</span>
+      <h2 class="section-title">Como o OpenBridge Coleta os Dados</h2>
+    </div>
+    <div class="prose">
+      <p>A OpenBridge não sabe a priori se um vendedor possui uma conta unificada. Ela consulta a SP-API e recebe a lista de marketplace IDs associados ao seller_id. Em seguida, faz <strong>uma requisição separada por marketplace</strong>.</p>
+      <p>Para contas unificadas, a Amazon pode retornar os mesmos dados em resposta a qualquer um dos marketplaces da conta. A OpenBridge armazena cada resposta com o <code>ob_marketplace_id</code> correspondente à requisição feita — não ao dado real. O resultado é uma linha por marketplace para o mesmo registro.</p>
+    </div>
+    <div class="flow">
+      <div class="flow-step highlight">
+        <div class="flow-step-icon">🔌</div>
+        <div class="flow-step-label">SP-API</div>
+        <div class="flow-step-sub">Requisição por marketplace</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-step-icon">📦</div>
+        <div class="flow-step-label">Amazon</div>
+        <div class="flow-step-sub">Retorna mesmos dados para DE, FR, GB...</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-step-icon">🔄</div>
+        <div class="flow-step-label">OpenBridge</div>
+        <div class="flow-step-sub">1 linha por ob_marketplace_id</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-step-icon">🗄️</div>
+        <div class="flow-step-label">BigQuery</div>
+        <div class="flow-step-sub">N linhas idênticas</div>
+      </div>
+    </div>
+    <div class="callout blue">
+      <div class="callout-icon">ℹ️</div>
+      <div class="callout-text">O campo <strong>ob_marketplace_id</strong> é inserido pelo OpenBridge e reflete apenas o marketplace usado na requisição à SP-API, não o marketplace onde o evento ocorreu de fato. Por isso, ele <strong>não pode ser usado como identificador confiável de marketplace</strong> para contas unificadas.</div>
+    </div>
+  </div>
+
+  <!-- 03 -->
+  <div class="section" id="impacto">
+    <div class="section-header">
+      <span class="section-number">03</span>
+      <h2 class="section-title">Exemplo: <code style="font-family:var(--font-mono);font-size:18px;">sp_fba_reimbursements</code></h2>
+    </div>
+    <div class="prose">
+      <p>O problema descrito nas seções anteriores se manifesta em qualquer report da SP-API, mas a complexidade da deduplicação varia. O <strong>sp_fba_reimbursements</strong> é usado aqui como exemplo por ilustrar os dois extremos: casos onde a deduplicação é viável e casos onde ela é, na prática, impossível.</p>
+      <p>Este relatório não contém uma coluna de marketplace confiável. O comportamento de duplicação afeta os registros de forma diferente dependendo da presença ou não de um pedido vinculado.</p>
+    </div>
+    <div class="two-col">
+      <div class="gov-card">
+        <div class="gov-card-header can">Com amazon_order_id — Contornável</div>
+        <div class="gov-card-body">
+          <p style="font-size:13px; color:var(--text-label); line-height:1.6; margin-bottom:12px;">O pedido pertence a um marketplace específico. É possível cruzar com a dimensão de pedidos para identificar o marketplace real e filtrar a linha correta.</p>
+          <div class="callout" style="padding:10px 14px; margin-top:0;">
+            <div class="callout-icon" style="font-size:14px;">✅</div>
+            <div class="callout-text" style="font-size:12px;">Implementado em <strong>vw_full_reimbursements_by_amazon_order_id</strong></div>
+          </div>
+        </div>
+      </div>
+      <div class="gov-card">
+        <div class="gov-card-header cannot">Sem amazon_order_id — Problema em aberto</div>
+        <div class="gov-card-body">
+          <p style="font-size:13px; color:var(--text-label); line-height:1.6; margin-bottom:12px;">Para eventos como <code>Lost_Warehouse</code> e <code>Damaged_Warehouse</code>, não existe âncora de marketplace. Não há forma determinística de identificar qual das N linhas representa o evento real.</p>
+          <div class="callout amber" style="padding:10px 14px; margin-top:0;">
+            <div class="callout-icon" style="font-size:14px;">⚠️</div>
+            <div class="callout-text" style="font-size:12px;">Sem estratégia de deduplicação definida</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-title">Exemplo real — reimbursement_id 6665181942</div>
+      <div class="two-col">
+        <div class="gov-card">
+          <div class="gov-card-header can">Dado real (1 evento)</div>
+          <div class="gov-card-body" style="padding:14px 16px;">
+            <ul class="gov-list">
+              <li>reason: Lost_Warehouse</li>
+              <li>amount_total: 15.48 EUR</li>
+              <li>amazon_order_id: NULL</li>
+              <li>sku: EU-OHPB-MBRSBR-2M-25-30</li>
+            </ul>
+          </div>
+        </div>
+        <div class="gov-card">
+          <div class="gov-card-header cannot">BigQuery (10 linhas duplicadas)</div>
+          <div class="gov-card-body" style="padding:14px 16px;">
+            <ul class="gov-list">
+              <li>A13V1IB3VIYZZH → IT</li>
+              <li>A1805IZSGTT6HS → DE</li>
+              <li>A1C3SOZRARQ6R3 → ES</li>
+              <li>A1F83G8C2ARO7P → GB</li>
+              <li>A1PA6795UKMFR9 → FR</li>
+              <li style="color:var(--gray-mid);">... e mais 5 marketplaces</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBSECAO: PIPELINE (dentro do exemplo sp_fba_reimbursements) -->
+  <div class="section" id="pipeline" style="border-left: 3px solid var(--border); padding-left: 24px; margin-left: 8px;">
+    <div class="section-header" style="border-bottom: none; margin-bottom: 12px; padding-bottom: 0;">
+      <h3 class="section-title" style="font-size: 18px; color: var(--text-label);">Implementação Atual no Pipeline</h3>
+    </div>
+    <div class="prose">
+      <p>A arquitetura atual divide os reembolsos em três views, todas lendo de <code>vw_full_reimbursements_base</code>.</p>
+    </div>
+    <div class="rules-list">
+      <div class="rule-item">
+        <div class="rule-dot"></div>
+        <span><strong>vw_full_reimbursements_base</strong> — Une a OpenBridge (a partir de 2024-11-01) com o relatório baixado manualmente (anterior a 2024-11-01). Pode conter duplicatas. Não deve ser usada diretamente para relatórios.</span>
+      </div>
+      <div class="rule-item">
+        <div class="rule-dot"></div>
+        <span><strong>vw_full_reimbursements_by_amazon_order_id</strong> — Filtra reembolsos com amazon_order_id preenchido. Resolve marketplace via cruzamento com dimensão de pedidos. Deduplicação implementada com lógica de três condições.</span>
+      </div>
+      <div class="rule-item">
+        <div class="rule-dot amber"></div>
+        <span><strong>vw_full_reimbursements_by_reason</strong> — Filtra reembolsos sem amazon_order_id. <strong>Não possui estratégia de deduplicação determinística</strong> para registros da OpenBridge. Requer definição antes de uso em contextos financeiros.</span>
+      </div>
+    </div>
+
+    <div class="code-block"><span class="c">-- Exemplo do problema: mesmo reimbursement_id com 10 linhas distintas</span>
+<span class="k">SELECT</span>
+  reimbursement_id,
+  <span class="f">COUNT</span>(*) <span class="k">AS</span> total_rows,
+  <span class="f">COUNT</span>(<span class="k">DISTINCT</span> ob_marketplace_id) <span class="k">AS</span> distinct_marketplaces,
+  <span class="f">SUM</span>(amount_total) <span class="k">AS</span> inflated_total
+<span class="k">FROM</span> vw_full_reimbursements_base
+<span class="k">WHERE</span> reimbursement_id = <span class="s">6665181942</span>
+  <span class="k">AND</span> amazon_order_id <span class="k">IS NULL</span>
+<span class="k">GROUP BY</span> <span class="s">1</span>
+<span class="c">-- Resultado: 10 linhas, 10 marketplaces, total inflado em 10x</span></div>
+  </div>
+
+  <!-- 04 -->
+  <div class="section" id="estrategias">
+    <div class="section-header">
+      <span class="section-number">04</span>
+      <h2 class="section-title">Estratégias de Deduplicação Avaliadas</h2>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr><th>Estratégia</th><th>Viabilidade</th><th>Observação</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Cruzamento com amazon_order_id</td>
+          <td><span class="badge-ok">Viável</span></td>
+          <td>Implementado em <code>vw_full_reimbursements_by_amazon_order_id</code>. Funciona quando o reembolso está vinculado a um pedido.</td>
+        </tr>
+        <tr>
+          <td>Filtro por ob_marketplace_id esperado</td>
+          <td><span class="badge-warn">Parcial</span></td>
+          <td>Funciona apenas para vendedores com marketplace padrão conhecido. Quebraria para reembolsos de marketplaces secundários legítimos.</td>
+        </tr>
+        <tr>
+          <td>MAX(ob_modified_date) como chave</td>
+          <td><span class="badge-warn">Parcial</span></td>
+          <td>Reduz duplicatas mas não elimina — múltiplos marketplaces podem ter o mesmo ob_modified_date.</td>
+        </tr>
+        <tr>
+          <td>Deduplica por reimbursement_id + sku + reason</td>
+          <td><span class="badge-block">Não viável</span></td>
+          <td>Um mesmo reimbursement_id pode ter múltiplas linhas legítimas para SKUs ou eventos distintos.</td>
+        </tr>
+        <tr>
+          <td>Download manual do Seller Central</td>
+          <td><span class="badge-ok">Referência confiável</span></td>
+          <td>O relatório baixado diretamente não sofre duplicação. Usado como source de verdade para o período anterior a 2024-11-01.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 05 -->
+  <div class="section" id="referencias">
+    <div class="section-header">
+      <span class="section-number">05</span>
+      <h2 class="section-title">Referências</h2>
+    </div>
+    <ul class="ref-list">
+      <li class="ref-item">
+        <div class="ref-source">OpenBridge</div>
+        <div class="ref-title">Amazon Unified, Multi-Marketplace Seller Accounts</div>
+        <a class="ref-link" href="https://docs.openbridge.com/en/articles/5013964-amazon-unified-multi-marketplace-seller-accounts" target="_blank">https://docs.openbridge.com/en/articles/5013964-amazon-unified-multi-marketplace-seller-accounts</a>
+      </li>
+      <li class="ref-item">
+        <div class="ref-source">OpenBridge</div>
+        <div class="ref-title">How To Query Amazon Multi-market Accounts With Data Duplication</div>
+        <a class="ref-link" href="https://docs.openbridge.com/en/articles/6538970-how-to-query-amazon-multi-market-accounts-with-data-duplication" target="_blank">https://docs.openbridge.com/en/articles/6538970-how-to-query-amazon-multi-market-accounts-with-data-duplication</a>
+      </li>
+      <li class="ref-item">
+        <div class="ref-source">Amazon SP-API</div>
+        <div class="ref-title">Fulfillment by Amazon (FBA) Reports — FBA Reimbursements Report</div>
+        <a class="ref-link" href="https://developer-docs.amazon.com/sp-api/docs/report-type-values-fba#fba-reimbursements-report" target="_blank">https://developer-docs.amazon.com/sp-api/docs/report-type-values-fba#fba-reimbursements-report</a>
+      </li>
+    </ul>
+  </div>
+
+</div>
+
+</div><!-- /.main -->
+
+<div class="footer">
+  Eleven Brands · Data Team · Referência Técnica — Amazon Multi-Marketplace · v0.1 · Abril 2025
+</div>
+
+<script src="../assets/nav.js"></script>
+</body>
+</html>
