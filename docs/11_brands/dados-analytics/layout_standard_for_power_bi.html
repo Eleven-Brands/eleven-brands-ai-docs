@@ -27,6 +27,7 @@
       <a href="#consistencia"><span class="nav-dot"></span> Consistência</a>
       <a href="#governanca"><span class="nav-dot"></span> Governança</a>
       <a href="#proibicoes"><span class="nav-dot"></span> Proibições</a>
+      <a href="#calculadora"><span class="nav-dot"></span> Calculadora</a>
     </div>
   </nav>
 </header>
@@ -41,6 +42,7 @@
     <span class="cover-tag">Margens</span>
     <span class="cover-tag">Header</span>
     <span class="cover-tag">KPIs</span>
+    <a href="#calculadora" class="cover-tag highlight">↓ Calculadora de Posicionamento</a>
   </div>
 </div>
 
@@ -406,6 +408,57 @@
     </div>
   </div>
 
+  <!-- 10 CALCULADORA -->
+  <div class="section" id="calculadora">
+    <div class="section-header">
+      <span class="section-number">10</span>
+      <h2 class="section-title">Calculadora de Posicionamento</h2>
+    </div>
+    <div class="prose">
+      <p>Para páginas no formato retrato, use esta calculadora para obter os valores exatos de posicionamento vertical. Informe a altura total da página e, se necessário, a altura da forma orgânica.</p>
+    </div>
+
+    <div class="calc-wrapper">
+      <div class="calc-inputs">
+        <div class="calc-field">
+          <label for="input-h">H — Altura da página (px)</label>
+          <input type="number" id="input-h" placeholder="ex: 1800" min="94" step="1" oninput="calcular()">
+          <div class="field-hint">Altura total da página no Power BI</div>
+        </div>
+        <div class="calc-field">
+          <label for="input-a">A — Altura da forma orgânica (px)</label>
+          <input type="number" id="input-a" placeholder="ex: 400" min="1" step="1" oninput="calcular()">
+          <div class="field-hint">Necessário apenas para TopFormaOrg</div>
+        </div>
+      </div>
+
+      <div class="calc-results">
+        <div class="calc-result-card primary" id="card-centro">
+          <div class="calc-result-label">CentroUtil</div>
+          <div class="calc-result-value empty" id="val-centro">—</div>
+          <div class="calc-result-unit">px</div>
+          <div class="calc-result-formula">( H / 2 ) + 47</div>
+        </div>
+        <div class="calc-result-card" id="card-forma-centro">
+          <div class="calc-result-label">TopFormaCentro</div>
+          <div class="calc-result-value empty" id="val-forma-centro">—</div>
+          <div class="calc-result-unit">px</div>
+          <div class="calc-result-formula">( H / 2 ) + 39</div>
+        </div>
+        <div class="calc-result-card" id="card-forma-org">
+          <div class="calc-result-label">TopFormaOrg</div>
+          <div class="calc-result-value empty" id="val-forma-org">—</div>
+          <div class="calc-result-unit">px</div>
+          <div class="calc-result-formula">( H / 2 ) + 47 − ( A / 2 )</div>
+        </div>
+      </div>
+
+      <div class="calc-note" id="calc-note">
+        Preencha H para calcular CentroUtil e TopFormaCentro. Preencha A também para obter TopFormaOrg.
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <div class="footer">
@@ -413,5 +466,49 @@
 </div>
 
 <script src="../assets/nav.js"></script>
+<script>
+function calcular() {
+  var h = parseFloat(document.getElementById('input-h').value);
+  var a = parseFloat(document.getElementById('input-a').value);
+
+  var valCentro = document.getElementById('val-centro');
+  var valFormaCentro = document.getElementById('val-forma-centro');
+  var valFormaOrg = document.getElementById('val-forma-org');
+  var note = document.getElementById('calc-note');
+
+  var hOk = !isNaN(h) && h > 0;
+  var aOk = !isNaN(a) && a > 0;
+
+  if (hOk) {
+    var centro = (h / 2) + 47;
+    var formaCentro = (h / 2) + 39;
+
+    valCentro.textContent = Math.round(centro);
+    valCentro.classList.remove('empty');
+
+    valFormaCentro.textContent = Math.round(formaCentro);
+    valFormaCentro.classList.remove('empty');
+
+    if (aOk) {
+      var formaOrg = (h / 2) + 47 - (a / 2);
+      valFormaOrg.textContent = Math.round(formaOrg);
+      valFormaOrg.classList.remove('empty');
+      note.textContent = 'Valores calculados para H = ' + Math.round(h) + ' px · A = ' + Math.round(a) + ' px';
+    } else {
+      valFormaOrg.textContent = '—';
+      valFormaOrg.classList.add('empty');
+      note.textContent = 'Preencha A (altura da forma orgânica) para calcular TopFormaOrg.';
+    }
+  } else {
+    valCentro.textContent = '—';
+    valCentro.classList.add('empty');
+    valFormaCentro.textContent = '—';
+    valFormaCentro.classList.add('empty');
+    valFormaOrg.textContent = '—';
+    valFormaOrg.classList.add('empty');
+    note.textContent = 'Preencha H para calcular CentroUtil e TopFormaCentro. Preencha A também para obter TopFormaOrg.';
+  }
+}
+</script>
 </body>
 </html>
