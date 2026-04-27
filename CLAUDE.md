@@ -23,6 +23,11 @@ eleven-brands-ai-docs/
 └── README.md            # Human-facing documentation
 ```
 
+## Claude Behavior Rules
+
+- **Never delete files** without explicit user confirmation, even if they appear unused or redundant.
+- **Never create a git commit** without the user explicitly asking for one in that message.
+
 ## Standards
 
 Every skill follows the Eleven Brands skill standard defined in `skills/skills-creator/SKILL.md`. When working in this repo, always consult that file before creating or editing any skill.
@@ -68,6 +73,14 @@ Output ZIPs are generated in `dist/`. Upload them at `claude.ai/customize/skills
 ### Special case: documentation-editor
 
 The `documentation-editor` build script injects extra assets beyond `references/` — it also copies `docs/11_brands/assets/nav.js`, `docs/11_brands/assets/style.css`, and `docs/11_brands/dados-analytics/color_palette.html` into a temporary `skills/documentation-editor/assets/` folder before zipping. This gives the skill access to the shared design assets and a reference example page at build time. Both `references/` and `assets/` are cleaned up after zipping.
+
+## Global Claude Code Commands
+
+Skill commands for Claude Code live in `~/.claude/commands/` and are available globally from any folder. A shared reference file lives in `~/.claude/references/color_palette_11_brands.md`.
+
+**Syncing is automatic** — each build script strips the YAML frontmatter from `SKILL.md` and writes it to `~/.claude/commands/[skill-name].md`. Running `build-all.ps1` also syncs `~/.claude/references/`. No manual updates needed.
+
+`presentation-creator` is **claude.ai only** and is not synced to `~/.claude/commands/` — it depends on the claude.ai Linux container (LibreOffice, pdftoppm, `/mnt/` paths).
 
 ## Current Skills
 
