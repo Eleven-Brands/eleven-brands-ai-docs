@@ -1,0 +1,59 @@
+name: 💡 Feature Request
+description: Suggest a new feature, enhancement, or pipeline idea.
+title: "[FEATURE] <short description>"
+labels: [enhancement]
+body:
+
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature! Please fill out the form below so we can better understand your idea.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Feature Summary
+      description: Brief description of the feature or enhancement.
+      placeholder: Add a button to export filtered data as Excel
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Problem / Motivation
+      description: What problem does this solve or what value does it add?
+      placeholder: We currently support CSV export only, but Excel is a common ask from clients.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_solution
+    attributes:
+      label: Proposed Solution
+      description: Describe how you would like this to be implemented or what you imagine the solution looking like.
+      placeholder: Add an "Export as Excel" button next to the CSV button using pandas `to_excel()` and a Streamlit download widget.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected Component
+      description: Which part of the project is this feature related to?
+      options:
+        - pipelines
+        - webapps
+        - common utilities
+        - documentation
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Add any other information, screenshots, links, or code references here.
+    validations:
+      required: false

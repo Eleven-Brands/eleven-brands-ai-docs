@@ -1,0 +1,12 @@
+# CODEOWNERS file
+#
+# Lines starting with `#` are comments.
+# Each non-comment line is: <file-pattern> <owner> [<owner>…]
+# Owners can be individual GitHub usernames or teams:
+#   • @username
+#   • @org/team-name
+
+# Require review only for automation-sensitive areas
+.github/workflows/ @Eleven-Brands/engineering
+scripts/           @Eleven-Brands/engineering
+.github/actions/   @Eleven-Brands/engineering
