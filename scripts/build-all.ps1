@@ -3,7 +3,7 @@ Write-Host ""
 
 & "$PSScriptRoot\build-agile-management.ps1"
 & "$PSScriptRoot\build-documentation-editor.ps1"
-& "$PSScriptRoot\build-task-organizer.ps1"
+& "$PSScriptRoot\build-clickup-manager.ps1"
 & "$PSScriptRoot\build-skills-creator.ps1"
 & "$PSScriptRoot\build-presentation-creator.ps1"
 

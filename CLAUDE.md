@@ -89,5 +89,5 @@ Skill commands for Claude Code live in `~/.claude/commands/` and are available g
 | `agile-management` | Sprint planning, OKRs, backlog, meeting analysis |
 | `documentation-editor` | HTML documentation creation and editing |
 | `presentation-creator` | PowerPoint/Google Slides presentation creation |
-| `task-organizer` | ClickUp task creation and organization |
+| `clickup-manager` | Full ClickUp workspace management: tasks, chat, goals, time tracking, docs |
 | `skills-creator` | Creates and reviews skill files following this standard |
