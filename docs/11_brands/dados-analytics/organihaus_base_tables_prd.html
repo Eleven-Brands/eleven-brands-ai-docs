@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OrganiHaus Base Tables — PRD do Modelo Power BI · Eleven Brands</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="./organihaus_base_tables_prd.css">
+</head>
+<body>
+
+<!-- HEADER + NAV -->
+<header class="site-header">
+  <div class="nav-logo" id="nav-logo">
+    OrganiHaus Base Tables
+    <span>PRD · Modelo Power BI</span>
+  </div>
+  <nav class="nav">
+    <div class="nav-links">
+      <a href="#proposito"><span class="nav-dot"></span> Propósito</a>
+      <a href="#arquitetura"><span class="nav-dot"></span> Arquitetura</a>
+      <a href="#expressions"><span class="nav-dot"></span> Funções M</a>
+      <a href="#fatos"><span class="nav-dot"></span> Fatos</a>
+      <a href="#dimensoes"><span class="nav-dot"></span> Dimensões</a>
+      <a href="#auxiliares"><span class="nav-dot"></span> Auxiliares</a>
+      <a href="#relacionamentos"><span class="nav-dot"></span> Relacionamentos</a>
+      <a href="#measures"><span class="nav-dot"></span> Measures</a>
+      <a href="#convencoes"><span class="nav-dot"></span> Convenções</a>
+      <a href="#atencao"><span class="nav-dot"></span> Atenção</a>
+    </div>
+  </nav>
+</header>
+
+<div class="cover">
+  <div class="cover-label">PRD · Modelo Semântico Power BI · v1.0</div>
+  <h1>OrganiHaus<br>Base Tables</h1>
+  <p class="cover-sub">Documentação completa do modelo: tabelas, relacionamentos, measures, fontes de dados e tratamentos M</p>
+  <div class="cover-tags">
+    <span class="cover-tag">Power BI · TMDL</span>
+    <span class="cover-tag">BigQuery</span>
+    <span class="cover-tag">Google Sheets</span>
+    <span class="cover-tag">Amazon Seller Central</span>
+    <span class="cover-tag">3PL</span>
+    <span class="cover-tag">604 measures</span>
+  </div>
+</div>
+
+<div class="doc-body">
+
+  <!-- 01 PROPÓSITO -->
+  <div class="section" id="proposito">
+    <div class="section-header">
+      <span class="section-number">01</span>
+      <h2 class="section-title">Propósito do Modelo</h2>
+    </div>
+    <div class="prose">
+      <p>O <strong>OrganiHaus Base Tables</strong> é o modelo semântico Power BI que serve como fonte de verdade para todos os dashboards analíticos da empresa. Ele consolida dados de vendas, inventário, anúncios, taxas, devoluções e logística da operação Amazon e dos parceiros 3PL em um único modelo reutilizável via template <code style="font-family:var(--font-mono); font-size:12px;">.pbit</code>.</p>
+      <p>Este documento descreve o que existe dentro do modelo: as tabelas, seus tratamentos, as fontes externas, os relacionamentos e o catálogo completo de medidas DAX. Serve como referência técnica para quem precisa manter o modelo, criar novos dashboards a partir dele, ou entender de onde vem cada métrica exposta nos relatórios.</p>
+    </div>
+
+    <div class="callout blue">
+      <div class="callout-icon">📁</div>
+      <div class="callout-text"><strong>Localização do modelo:</strong> <code style="font-family:var(--font-mono); font-size:12px;">G:\Shared drives\OrganiHaus\3.1 - OH Data &amp; Reports\Dashboards\OrganiHaus - Base Tables\OrganiHaus - Base Tables.SemanticModel</code> — formato PBIP/TMDL, lido diretamente como texto.</div>
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-title">Escopo coberto</div>
+      <div class="legend-row">
+        <span><span class="legend-dot"></span> 47 tabelas fato</span>
+        <span><span class="legend-dot blue"></span> 17 dimensões</span>
+        <span><span class="legend-dot terra"></span> 30+ auxiliares e dinâmicas</span>
+        <span><span class="legend-dot amber"></span> 604 measures</span>
+        <span><span class="legend-dot"></span> 130+ relacionamentos</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 02 ARQUITETURA -->
+  <div class="section" id="arquitetura">
+    <div class="section-header">
+      <span class="section-number">02</span>
+      <h2 class="section-title">Arquitetura de Dados</h2>
+    </div>
+    <div class="prose">
+      <p>O modelo combina três classes de fonte: <strong>BigQuery</strong> (warehouse principal, organizado em camadas Bronze / Silver / Gold), arquivos da pasta compartilhada (<strong>Excel, CSV, parquet</strong> em folders Amazon Seller Central, AWD e 3PL) e <strong>Google Sheets</strong> (controles operacionais editados pela equipe). Todas as fontes são acessadas via custom functions M centralizadas em <code style="font-family:var(--font-mono); font-size:12px;">expressions.tmdl</code>.</p>
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-title">Fontes externas consolidadas</div>
+      <table class="data-table compact">
+        <thead><tr><th>Fonte</th><th>Camada / Local</th><th>O que entrega</th></tr></thead>
+        <tbody>
+          <tr><td>BigQuery — projeto <code>amazon-sp-api-openbridge</code></td><td><code>1_Gold_*</code></td><td>Vendas, devoluções, ads, fees, inventory ledger, fee preview, listings</td></tr>
+          <tr><td>BigQuery — projeto <code>amazon-sp-api-openbridge</code></td><td><code>2_Silver_*</code></td><td>Grade &amp; resell, voice of customer, business reports, inventory by country</td></tr>
+          <tr><td>BigQuery — projeto <code>amazon-sp-api-openbridge</code></td><td><code>3_Bronze_Aux</code></td><td>Lookups técnicos: tipos de ads, países de inventário</td></tr>
+          <tr><td>Amazon Seller Central — folder</td><td><code>fulfillment\</code></td><td>Storage fee mensal, FBA shipments, inventory ledger by country, grade &amp; resell, returns processing fee, aged inventory surcharge</td></tr>
+          <tr><td>Amazon Seller Central — folder</td><td><code>awd\</code></td><td>AWD storage / transportation / processing fees mensais</td></tr>
+          <tr><td>Amazon Campaign Manager — folder</td><td><code>temp_last30d_for_power_bi\</code></td><td>SP advertised &amp; purchased products dos últimos 10 dias (staging)</td></tr>
+          <tr><td>Third Party Logistics — folder</td><td><code>third_party_logistics\</code></td><td>Estoque dos parceiros DCI (CA), PGS (CA/GB), WWL (GB), SSG (US)</td></tr>
+          <tr><td>Standalone files</td><td><code>standalone_files\</code></td><td>SKUs &amp; pricing DB, lifecycle, ABC classification, storage fee rate, exchange rates, support cases, velocity DB, landed cost, promotion tracker, market &amp; base price, FBA fee expected, aging projection, SCPR</td></tr>
+          <tr><td>Google Sheets</td><td>4 planilhas (US / CA / EU / GB)</td><td>Order Records e Transfer Details editados pela equipe</td></tr>
+          <tr><td>Logs operacionais</td><td><code>TIO\Logs de cálculo\</code> e <code>VO\Logs de cálculo\</code></td><td>Outputs do modelo de otimização de inventário (TIO) e velocidade (VO)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-title">Convenção de prefixos por tabela</div>
+      <table class="data-table compact">
+        <thead><tr><th>Prefixo</th><th>Tipo</th><th>Exemplos</th></tr></thead>
+        <tbody>
+          <tr><td><code>fact_*</code></td><td>Fato (padrão)</td><td>fact_velocity, fact_fba_inventory, fact_sp_advertised_products</td></tr>
+          <tr><td><code>f.*</code> / <code>f_*</code></td><td>Fato (legado/histórico)</td><td>f.AllOrders, f.AmazonFulfilledShipments, f_promotion_tracker</td></tr>
+          <tr><td><code>dim_*</code></td><td>Dimensão</td><td>dim_calendar_aux, dim_skus_aux, dim_sponsored_ads</td></tr>
+          <tr><td><code>d.*</code></td><td>Dimensão (forma curta)</td><td>d.AmazonOrderId, d.fulfillmentCentersAddress</td></tr>
+          <tr><td><code>z.*</code></td><td>Tabela técnica / dinâmica / parâmetro</td><td>z.dynamic_time_frame_switch, z.list_of_warehouse_names, z.errorFile</td></tr>
+          <tr><td><code>STAGING_*</code></td><td>Staging (não final)</td><td>STAGING_fact_cross_sales</td></tr>
+          <tr><td><code>tab_*</code> / <code>parameter_*</code></td><td>Tabela de parâmetros / what-if</td><td>tab_parameters_measurements, parameter_low_stock_tacos_acos</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-title">Propriedades globais do modelo</div>
+      <div class="kv"><b>Culture</b> en-US (modelo e source query)</div>
+      <div class="kv"><b>Versão</b> Power BI V3 (defaultPowerBIDataSourceVersion)</div>
+      <div class="kv"><b>Data access</b> fastCombine, legacyRedirects, returnErrorValuesAsNull</div>
+      <div class="kv"><b>Implicit measures</b> desabilitadas (<code>discourageImplicitMeasures</code>)</div>
+      <div class="kv"><b>Time intelligence automática</b> desabilitada (<code>__PBI_TimeIntelligenceEnabled = 0</code>) — todas as comparações de período usam DAX explícito</div>
+      <div class="kv"><b>Compatibility level</b> 1600</div>
+      <div class="kv"><b>Query groups</b> STAGING · Custom Functions and Parameters · Amazon (Fulfillment / AWD / Business Reports / Campaign Manager / Inventory Reports) · Third Party Logistics · Dimensions · Google Sheets · Standalone Files · LOG/SCPR</div>
+    </div>
+  </div>
+
+  <!-- 03 EXPRESSIONS -->
+  <div class="section" id="expressions">
+    <div class="section-header">
+      <span class="section-number">03</span>
+      <h2 class="section-title">Parâmetros, Funções M e Expressões</h2>
+    </div>
+    <div class="prose">
+      <p>Tudo que é compartilhado entre tabelas — caminhos, conexões com BigQuery, transformações reutilizáveis — vive em <code>expressions.tmdl</code>. As tabelas consomem essas expressões nas suas partições M.</p>
+    </div>
+
+    <div class="subhead">Parâmetros de caminho</div>
+    <table class="data-table compact">
+      <thead><tr><th>Nome</th><th>Tipo</th><th>Valor</th><th>Finalidade</th></tr></thead>
+      <tbody>
+        <tr><td><code>rootPathLang</code></td><td>Text</td><td>Detecta dinamicamente "Shared drives" vs "Drives compartilhados"</td><td>Compatibilidade pt-BR / en-US do Google Drive desktop</td></tr>
+        <tr><td><code>path_to_files</code></td><td>Text</td><td><code>rootPathLang &amp; "OrganiHaus\3.1 - OH Data &amp; Reports\"</code></td><td>Raiz para todos os arquivos do projeto</td></tr>
+        <tr><td><code>folderPath_amazon</code></td><td>Text</td><td><code>path_to_files &amp; "OH DataBases\NOVO DB\amazon"</code></td><td>Raiz da extração do Amazon Seller Central</td></tr>
+        <tr><td><code>folderPath_thirdPartyLogistics</code></td><td>Text</td><td><code>... &amp; "OH DataBases\NOVO DB\third_party_logistics"</code></td><td>Raiz dos relatórios 3PL</td></tr>
+        <tr><td><code>Parameter1</code> a <code>Parameter20</code> (+1(2))</td><td>Binary</td><td>Sample files referenciados</td><td>Seeds de transformação dinâmica para folders de CSV/Excel</td></tr>
+      </tbody>
+    </table>
+
+    <div class="subhead">Custom functions M</div>
+    <div class="tbl-cat">
+      <div class="info-card">
+        <div class="info-card-title">bigQuery_customFunction <span class="area-tag blue">conexão</span></div>
+        <div class="kv"><b>Param</b> <code>project_id</code> (formato <code>"projeto.dataset.tabela"</code>)</div>
+        <div class="kv"><b>Faz</b> conecta ao BigQuery via BillingProject e retorna a view/tabela. Usada em quase todas as fact tables que consomem o warehouse.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fnCarregarGoogleSheet <span class="area-tag blue">conexão</span></div>
+        <div class="kv"><b>Param</b> <code>url</code>, <code>nomeTabela</code></div>
+        <div class="kv"><b>Faz</b> abre planilha pública via <code>GoogleSheets.Contents</code>, posiciona na aba e promove headers pulando 3 linhas. Alimenta US / CA / EU / GB Order Records.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fnConverterDatas <span class="area-tag taupe">transformação</span></div>
+        <div class="kv"><b>Faz</b> converte colunas de texto para data, substituindo "-" e "0" por null antes da conversão. Usada nos pipelines de Order Records.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fnRenomearColunasPadronizadas <span class="area-tag taupe">transformação</span></div>
+        <div class="kv"><b>Faz</b> normaliza nomes de colunas de transporte (ex: "Pick up Date" → "Actual - Pick up Date").</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fnAdicionarLeadTimes <span class="area-tag taupe">transformação</span></div>
+        <div class="kv"><b>Faz</b> calcula 5 lead times em dias: Total, Ocean, Last Leg, Production, Handling — a partir de datas de pedido / pickup / partida / chegada / entrega.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fnTransformar0EmNuloDinamico <span class="area-tag taupe">transformação</span></div>
+        <div class="kv"><b>Faz</b> substitui zeros por null em colunas numéricas listadas. Usada para CBM e medidas opcionais.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fnExcluirLinhasVazias <span class="area-tag taupe">transformação</span></div>
+        <div class="kv"><b>Faz</b> remove linhas com <code>Order Id</code> vazio/null.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">utcToLocalTimeConversion <span class="area-tag taupe">transformação</span></div>
+        <div class="kv"><b>Param</b> <code>salesMarketplace</code>, <code>purchaseDateUtc</code></div>
+        <div class="kv"><b>Faz</b> converte UTC para horário local conforme marketplace (US / CA / MX / GB / EU), aplicando regras de Daylight Saving específicas. Subdividida em <code>us_ca_*</code>, <code>mx_*</code>, <code>gb_eu_*</code>.</div>
+      </div>
+    </div>
+
+    <div class="subhead">Expressões compartilhadas (não-função)</div>
+    <table class="data-table compact">
+      <thead><tr><th>Nome</th><th>Tipo</th><th>Fonte</th></tr></thead>
+      <tbody>
+        <tr><td><code>dInventoryCountry</code></td><td>Lookup</td><td>BigQuery <code>3_Bronze_Aux.td_inventory_country</code></td></tr>
+        <tr><td><code>dgradeAndResellAmazonFoundSkus</code></td><td>Lookup enriquecida</td><td>BigQuery <code>2_Silver_Aux.vw_full_grade_and_resell_amazon_found_skus</code> + left join com SKUs (raw)</td></tr>
+        <tr><td><code>SKUs (raw)</code></td><td>Master</td><td>Excel <code>Product Information and Pricing Database.xlsx</code> (skusByRegion / hierarchy / dimensions) — gera variações para marketplaces não-Amazon</td></tr>
+        <tr><td><code>fAllListingsReport</code></td><td>Snapshot</td><td>BigQuery <code>1_Gold_Aux.vw_full_all_listings_report_last_date</code></td></tr>
+        <tr><td><code>raw_bq_inventoryLedgerByCountry</code></td><td>Raw</td><td>BigQuery <code>2_Silver_Inventory.vw_full_inventory_ledger_summary_by_country</code> (filtrado SELLABLE)</td></tr>
+        <tr><td><code>aux_dailyShareOfStorageFee</code></td><td>Auxiliar</td><td>BigQuery <code>1_Gold_Aux.vw_full_daily_share_storage_fee</code></td></tr>
+        <tr><td><code>aux_LifeCycleLastDate</code></td><td>Auxiliar</td><td>Agrupa <code>raw_lifeCycle</code> por max(date) por SKU/região</td></tr>
+        <tr><td><code>fact_voice_of_customer_report</code></td><td>Fact (live)</td><td>BigQuery <code>2_Silver_Business_Reports.vw_voice_of_customer</code></td></tr>
+        <tr><td><code>fact_abc_classification</code></td><td>Fact (live)</td><td>Excel <code>db_abc_classification.xlsx</code> (sheet Classification)</td></tr>
+        <tr><td><code>fact_storage_fee_rate</code></td><td>Fact (live)</td><td>Excel <code>db.storagefee_rate.xlsx</code> — expandido trimestre→3 meses</td></tr>
+        <tr><td><code>fact_last_tem_volume_for_storage_fee</code></td><td>Fact derivada</td><td>Agrupa raw_monthlyStorageFee por FNSKU / inventory_region pegando último mês</td></tr>
+        <tr><td><code>fact_average_quantity_on_hand</code></td><td>Fact derivada</td><td>Calculada sobre raw_bq_inventoryLedgerByCountry (média diária SELLABLE)</td></tr>
+        <tr><td><code>fact_estimated_future_monthly_storage_fee</code></td><td>Fact derivada</td><td>Merge das três anteriores: <code>avg_qty × item_volume × rate_prorated</code></td></tr>
+        <tr><td><code>silver_fStorageFeeMonthly</code></td><td>Silver</td><td>raw_monthlyStorageFee × dInventoryCountry, agrupada por mês/moeda/região_fnsku</td></tr>
+        <tr><td><code>silver_fStorageFeeMeasurementsByRegion</code></td><td>Silver</td><td>Dimensões (tamanho, peso) ponderadas por quantity on hand</td></tr>
+        <tr><td><code>STAGING - us_temp_last10d_SPPurchasedProducts</code></td><td>Staging</td><td>Excel temporário com últimos 10 dias de Sponsored Products purchased</td></tr>
+        <tr><td><code>STAGING - us_temp_last10d_SPAdvertisedProducts</code></td><td>Staging</td><td>Excel temporário com últimos 10 dias de Sponsored Products advertised</td></tr>
+        <tr><td><code>raw_3PL_CA_DCI / CA_PGS / GB_PGS / GB_WWL / US_SSG</code></td><td>Raw 3PL</td><td>Folders por parceiro logístico</td></tr>
+        <tr><td><code>raw_awdMonthlyStorageFee / TransportationFee / ProcessingFee</code></td><td>Raw AWD</td><td>Folders <code>awd\</code></td></tr>
+        <tr><td><code>raw_usCaMx_amazonFulfilledShipments / raw_gbEu_amazonFulfilledShipments</code></td><td>Raw</td><td>Folders FBA shipments</td></tr>
+        <tr><td><code>raw_usCaMx_inventoryLedgerByCountry / raw_gbEu_inventoryLedgerByCountry</code></td><td>Raw</td><td>Folders inventory ledger by country</td></tr>
+        <tr><td><code>raw_usCaMx__fbaGrade&amp;ResellReport / raw_gbEu__fbaGrade&amp;ResellReport</code></td><td>Raw</td><td>Folders customer concessions FBA</td></tr>
+        <tr><td><code>raw_monthlyStorageFee</code></td><td>Raw</td><td>Folder <code>payments_monthly_storage_fee</code></td></tr>
+        <tr><td><code>raw_lifeCycle</code></td><td>Raw</td><td>Excel <code>db_life_cycle.xlsx</code></td></tr>
+        <tr><td><code>f_seller_suport_cases_old</code></td><td>Legado</td><td>CSV <code>db_amazon_seller_support_cases.csv</code></td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <div class="callout-icon">🔌</div>
+      <div class="callout-text"><strong>Pipeline Order Records.</strong> Cada região (US / CA / EU / GB) passa pela mesma cadeia de funções: <code>fnCarregarGoogleSheet → fnConverterDatas → fnRenomearColunasPadronizadas → fnTransformar0EmNuloDinamico → fnAdicionarLeadTimes → fnExcluirLinhasVazias</code>. É a única região com pipeline custom — todas as outras tabelas consomem direto do BigQuery ou de folders.</div>
+    </div>
+  </div>
+
+  <!-- 04 FATOS -->
+  <div class="section" id="fatos">
+    <div class="section-header">
+      <span class="section-number">04</span>
+      <h2 class="section-title">Tabelas Fato</h2>
+    </div>
+    <div class="prose">
+      <p>São 47 tabelas fato cobrindo nove áreas de negócio. Cada cartão abaixo lista a fonte M, a granularidade (uma linha equivale a o quê) e as colunas-chave usadas em relacionamentos ou medidas.</p>
+    </div>
+
+    <div class="subhead">Vendas</div>
+    <div class="tbl-cat">
+      <div class="info-card">
+        <div class="info-card-title">f.AllOrders <span class="area-tag">vendas</span></div>
+        <div class="kv"><b>Fonte</b> BigQuery <code>1_Gold_Sales_Returns.vw_full_all_orders</code></div>
+        <div class="kv"><b>Tratamentos</b> seleção de colunas; cálculos de imposto (US/CA = tax_after_price; demais = tax_within_price); LOOKUPVALUE em <code>fact_average_landed_cost</code> para landed_cost</div>
+        <div class="kv"><b>Granularidade</b> item × pedido</div>
+        <div class="kv"><b>Chaves</b> <code>order_id_SK</code>, <code>key_marketplace_sku</code>, <code>date_all_orders</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">f.AmazonFulfilledShipments <span class="area-tag">vendas</span></div>
+        <div class="kv"><b>Fonte</b> append de <code>raw_usCaMx_amazonFulfilledShipments</code> + <code>raw_gbEu_amazonFulfilledShipments</code></div>
+        <div class="kv"><b>Tratamentos</b> join com <code>d.AmazonOrderId</code> para obter <code>order_id_SK</code> e <code>sales_marketplace</code>; criação da chave marketplace|SKU</div>
+        <div class="kv"><b>Granularidade</b> shipment</div>
+        <div class="kv"><b>Chaves</b> <code>order_id_SK</code>, <code>key_marketplace_sku</code>, <code>shipment_date</code>, <code>FC</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_amz_business_report <span class="area-tag">vendas</span></div>
+        <div class="kv"><b>Fonte</b> BigQuery <code>2_Silver_Business_Reports.vw_business_report_by_child</code></div>
+        <div class="kv"><b>Tratamentos</b> chave marketplace|child_asin; <code>buy_box_percentage / 100</code></div>
+        <div class="kv"><b>Granularidade</b> ASIN × marketplace × dia</div>
+        <div class="kv"><b>Chaves</b> <code>key_country_asin</code>, <code>date</code>, <code>parent_asin</code>, <code>child_asin</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_velocity <span class="area-tag">vendas</span></div>
+        <div class="kv"><b>Fonte</b> Excel <code>Velocity Database.xlsx</code></div>
+        <div class="kv"><b>Tratamentos</b> expansão da lista de datas (uma linha por dia ativo); chave Country|ASIN</div>
+        <div class="kv"><b>Granularidade</b> ASIN × país × dia</div>
+        <div class="kv"><b>Chaves</b> <code>Date</code>, <code>Key Column: Country | ASIN</code>; medidas: Daily/Weekly Velocity, Weekly MA Slow/Medium/Fast, Minimum Inventory</div>
+      </div>
+    </div>
+
+    <div class="subhead">Devoluções</div>
+    <div class="tbl-cat">
+      <div class="info-card">
+        <div class="info-card-title">f.FBACustomerReturns <span class="area-tag">devoluções</span></div>
+        <div class="kv"><b>Fonte</b> BigQuery <code>1_Gold_Sales_Returns.vw_full_fba_customer_returns</code></div>
+        <div class="kv"><b>Tratamentos</b> coluna calculada <code>is_sellable</code> a partir de detailed_disposition; SWITCH para <code>Return Reason Group</code></div>
+        <div class="kv"><b>Granularidade</b> devolução</div>
+        <div class="kv"><b>Chaves</b> <code>order_id_SK</code>, <code>key_marketplace_sku</code>, <code>date_fba_customer_return</code>, <code>purchase_date</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">f.us_returns_processing_fee <span class="area-tag amber">fees</span></div>
+        <div class="kv"><b>Fonte</b> Excel em <code>fulfillment\payments_returns_processing_fee\us_returns_processing_fee</code></div>
+        <div class="kv"><b>Tratamentos</b> conversão de tipos; marketplace fixo (US); chave marketplace|fnsku</div>
+        <div class="kv"><b>Granularidade</b> SKU × mês de cobrança</div>
+        <div class="kv"><b>Chaves</b> <code>key_marketplace_fnsku</code>, <code>date_shipment</code>, <code>date_charge</code>, <code>sku_fee_per_unit</code></div>
+      </div>
+    </div>
+
+    <div class="subhead">Inventário</div>
+    <div class="tbl-cat">
+      <div class="info-card">
+        <div class="info-card-title">Inventory Ledger <span class="area-tag terra">inventário</span></div>
+        <div class="kv"><b>Fonte</b> raw inventory ledger by country (US/CA/MX + GB/EU consolidados)</div>
+        <div class="kv"><b>Granularidade</b> SKU × país × dia × disposição</div>
+        <div class="kv"><b>Chaves</b> <code>Date</code>, <code>Key Column: Country | SKU</code>, <code>Location Group</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_fba_inventory <span class="area-tag terra">inventário</span></div>
+        <div class="kv"><b>Fonte</b> BigQuery <code>1_Gold_Inventory.vw_full_fba_manage_inventory</code></div>
+        <div class="kv"><b>Tratamentos</b> coerção de tipos para reservas (transfer / processing / customer order)</div>
+        <div class="kv"><b>Granularidade</b> SKU × região × dia (com 25+ colunas de buckets de aging)</div>
+        <div class="kv"><b>Chaves</b> <code>date_fba_inventory</code>, <code>key_inventory_region_sku</code>; medidas: <code>available</code>, <code>inv_age_*</code>, <code>estimated_storage_cost_next_month</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_fba_manage_inventory_real_time <span class="area-tag terra">inventário</span></div>
+        <div class="kv"><b>Fonte</b> BigQuery <code>1_Gold_Inventory.vw_full_fba_manage_inventory_real_time</code></div>
+        <div class="kv"><b>Tratamentos</b> passthrough</div>
+        <div class="kv"><b>Granularidade</b> snapshot real-time SKU × ASIN × região × condição</div>
+        <div class="kv"><b>Chaves</b> <code>key_inventory_region_sku</code>, <code>date_fba_manage_inventory_real_time</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_inventory_3pl <span class="area-tag terra">inventário</span></div>
+        <div class="kv"><b>Fonte</b> append de 4 raw 3PL (US_SSG, GB_WWL, GB_PGS, CA)</div>
+        <div class="kv"><b>Tratamentos</b> derivação de Inventory Region a partir do prefixo do campo Date; classificação Warehouse 3pl pelo nome</div>
+        <div class="kv"><b>Granularidade</b> SKU × região × localidade × dia</div>
+        <div class="kv"><b>Chaves</b> <code>Date</code>, <code>Key Column: Inventory Region | SKU</code>, <code>Warehouse 3pl</code>, <code>Location</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_inventory_ledger_by_fulfillment_center <span class="area-tag terra">inventário</span></div>
+        <div class="kv"><b>Fonte</b> BigQuery <code>1_Gold_Inventory.vw_full_inventory_ledger_summary_by_fulfillment_center</code></div>
+        <div class="kv"><b>Granularidade</b> SKU × país × FC × disposição × dia</div>
+        <div class="kv"><b>Chaves</b> <code>date</code>, <code>fulfillment_center</code>, <code>key_column_inventory_country_sku</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_awd_inventory_ledger_by_country <span class="area-tag terra">inventário</span></div>
+        <div class="kv"><b>Fonte</b> folder <code>fulfillment\inventory_awd_inventory_ledger_by_country\us_awd_*</code></div>
+        <div class="kv"><b>Tratamentos</b> agrupamento por (Date, Country, MSKU); média de package_qty; soma de cartons; <code>location_group = "AWD"</code></div>
+        <div class="kv"><b>Granularidade</b> SKU × país × dia</div>
+        <div class="kv"><b>Chaves</b> <code>date_awd_inventory_ledger</code>, <code>key_inventory_country_sku</code>, <code>location_group</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_life_cycle <span class="area-tag terra">inventário</span></div>
+        <div class="kv"><b>Fonte</b> <code>raw_lifeCycle</code> (staging) + chave SKU × região</div>
+        <div class="kv"><b>Granularidade</b> SKU × região × dia</div>
+        <div class="kv"><b>Chaves</b> <code>date_life_cycle</code>, <code>key_inventory_region_sku</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">f_aging_projection <span class="area-tag terra">inventário</span></div>
+        <div class="kv"><b>Fonte</b> Excel em <code>standalone_files\db_aging_projection</code> — primeiro arquivo do mês + último arquivo do diretório</div>
+        <div class="kv"><b>Tratamentos</b> agrupamento por mês; filtro de simulações válidas; chave inventory_region|SKU</div>
+        <div class="kv"><b>Granularidade</b> SKU × região × data de simulação</div>
+        <div class="kv"><b>Chaves</b> <code>date_aging_projection</code>, <code>file_date</code>, <code>key_inventory_region_sku</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact.aged_inventory_surcharge <span class="area-tag amber">fees</span></div>
+        <div class="kv"><b>Fonte</b> folder <code>fulfillment\payments_aged_inventory_surcharge</code> (binários via custom function)</div>
+        <div class="kv"><b>Tratamentos</b> conversão datetimezone→date; chave inventory_country|SKU; LOOKUPVALUE em <code>fact_exchange_rates</code> para <code>rate_surcharge_usd</code></div>
+        <div class="kv"><b>Granularidade</b> SKU × país × condição × dia de cobrança</div>
+        <div class="kv"><b>Chaves</b> <code>date_charge</code>, <code>key_inventory_country_sku</code>, <code>condition</code>, <code>surcharge-age-tier</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_estimated_future_daily_storage_fee <span class="area-tag amber">fees</span></div>
+        <div class="kv"><b>Fonte</b> join entre <code>aux_dailyShareOfStorageFee</code> e <code>fact_estimated_future_monthly_storage_fee</code></div>
+        <div class="kv"><b>Tratamentos</b> diluição mensal→diária; chave marketplace|SKU</div>
+        <div class="kv"><b>Granularidade</b> marketplace × SKU × dia</div>
+        <div class="kv"><b>Chaves</b> <code>date</code>, <code>key_marketplace_sku</code>, <code>estimated_daily_storage_fee</code></div>
+      </div>
+    </div>
+
+    <div class="subhead">Fees / Custos</div>
+    <div class="tbl-cat">
+      <div class="info-card">
+        <div class="info-card-title">fact_storage_fee_daily <span class="area-tag amber">fees</span></div>
+        <div class="kv"><b>Fonte</b> join <code>aux_dailyShareOfStorageFee</code> × <code>silver_fStorageFeeMonthly</code></div>
+        <div class="kv"><b>Tratamentos</b> diluição mensal→diária com arredondamento 6 casas; filtro currency não-nula</div>
+        <div class="kv"><b>Granularidade</b> marketplace × SKU × FNSKU × dia</div>
+        <div class="kv"><b>Chaves</b> <code>date_daily_share_of_storage_fee</code>, <code>key_marketplace_sku</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_storage_fee_measurements <span class="area-tag amber">fees</span></div>
+        <div class="kv"><b>Fonte</b> <code>silver_fStorageFeeMeasurementsByRegion</code></div>
+        <div class="kv"><b>Tratamentos</b> agrupamento por (mês, região, fnsku, units, weight, volume) ponderado por qty on hand</div>
+        <div class="kv"><b>Granularidade</b> região × FNSKU × mês</div>
+        <div class="kv"><b>Chaves</b> <code>month_of_charge</code>, <code>key_inventory_region_fnsku</code>; sides longest/median/shortest, item_volume, item_weight, quantity_on_hand</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_awd_monthly_storage_fee <span class="area-tag amber">fees</span></div>
+        <div class="kv"><b>Fonte</b> <code>raw_awdMonathlyStorageFee</code> [sic — typo na fonte]</div>
+        <div class="kv"><b>Tratamentos</b> expansão para uma linha por dia (daily_charged_amount = total / dias do mês)</div>
+        <div class="kv"><b>Granularidade</b> SKU × país × dia</div>
+        <div class="kv"><b>Chaves</b> <code>date</code>, <code>key_inventory_country_sku</code>, <code>daily_charged_amount</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_awd_monthly_processing_fee <span class="area-tag amber">fees</span></div>
+        <div class="kv"><b>Fonte</b> <code>raw_awdMonthlyProcessingFee</code></div>
+        <div class="kv"><b>Granularidade</b> SKU × país × mês × tipo de fee</div>
+        <div class="kv"><b>Chaves</b> <code>month_of_charge</code>, <code>fee_type</code>, <code>key_inventory_country_sku</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_awd_monthly_transportation_fee <span class="area-tag amber">fees</span></div>
+        <div class="kv"><b>Fonte</b> <code>raw_awdMonthlyTransportationFee</code></div>
+        <div class="kv"><b>Granularidade</b> SKU × país × mês × tipo de fee</div>
+        <div class="kv"><b>Chaves</b> <code>month_of_charge</code>, <code>fee_type</code>, <code>key_inventory_country_sku</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_awd_transportation_measurements <span class="area-tag amber">fees</span></div>
+        <div class="kv"><b>Fonte</b> reaproveita <code>raw_awdMonthlyTransportationFee</code></div>
+        <div class="kv"><b>Tratamentos</b> calcula longest/median/shortest sides via <code>List.MaxN</code>; box_volume = L×W×H/1728; mapeamento de unidades</div>
+        <div class="kv"><b>Granularidade</b> SKU × país × mês</div>
+        <div class="kv"><b>Chaves</b> <code>month_of_charge</code>, <code>key_inventory_country_sku</code>; box_volume, dimensões, unidades</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_fba_fee_expected <span class="area-tag amber">fees</span></div>
+        <div class="kv"><b>Fonte</b> Excel <code>db_fba_fee_expected.xlsx</code></div>
+        <div class="kv"><b>Tratamentos</b> expansão de período (start_end → hoje quando date_end null); chave country|ASIN</div>
+        <div class="kv"><b>Granularidade</b> país × ASIN × size_tier × dia</div>
+        <div class="kv"><b>Chaves</b> <code>key_sales_country_asin</code>, <code>date_list</code>, <code>size_tier</code>, fees por unidade (com SIPP / low_price)</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_fee_preview <span class="area-tag amber">fees</span></div>
+        <div class="kv"><b>Fonte</b> BigQuery <code>1_Gold_Fees.vw_full_fee_preview</code></div>
+        <div class="kv"><b>Tratamentos</b> coluna calculada <code>is_latest</code> via CALCULATE+MAX</div>
+        <div class="kv"><b>Granularidade</b> SKU × marketplace × dia</div>
+        <div class="kv"><b>Chaves</b> <code>key_sales_marketplace_sku</code>, <code>date_fee_preview</code>, <code>product_size_tier</code>, sides, item_volume, expected_fulfillment_fee_per_unit</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">f_storage_fee_rate <span class="area-tag amber">fees</span></div>
+        <div class="kv"><b>Fonte</b> Excel <code>db.storagefee_rate.xlsx</code> (sheet Storage_Fee_Rate)</div>
+        <div class="kv"><b>Granularidade</b> país × trimestre × data</div>
+        <div class="kv"><b>Chaves</b> <code>date_update</code>, <code>inventory_region</code>, <code>quarter</code>, <code>value</code></div>
+      </div>
+    </div>
+
+    <div class="subhead">Anúncios (Sponsored Ads)</div>
+    <div class="tbl-cat">
+      <div class="info-card">
+        <div class="info-card-title">fact_sp_advertised_products <span class="area-tag blue">ads</span></div>
+        <div class="kv"><b>Fonte</b> BigQuery <code>1_Gold_Amz_Ads.vw_full_amz_ads_sp_advertised_products</code></div>
+        <div class="kv"><b>Granularidade</b> SKU anunciado × campanha × dia (atribuição 7d)</div>
+        <div class="kv"><b>Chaves</b> <code>date_sp_advertised_products</code>, <code>key_marketplace_advertised_sku</code>, <code>sponsored_ads_type</code>; impressões, clicks, spend, advertised_sku_*_7d, other_sku_*_7d</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_sp_purchased_products <span class="area-tag blue">ads</span></div>
+        <div class="kv"><b>Fonte</b> BigQuery <code>1_Gold_Amz_Ads.vw_full_amz_ads_sp_purchased_products</code> + staging US últimos 10 dias</div>
+        <div class="kv"><b>Tratamentos</b> filtro <code>boolean_filter</code> remove US dos últimos 10 dias; append com <code>STAGING - us_temp_last10d_SPPurchasedProducts</code></div>
+        <div class="kv"><b>Granularidade</b> SKU anunciado × ASIN comprado × campanha × dia</div>
+        <div class="kv"><b>Chaves</b> <code>key_marketplace_advertised_sku</code>, <code>key_marketplace_purchased_asin</code>, <code>date_sp_purchased_products</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_sp_search_terms <span class="area-tag blue">ads</span></div>
+        <div class="kv"><b>Fonte</b> BigQuery <code>1_Gold_Amz_Ads.vw_full_amz_ads_sp_search_terms</code></div>
+        <div class="kv"><b>Granularidade</b> search term × campanha × dia (atribuição 7d)</div>
+        <div class="kv"><b>Chaves</b> <code>date_sp_search_terms</code>, <code>marketplace</code>, <code>customer_search_term</code>, <code>match_type</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_sb_attributed_purchase <span class="area-tag blue">ads</span></div>
+        <div class="kv"><b>Fonte</b> BigQuery <code>1_Gold_Amz_Ads.vw_full_amz_ads_sb_attributed_purchases</code></div>
+        <div class="kv"><b>Granularidade</b> campanha × ad group × ASIN comprado × dia (atribuição 14d)</div>
+        <div class="kv"><b>Chaves</b> <code>date_sb_attributed_purchase</code>, <code>key_marketplace_purchased_asin</code>; total_*_14d, new_to_brand_*_14d</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_sb_search_terms <span class="area-tag blue">ads</span></div>
+        <div class="kv"><b>Fonte</b> BigQuery <code>1_Gold_Amz_Ads.vw_full_amz_ads_sb_search_terms</code></div>
+        <div class="kv"><b>Granularidade</b> search term × campanha × dia</div>
+        <div class="kv"><b>Chaves</b> <code>date_sb_search_terms</code>, <code>customer_search_term</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_sb_spend_by_sku <span class="area-tag blue">ads</span></div>
+        <div class="kv"><b>Fonte</b> BigQuery <code>1_Gold_Amz_Ads.vw_full_amz_ads_consolidated_sb_attributed_orders_sales_spend</code></div>
+        <div class="kv"><b>Granularidade</b> ASIN × dia</div>
+        <div class="kv"><b>Chaves</b> <code>date_sb</code>, <code>key_marketplace_asin</code>; sb_orders, sb_sales, sb_spend</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_sd_advertised_products <span class="area-tag blue">ads</span></div>
+        <div class="kv"><b>Fonte</b> BigQuery <code>1_Gold_Amz_Ads.vw_full_amz_ads_sd_advertised_products</code></div>
+        <div class="kv"><b>Granularidade</b> SKU anunciado × campanha × dia (atribuição 14d)</div>
+        <div class="kv"><b>Chaves</b> <code>date_sb_advertised_products</code>, <code>key_marketplace_advertised_sku</code></div>
+      </div>
+    </div>
+
+    <div class="subhead">Logística e custo</div>
+    <div class="tbl-cat">
+      <div class="info-card">
+        <div class="info-card-title">fact_order_records <span class="area-tag taupe">logística</span></div>
+        <div class="kv"><b>Fonte</b> BigQuery <code>1_Gold_Google_Sheets.td_full_order_records</code></div>
+        <div class="kv"><b>Tratamentos</b> Title Case nas colunas; <code>fnAdicionarLeadTimes</code>; cálculo de delays (pickup/delivery/departure/arrival); EXW/Invoice USD; status produção/entrega</div>
+        <div class="kv"><b>Granularidade</b> pedido (PO)</div>
+        <div class="kv"><b>Chaves</b> <code>Order Id</code>, <code>Supplier</code>, <code>Freight Forwarder</code>, lead times, delays</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">Inbound Shipments <span class="area-tag taupe">logística</span></div>
+        <div class="kv"><b>Fonte</b> Google Sheets / BigQuery (inbound shipments)</div>
+        <div class="kv"><b>Granularidade</b> SKU × shipment</div>
+        <div class="kv"><b>Chaves</b> <code>Order Id</code>, <code>Key Column: Region | SKU</code>, <code>Delivery Date</code>, <code>Order Date</code>, <code>Deliver At Location</code>, <code>Origin</code>, <code>Supplier</code>, <code>Freight Forwarder</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">td_full_order_transfer_details <span class="area-tag taupe">logística</span></div>
+        <div class="kv"><b>Fonte</b> BigQuery <code>1_Gold_Google_Sheets.td_full_order_transfer_details</code></div>
+        <div class="kv"><b>Granularidade</b> SKU × transfer</div>
+        <div class="kv"><b>Chaves</b> <code>order_id</code>, <code>key_inventory_region_sku</code>, <code>delivery_date</code>; landed_cost, transfer/3pl/inbound fees</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_average_landed_cost <span class="area-tag taupe">custo</span></div>
+        <div class="kv"><b>Fonte</b> Excel <code>Average Landed Cost - Base SKU.xlsx</code></div>
+        <div class="kv"><b>Tratamentos</b> arredondamento de unit_cost; mapeamento de moeda por região; backfill de 2021 + FillDown</div>
+        <div class="kv"><b>Granularidade</b> SKU × região × dia</div>
+        <div class="kv"><b>Chaves</b> <code>date</code>, <code>key_inventory_region_sku</code>, <code>unit_cost</code>, <code>currency</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_exchange_rates <span class="area-tag taupe">câmbio</span></div>
+        <div class="kv"><b>Fonte</b> CSV <code>standalone_files\td_exchange_rates.csv</code></div>
+        <div class="kv"><b>Granularidade</b> par de moedas × dia</div>
+        <div class="kv"><b>Chaves</b> <code>date</code>, <code>currency_from</code>, <code>currency_to</code>, <code>ticker</code>, <code>exchange_rate</code></div>
+      </div>
+    </div>
+
+    <div class="subhead">Preços e promoções</div>
+    <div class="tbl-cat">
+      <div class="info-card">
+        <div class="info-card-title">f_promotion_tracker <span class="area-tag terra">promoções</span></div>
+        <div class="kv"><b>Fonte</b> Excel <code>db_promotion_tracker.xlsx</code></div>
+        <div class="kv"><b>Tratamentos</b> flag <code>is_aging</code> (detecta "aging" em Notes); chave inventory_region|SKU; categoria calculada (promo vs pricing)</div>
+        <div class="kv"><b>Granularidade</b> período de promoção único</div>
+        <div class="kv"><b>Chaves</b> <code>start_date</code>, <code>end_date</code>, <code>key_inventory_region_sku</code>, <code>price_promotion_action</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">f_aux_promo_tracker <span class="area-tag terra">promoções</span></div>
+        <div class="kv"><b>Fonte</b> Excel <code>db_promotion_tracker.xlsx</code></div>
+        <div class="kv"><b>Tratamentos</b> filtro de datas ≥ 2024-01-01; expansão para uma linha por dia ativo da promoção</div>
+        <div class="kv"><b>Granularidade</b> SKU × região × dia ativo</div>
+        <div class="kv"><b>Chaves</b> <code>activeDate</code>, <code>keyInventoryRegionSku</code>, <code>keyCountryAsin</code>, Category</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">f_db_loss_leader <span class="area-tag terra">preços</span></div>
+        <div class="kv"><b>Fonte</b> Excel <code>db_loss_leader.xlsx</code></div>
+        <div class="kv"><b>Tratamentos</b> end_date → DateTime.LocalNow() quando null; expansão diária; chave country|SKU</div>
+        <div class="kv"><b>Granularidade</b> país × SKU × dia ativo</div>
+        <div class="kv"><b>Chaves</b> <code>activeDate</code>, <code>key_country_sku</code>, <code>start_date</code>, <code>end_date</code>, <code>price</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">f_db_base_price <span class="area-tag terra">preços</span></div>
+        <div class="kv"><b>Fonte</b> Excel <code>db_market_base_price.xlsx</code> (sheet db_base_price)</div>
+        <div class="kv"><b>Granularidade</b> país × família nativa × dia</div>
+        <div class="kv"><b>Chaves</b> <code>date_base_price</code>, <code>key_salesCountry_nativeFamily</code>, <code>base_price</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">f_db_market_price <span class="area-tag terra">preços</span></div>
+        <div class="kv"><b>Fonte</b> Excel <code>db_market_base_price.xlsx</code> (sheet db_market_price)</div>
+        <div class="kv"><b>Tratamentos</b> remoção de hífens em colunas de preço</div>
+        <div class="kv"><b>Granularidade</b> país × família nativa × dia</div>
+        <div class="kv"><b>Chaves</b> <code>date_market_price</code>, <code>key_salesCountry_nativeFamily</code>, <code>market_price</code>, <code>promo_price</code>, <code>loss_leader</code></div>
+      </div>
+    </div>
+
+    <div class="subhead">Otimização de inventário (TIO / VO)</div>
+    <div class="tbl-cat">
+      <div class="info-card">
+        <div class="info-card-title">fact_db_results_tio <span class="area-tag">otimização</span></div>
+        <div class="kv"><b>Fonte</b> folder <code>5.2 - OH Inventory Management\TIO\Logs de cálculo\Oficial_For_Orders</code> (arquivo mais recente)</div>
+        <div class="kv"><b>Tratamentos</b> filtro de week mais antiga; "|"→"-" em SKU; chave <em>key_invenotry_region_sku</em> [<strong>typo conhecido</strong>]</div>
+        <div class="kv"><b>Granularidade</b> região × SKU × semana</div>
+        <div class="kv"><b>Chaves</b> <code>start_of_week</code>, <code>key_invenotry_region_sku</code>, ending_balance, demand_forecast, mandatory_transfer, storage_fee_amz</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_db_results_VO <span class="area-tag">otimização</span></div>
+        <div class="kv"><b>Fonte</b> folder <code>5.1 - OH Sales &amp; Performance\05. Forecasting\VO\Logs de cálculo\db_results</code> (arquivo mais recente)</div>
+        <div class="kv"><b>Tratamentos</b> join com Calendar (Year-Week); filtro <code>Date.IsInCurrentWeek = false</code>; expansão diária; ReplaceErrorValues</div>
+        <div class="kv"><b>Granularidade</b> região × ASIN × dia (expandida da semana)</div>
+        <div class="kv"><b>Chaves</b> <code>Date</code>, <code>Key Inventory Region | ASIN</code>, Calc_Velocity, Calc_Loss_of_Sales, Calc_Loss_of_Revenue</div>
+      </div>
+    </div>
+
+    <div class="subhead">Outros</div>
+    <div class="tbl-cat">
+      <div class="info-card">
+        <div class="info-card-title">fact_SCPR_all_reviews <span class="area-tag">SCPR</span></div>
+        <div class="kv"><b>Fonte</b> Excel <code>Supply Chain Performance Review (SCPR).xlsx</code> (sheet Form Answers)</div>
+        <div class="kv"><b>Tratamentos</b> Company Name condicional; preenchimento automático de Quarter/Year a partir de data; unpivot de comentários; join com <code>dim_SCPR_category</code>; Period = Year+Quarter</div>
+        <div class="kv"><b>Granularidade</b> empresa × atributo × período × comentário</div>
+        <div class="kv"><b>Chaves</b> <code>Quarter</code>, <code>Year</code>, <code>Company Name</code>, <code>Attribute</code>, <code>Grade</code>, <code>Weight</code>, <code>Period</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">f_seller_suport_cases <span class="area-tag">suporte</span></div>
+        <div class="kv"><b>Fonte</b> CSV <code>standalone_files\db_amazon_remeasurement_cases.csv</code></div>
+        <div class="kv"><b>Tratamentos</b> filtros para Region / ASIN / Case ID válidos; conversão de data pt-BR; tipagem de moeda</div>
+        <div class="kv"><b>Granularidade</b> caso de suporte</div>
+        <div class="kv"><b>Chaves</b> <code>Case ID</code>, <code>Date Created</code>, <code>Date Closed</code>, <code>Refunded Amount</code>, <code>Key Inventory Region | ASIN</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">fact_fbaGrade&amp;ResellReport <span class="area-tag">FBA</span></div>
+        <div class="kv"><b>Fonte</b> folder <code>customer_concessions_fba_grade_and_resell\</code> (US/CA/MX e GB/EU)</div>
+        <div class="kv"><b>Granularidade</b> SKU × marketplace × dia</div>
+        <div class="kv"><b>Chaves</b> <code>date</code>, <code>key_sales_marketplace_sku</code></div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">STAGING_fact_cross_sales <span class="area-tag taupe">staging</span></div>
+        <div class="kv"><b>Fonte</b> BigQuery <code>vw_full_cross_sales</code></div>
+        <div class="kv"><b>Granularidade</b> pedido × item × dia</div>
+        <div class="kv"><b>Chaves</b> <code>amazon_order_id</code>, <code>date_all_orders</code>, <code>key_sales_marketplace_sku_analysis</code>, <code>key_sales_marketplace_sku_cross_sales</code></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 05 DIMENSÕES -->
+  <div class="section" id="dimensoes">
+    <div class="section-header">
+      <span class="section-number">05</span>
+      <h2 class="section-title">Tabelas Dimensão</h2>
+    </div>
+    <div class="prose">
+      <p>As dimensões servem como hubs de filtro. <strong>Calendar</strong> e <strong>SKUs</strong> são os dois hubs principais — quase toda fato se conecta a pelo menos um deles.</p>
+    </div>
+
+    <div class="tbl-cat">
+      <div class="info-card">
+        <div class="info-card-title">Calendar <span class="area-tag">tempo</span></div>
+        <div class="kv"><b>Fonte</b> calculada (M) — de 01/01/2019 até hoje + 750 dias</div>
+        <div class="kv"><b>Granularidade</b> 1 dia</div>
+        <div class="kv"><b>Colunas</b> Date, Week/Month/Year Number 544, Year-Week, Year-Month, Year-Quarter, Start of Week/Month/Quarter/Year, End of Week/Month, Day of Week/Month, Month Name, Quarter, is_future</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">dim_calendar_aux <span class="area-tag">tempo</span></div>
+        <div class="kv"><b>Fonte</b> cópia renomeada de Calendar (hidden)</div>
+        <div class="kv"><b>Granularidade</b> 1 dia</div>
+        <div class="kv"><b>Uso</b> permite filtros de tempo independentes via relacionamento 1:1 inativo bidirecional</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">SKUs <span class="area-tag">produto</span></div>
+        <div class="kv"><b>Fonte</b> SKUs (raw) Excel + Grade &amp; Resell (BigQuery) + ABC Classification + All Listings Report + Life Cycle</div>
+        <div class="kv"><b>Granularidade</b> 1 SKU</div>
+        <div class="kv"><b>Chaves derivadas</b> Marketplace|SKU, Marketplace|ASIN, Marketplace|FNSKU, Country|SKU, Country|ASIN, Inventory Region|SKU, Inventory Region|ASIN, Inventory Region|FNSKU, Country|Native Family</div>
+        <div class="kv"><b>Atributos</b> Brand, Product Type (General/Specific/Complete), Size, Color, Pattern, Native/Amazon Family, Units/Package, Carton/Package CBM, ABC (Revenue/Sales/Profitability), Life Cycle, Reorder Region, Grade, Average Weekly Units/Revenue, Current Price</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">dim_skus_aux <span class="area-tag">produto</span></div>
+        <div class="kv"><b>Fonte</b> cópia hidden de SKUs</div>
+        <div class="kv"><b>Uso</b> usada como dimensão alternativa em relacionamentos inativos para análise cross-sales / SKUs anunciados vs comprados</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">d.AmazonOrderId <span class="area-tag">pedidos</span></div>
+        <div class="kv"><b>Fonte</b> BigQuery <code>1_Gold_Aux.vw_full_dimension_amazon_order_id</code></div>
+        <div class="kv"><b>Granularidade</b> 1 pedido Amazon único</div>
+        <div class="kv"><b>Colunas</b> amazon_order_id, merchant_order_id, order_status, is_business_order, order_id_SK, date_all_orders, sales_marketplace, sales_channel_temporary</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">d.fulfillmentCentersAddress <span class="area-tag">geografia</span></div>
+        <div class="kv"><b>Fonte</b> CSV <code>td_fulfillment_centers_address.csv</code></div>
+        <div class="kv"><b>Granularidade</b> 1 FC</div>
+        <div class="kv"><b>Colunas</b> fulfillment_center_id, city, state, country, zip, address, lat, long, inventory_region, state_country, fc_city_state</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">dim_order_IDs <span class="area-tag">pedidos</span></div>
+        <div class="kv"><b>Fonte</b> DISTINCT extraído de Inbound Shipments</div>
+        <div class="kv"><b>Granularidade</b> 1 Order Id único</div>
+        <div class="kv"><b>Colunas</b> Order Id, Region, Type</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">dim_sponsored_ads <span class="area-tag">ads</span></div>
+        <div class="kv"><b>Fonte</b> BigQuery <code>3_Bronze_Aux.td_sponsored_ads</code></div>
+        <div class="kv"><b>Granularidade</b> 1 tipo de anúncio</div>
+        <div class="kv"><b>Colunas</b> sponsored_ads_type, sponsored_ads, sponsored_ads_report</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">dim_awd_fee_type <span class="area-tag">AWD</span></div>
+        <div class="kv"><b>Fonte</b> JSON estático embutido</div>
+        <div class="kv"><b>Granularidade</b> 1 tipo de fee</div>
+        <div class="kv"><b>Colunas</b> fee_type_report, fee_type</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">dim_SCPR_category <span class="area-tag">SCPR</span></div>
+        <div class="kv"><b>Fonte</b> Excel SCPR.xlsx (sheet Category)</div>
+        <div class="kv"><b>Colunas</b> Category, Attribute, Description, Short Name, Weight (=3 se "Payment Terms", senão 1)</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">dim_SCPR_factory <span class="area-tag">SCPR</span></div>
+        <div class="kv"><b>Fonte</b> Excel SCPR.xlsx (sheet Type, filtro = Factory)</div>
+        <div class="kv"><b>Colunas</b> Name, Type</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">dim_SCPR_freight <span class="area-tag">SCPR</span></div>
+        <div class="kv"><b>Fonte</b> Excel SCPR.xlsx (sheet Type, filtro = Freight Forwarder)</div>
+        <div class="kv"><b>Colunas</b> Name, Type</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">dim_SCPR_type <span class="area-tag">SCPR</span></div>
+        <div class="kv"><b>Fonte</b> Excel SCPR.xlsx (sheet Type, sem filtro)</div>
+        <div class="kv"><b>Colunas</b> Name, Type</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">SCPR_Metrics <span class="area-tag">SCPR</span></div>
+        <div class="kv"><b>Fonte</b> calculada vazia (apenas measures)</div>
+        <div class="kv"><b>Measures</b> weighted_average, proactivity_grade, price_grade, communication_grade, commitment_grade, Action, grade_classification, fwd/supplier weighted_average, _transfers, _orders</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">dim_bar_chart_aging_projection <span class="area-tag taupe">field parameter</span></div>
+        <div class="kv"><b>Fonte</b> Field parameter (NAMEOF para SKUs.Inventory Region, Life Cycle)</div>
+        <div class="kv"><b>Uso</b> alterna eixo de gráfico de barras na visão de aging projection</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">dim_scatter_plot_mapped_returns <span class="area-tag taupe">field parameter</span></div>
+        <div class="kv"><b>Fonte</b> Field parameter (Amazon Family, Native Family, Life Cycle)</div>
+        <div class="kv"><b>Uso</b> alterna dimensão no scatter de devoluções mapeadas</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">Contracted liquidator rate <span class="area-tag taupe">lookup</span></div>
+        <div class="kv"><b>Fonte</b> Excel</div>
+        <div class="kv"><b>Uso</b> taxas contratadas para liquidação</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 06 AUXILIARES -->
+  <div class="section" id="auxiliares">
+    <div class="section-header">
+      <span class="section-number">06</span>
+      <h2 class="section-title">Tabelas Auxiliares e Dinâmicas</h2>
+    </div>
+    <div class="prose">
+      <p>Tabelas com prefixo <code>z.*</code>, <code>tab_*</code>, <code>parameter_*</code> e nomes específicos como "The Date Picker" alimentam slicers, parâmetros what-if, field parameters do Power BI e seletores dinâmicos das visualizações. Não fazem parte do modelo de fatos — são <em>plumbing</em> de UX.</p>
+    </div>
+
+    <div class="subhead">Field parameters (seleção dinâmica de campo)</div>
+    <table class="data-table compact">
+      <thead><tr><th>Tabela</th><th>O que controla</th><th>Conteúdo</th></tr></thead>
+      <tbody>
+        <tr><td>z.dynamic_GC_Rows</td><td>Linhas do Gallery (Country / SKU view)</td><td>5 opções (Country, Amazon Family, Sales Region | Base SKU, SKU)</td></tr>
+        <tr><td>z.dynamic_GC_Values</td><td>Métrica do Gallery (28 Country + 20 SKU)</td><td>NAMEOF para Net Sales, Profit, Units, Price, Organic/PPC Sales, TACOS, ACOS + Δ$ e Δ%</td></tr>
+        <tr><td>z.dynamic_GC_selector</td><td>Master switch entre Country View vs SKU View</td><td>2 valores estáticos</td></tr>
+        <tr><td>z.dynamic_inventory_column_axis</td><td>Eixo de coluna em gráfico de inventário</td><td>5 opções (Inbound AWD/Amazon, AWD Available, Amazon Estimate/Actual)</td></tr>
+        <tr><td>z.dynamic_inventory_line_axis</td><td>Eixo de linha em gráfico de inventário</td><td>2 opções (Units Sold por Inventory Type)</td></tr>
+        <tr><td>z.dynamic_inventory_selector</td><td>Master switch Inventory AWD vs Amazon</td><td>2 valores estáticos</td></tr>
+        <tr><td>z.dynamic_parameter_difference_year_over_year</td><td>YoY Diff vs %</td><td>8 pares: Units / Revenue / Net Revenue / Net Price (Diff e %)</td></tr>
+        <tr><td>z.dynamic_parameter_units_revenue_price</td><td>Múltiplos contextos (Revenue Loss, PPC, Landed Cost)</td><td>10 opções com tema</td></tr>
+        <tr><td>z.tio_slicer_column / z.tio_slicer_line</td><td>Eixos no gráfico TIO</td><td>3 e 8 opções respectivamente</td></tr>
+        <tr><td>z.parameter_coverage_selection</td><td>Seleção de métrica de cobertura</td><td>3 opções (Amazon, AWD, combined)</td></tr>
+        <tr><td>field_picker_ads_performance</td><td>Granularidade em performance de ads</td><td>Amazon Family / Native Family / SKU</td></tr>
+        <tr><td>parameter_low_stock_tacos_acos</td><td>Métrica de análise de estoque/PPC</td><td>6 opções (Low Stock, TACOS, ACOS, Revenue Loss + Prev. Year)</td></tr>
+        <tr><td>SWICTH_BUTTON_UNITS_SOLD_INVENTORY <span class="badge terracotta">[sic]</span></td><td>Toggle Units Sold vs Inventory</td><td>2 measures (u_units_sold, u_inventory_ending_plus_transit)</td></tr>
+        <tr><td>Unified Sponsored Products - $, u and %</td><td>KPI unificado de Sponsored Products</td><td>36+ opções (Sales/Spend/Ratios/ACOS/TACOS/CTR/CVR/ROAS) por categoria</td></tr>
+        <tr><td>tab_parameters_measurements</td><td>Tipo de agregação estatística</td><td>4 valores: Max, Med, Avg, Min</td></tr>
+        <tr><td>shifting_fba_costs_aux_table</td><td>Filtro de severidade de alerta FBA</td><td>5 valores: Red, Yellow, Red & Yellow, Green, All</td></tr>
+        <tr><td>teste Fees - $ and u / %</td><td>Field parameters de teste</td><td>Variações experimentais de FBA fee</td></tr>
+        <tr><td>teste Sponsored Products - $ and u / %</td><td>Field parameters de teste</td><td>Variações experimentais de Sponsored Products</td></tr>
+      </tbody>
+    </table>
+
+    <div class="subhead">What-if e parâmetros numéricos</div>
+    <table class="data-table compact">
+      <thead><tr><th>Tabela</th><th>Range</th><th>Default</th><th>Uso</th></tr></thead>
+      <tbody>
+        <tr><td>z.dynamic_coupon_usage_percentage</td><td>0 → 1, passo 0.01</td><td>0.75</td><td>Simulação de % de uso de cupom</td></tr>
+        <tr><td>z_number_list</td><td>0 → 99, passo 1</td><td>50</td><td>Slider numérico genérico</td></tr>
+        <tr><td>Time range avg selling price</td><td>1 → 365 dias</td><td>90</td><td>Janela de cálculo de preço médio</td></tr>
+      </tbody>
+    </table>
+
+    <div class="subhead">Lookups e tabelas de scorecard</div>
+    <table class="data-table compact">
+      <thead><tr><th>Tabela</th><th>Uso</th></tr></thead>
+      <tbody>
+        <tr><td>z.list_of_warehouse_names</td><td>DISTINCT de Inbound Shipments para slicers de localização (Type, Location Group: AWD/Warehouse/Amazon, Deliver At Location)</td></tr>
+        <tr><td>z.RowHeaderScorecardCoverage</td><td>3 rótulos: Inventory Amazon, Inventory AWD, Velocity Daily</td></tr>
+        <tr><td>z.RowHeaderScorecardPpc</td><td>13 rótulos PPC (Net Revenue, Organic Sales, Clicks, ACoS %, TACos %, NAP, etc.)</td></tr>
+        <tr><td>z.RowHeaderScorecardProfit</td><td>13 rótulos profit (Inventory, Units Sold, NAP, COGS %, FBA %, Referral %, Operational Profit, etc.)</td></tr>
+        <tr><td>z.dynamic_time_frame_switch</td><td>Granularidade temporal (Daily/Weekly/Monthly/Quarterly/Yearly) — UNION DISTINCT de 5 SELECT sobre Calendar com filtro bidirecional ativo</td></tr>
+      </tbody>
+    </table>
+
+    <div class="subhead">Técnicas e infraestrutura</div>
+    <table class="data-table compact">
+      <thead><tr><th>Tabela</th><th>Uso</th></tr></thead>
+      <tbody>
+        <tr><td>rootPathLang</td><td>Tabela com expressão M que detecta "Shared drives" vs "Drives compartilhados" no G:\</td></tr>
+        <tr><td>zz_Refresh_Control</td><td>Linha única com NOW() — alimenta cartão "Last Refresh Datetime"</td></tr>
+        <tr><td>z.errorFile</td><td>Tenta converter "a" para Int64 deliberadamente (gera erro controlado para popup pós-refresh)</td></tr>
+        <tr><td>The Date Picker</td><td>Calculation Group com item "Single Date" — força MIN da data selecionada para qualquer measure</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 07 RELACIONAMENTOS -->
+  <div class="section" id="relacionamentos">
+    <div class="section-header">
+      <span class="section-number">07</span>
+      <h2 class="section-title">Relacionamentos</h2>
+    </div>
+    <div class="prose">
+      <p>O modelo é organizado em torno de dois hubs centrais — <strong>Calendar</strong> e <strong>SKUs</strong> — com hubs secundários para pedidos (d.AmazonOrderId, dim_order_IDs), centros de fulfillment (d.fulfillmentCentersAddress), localizações (z.list_of_warehouse_names), tipos de anúncio (dim_sponsored_ads) e SCPR.</p>
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-title">Hubs principais</div>
+      <div class="tree"><b>Calendar</b>
+├─ Date ──── ~50 fatos e dimensões
+├─ Start of Month ──── fact_awd_monthly_storage_fee · fact_awd_monthly_transportation_fee · fact_storage_fee_measurements
+└─ Start of Week ──── fact_db_results_tio
+
+<b>SKUs</b>
+├─ Marketplace | SKU ──── ~30 fatos
+├─ Country | SKU ──── ~15 fatos AWD / armazenamento
+├─ Inventory Region | SKU ──── ~10 fatos de inventory
+├─ Marketplace | ASIN ──── Sponsored Ads, Customer Returns
+├─ Country | ASIN ──── fact_amz_business_report, f_seller_suport_cases, fact_velocity, fact_db_results_VO
+├─ Marketplace | FNSKU ──── f.us_returns_processing_fee
+├─ Inventory Region | FNSKU ──── fact_storage_fee_measurements
+└─ Country | Native Family ──── f_db_base_price, f_db_market_price
+
+<b>d.AmazonOrderId</b>
+├─ order_id_SK ──── f.AllOrders, f.AmazonFulfilledShipments, f.FBACustomerReturns
+└─ amazon_order_id ──── STAGING_fact_cross_sales
+
+<b>dim_order_IDs</b>
+└─ Order Id ──── fact_order_records, Inbound Shipments, td_full_order_transfer_details
+
+<b>d.fulfillmentCentersAddress</b>
+└─ fulfillment_center_id ──── fact_inventory_ledger_by_fulfillment_center, f.AmazonFulfilledShipments
+
+<b>z.list_of_warehouse_names</b>
+├─ Location Group ──── Inventory Ledger, fact_awd_inventory_ledger_by_country
+└─ Deliver At Location ──── fact_inventory_3pl, Inbound Shipments [inativo]
+
+<b>dim_sponsored_ads</b>
+└─ sponsored_ads_type ──── fact_sp_*, fact_sb_*, fact_sd_*
+
+<b>SCPR (factory / freight / category / type)</b>
+└─ Name ──── fact_SCPR_all_reviews, fact_order_records, Inbound Shipments
+
+<b>dim_awd_fee_type</b>
+└─ fee_type_report ──── fact_awd_monthly_processing_fee, fact_awd_monthly_transportation_fee</div>
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-title">Catálogo completo de relacionamentos</div>
+      <div class="legend-row">
+        <span><span class="legend-dot"></span> Active</span>
+        <span><span class="legend-dot amber"></span> Inactive</span>
+        <span><span class="legend-dot blue"></span> Filtro bidirecional</span>
+      </div>
+      <table class="data-table compact" style="margin-top:14px;">
+        <thead>
+          <tr>
+            <th>Origem · coluna</th>
+            <th>Destino · coluna</th>
+            <th class="nowrap">Card.</th>
+            <th class="nowrap">Filtro</th>
+            <th>Obs</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>fact_velocity · Date</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_velocity · Country | ASIN</td><td>SKUs · Inventory Region | ASIN</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>Inbound Shipments · Delivery Date</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_inventory_3pl · Inventory Region | SKU</td><td>SKUs · Inventory Region | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_inventory_3pl · Date</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>Inventory Ledger · Date</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>Inventory Ledger · Country | SKU</td><td>SKUs · Country | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_inventory_ledger_by_fulfillment_center · date</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_fba_inventory · date_fba_inventory</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr class="inactive"><td>Inventory Ledger · Country | ASIN</td><td>SKUs · Country | ASIN</td><td>N:1</td><td>single</td><td>inactive — duplicado com SKU</td></tr>
+          <tr><td>z.dynamic_time_frame_switch · Start Date</td><td>Calendar · Date</td><td>N:1</td><td><b>both</b></td><td>bidirecional</td></tr>
+          <tr><td>fact_sp_advertised_products · date_sp_advertised_products</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_fba_manage_inventory_real_time · key_inventory_region_sku</td><td>SKUs · Inventory Region | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_fba_manage_inventory_real_time · date_*</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_fba_inventory · key_inventory_region_sku</td><td>SKUs · Inventory Region | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr class="inactive"><td>Calendar · Date</td><td>dim_calendar_aux · Date aux</td><td>1:1</td><td><b>both</b></td><td>inactive — bidirecional disponível</td></tr>
+          <tr><td>fact_fee_preview · date_fee_preview</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_fee_preview · key_sales_marketplace_sku</td><td>SKUs · Marketplace | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr class="inactive"><td>f.FBACustomerReturns · date_fba_customer_return</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td>inactive</td></tr>
+          <tr><td>fact_storage_fee_daily · date_*</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_storage_fee_daily · key_marketplace_sku</td><td>SKUs · Marketplace | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_db_results_tio · start_of_week</td><td>Calendar · Start of Week</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_db_results_tio · key_invenotry_region_sku</td><td>SKUs · Inventory Region | SKU</td><td>N:1</td><td>single</td><td>typo "invenotry" na origem</td></tr>
+          <tr><td>fact_storage_fee_measurements · key_inventory_region_fnsku</td><td>SKUs · Inventory Region | FNSKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_storage_fee_measurements · month_of_charge</td><td>Calendar · Start of Month</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_sp_purchased_products · key_marketplace_advertised_sku</td><td>SKUs · Marketplace | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_sp_purchased_products · date_*</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr class="inactive"><td>fact_sp_purchased_products · key_marketplace_purchased_asin</td><td>dim_skus_aux · Marketplace | ASIN</td><td>N:1</td><td>single</td><td>inactive — análise cross-SKU</td></tr>
+          <tr class="inactive"><td>fact_sp_advertised_products · key_marketplace_advertised_sku</td><td>dim_skus_aux · Marketplace | SKU</td><td>N:1</td><td>single</td><td>inactive — análise cross-SKU</td></tr>
+          <tr><td>fact_fba_fee_expected · date_list</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_fba_fee_expected · key_sales_country_asin</td><td>SKUs · Country | ASIN</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_life_cycle · date_life_cycle</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_life_cycle · key_inventory_region_sku</td><td>SKUs · Inventory Region | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_sp_search_terms · marketplace</td><td>SKUs · Marketplace</td><td>N:1</td><td>single</td><td>chave genérica</td></tr>
+          <tr><td>fact_sp_search_terms · date_*</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_sd_advertised_products · key_marketplace_advertised_sku</td><td>SKUs · Marketplace | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_sd_advertised_products · date_*</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_awd_monthly_storage_fee · key_inventory_country_sku</td><td>SKUs · Country | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>STAGING_fact_cross_sales · date_all_orders</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>STAGING_fact_cross_sales · key_sales_marketplace_sku_analysis</td><td>SKUs · Marketplace | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr class="inactive"><td>STAGING_fact_cross_sales · key_sales_marketplace_sku_cross_sales</td><td>dim_skus_aux · Marketplace | SKU</td><td>N:1</td><td>single</td><td>inactive — segunda chave SKU</td></tr>
+          <tr><td>fact_awd_monthly_transportation_fee · month_of_charge</td><td>Calendar · Start of Month</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_awd_monthly_processing_fee · month_of_charge</td><td>Calendar · Start of Month</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_awd_monthly_transportation_fee · key_inventory_country_sku</td><td>SKUs · Country | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_awd_monthly_processing_fee · key_inventory_country_sku</td><td>SKUs · Country | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_awd_monthly_transportation_fee · fee_type</td><td>dim_awd_fee_type · fee_type_report</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_awd_monthly_processing_fee · fee_type</td><td>dim_awd_fee_type · fee_type_report</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_sb_spend_by_sku · date_sb</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_sb_spend_by_sku · key_marketplace_asin</td><td>SKUs · Marketplace | ASIN</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_sb_attributed_purchase · date_*</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_sb_attributed_purchase · key_marketplace_purchased_asin</td><td>SKUs · Marketplace | ASIN</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr class="inactive"><td>f.FBACustomerReturns · key_marketplace_sku</td><td>SKUs · Marketplace | SKU</td><td>N:1</td><td>single</td><td>inactive — duplicado</td></tr>
+          <tr><td>f.FBACustomerReturns · purchase_date</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>f.FBACustomerReturns · order_id_SK</td><td>d.AmazonOrderId · order_id_SK</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>f.AllOrders · date_all_orders</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>f.AllOrders · order_id_SK</td><td>d.AmazonOrderId · order_id_SK</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>f.AllOrders · key_marketplace_sku</td><td>SKUs · Marketplace | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>f.AmazonFulfilledShipments · shipment_date</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>f.AmazonFulfilledShipments · key_marketplace_sku</td><td>SKUs · Marketplace | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>STAGING_fact_cross_sales · amazon_order_id</td><td>d.AmazonOrderId · amazon_order_id</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>f.AmazonFulfilledShipments · order_id_SK</td><td>d.AmazonOrderId · order_id_SK</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_sp_purchased_products · sponsored_ads_type</td><td>dim_sponsored_ads · sponsored_ads_type</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_sp_advertised_products · sponsored_ads_type</td><td>dim_sponsored_ads · sponsored_ads_type</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_sp_search_terms · sponsored_ads_type</td><td>dim_sponsored_ads · sponsored_ads_type</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_sb_attributed_purchase · sponsored_ads_type</td><td>dim_sponsored_ads · sponsored_ads_type</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_sd_advertised_products · sponsored_ads_type</td><td>dim_sponsored_ads · sponsored_ads_type</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_sb_spend_by_sku · sponsored_ads_type</td><td>dim_sponsored_ads · sponsored_ads_type</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_sp_advertised_products · key_marketplace_advertised_sku</td><td>SKUs · Marketplace | SKU</td><td>N:1</td><td>single</td><td>duplicado ativo</td></tr>
+          <tr><td>fact_awd_transportation_measurements · key_inventory_country_sku</td><td>SKUs · Country | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_awd_transportation_measurements · month_of_charge</td><td>Calendar · Start of Month</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_inventory_ledger_by_fulfillment_center · key_column_inventory_country_sku</td><td>SKUs · Country | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>f_db_market_price · key_salesCountry_nativeFamily</td><td>SKUs · Country | Native Family</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>f_db_base_price · key_salesCountry_nativeFamily</td><td>SKUs · Country | Native Family</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>f_db_base_price · date_base_price</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>f_db_market_price · date_market_price</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_SCPR_all_reviews · Attribute</td><td>dim_SCPR_category · Attribute</td><td>N:1</td><td><b>both</b></td><td>bidirecional</td></tr>
+          <tr><td>fact_SCPR_all_reviews · Company Name</td><td>dim_SCPR_type · Name</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>f.us_returns_processing_fee · date_shipment</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>f.us_returns_processing_fee · key_marketplace_fnsku</td><td>SKUs · Marketplace | FNSKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_order_records · Order Id</td><td>dim_order_IDs · Order Id</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_awd_inventory_ledger_by_country · date_*</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_awd_inventory_ledger_by_country · key_inventory_country_sku</td><td>SKUs · Country | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_order_records · Actual - Pick up Date</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>Inbound Shipments · Order Id</td><td>dim_order_IDs · Order Id</td><td>N:1</td><td><b>both</b></td><td>bidirecional</td></tr>
+          <tr><td>fact_fbaGrade&amp;ResellReport · date</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_fbaGrade&amp;ResellReport · key_sales_marketplace_sku</td><td>SKUs · Marketplace | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>f_aging_projection · date_aging_projection</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr class="inactive"><td>f_aging_projection · file_date</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td>inactive — segunda data</td></tr>
+          <tr><td>fact.aged_inventory_surcharge · date_charge</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>f_aging_projection · key_inventory_region_sku</td><td>SKUs · Inventory Region | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact.aged_inventory_surcharge · key_inventory_country_sku</td><td>SKUs · Country | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>f_storage_fee_rate · date_update</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>f_promotion_tracker · end_date</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr class="inactive"><td>f_promotion_tracker · start_date</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td>inactive — fim ativo</td></tr>
+          <tr><td>f_promotion_tracker · key_inventory_region_sku</td><td>SKUs · Inventory Region | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>f_storage_fee_rate · inventory_region</td><td>SKUs · Inventory Region</td><td>N:1</td><td>single</td><td>chave genérica</td></tr>
+          <tr><td>f_seller_suport_cases · Date Created</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_inventory_ledger_by_fulfillment_center · fulfillment_center</td><td>d.fulfillmentCentersAddress · fulfillment_center_id</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>f.AmazonFulfilledShipments · FC</td><td>d.fulfillmentCentersAddress · fulfillment_center_id</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>Inbound Shipments · Region | SKU</td><td>SKUs · Inventory Region | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>Inventory Ledger · Location Group</td><td>z.list_of_warehouse_names · Location Group</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_awd_inventory_ledger_by_country · location_group</td><td>z.list_of_warehouse_names · Location Group</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_inventory_3pl · Warehouse 3pl</td><td>z.list_of_warehouse_names · Deliver At Location</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr class="inactive"><td>Inbound Shipments · Deliver At Location</td><td>z.list_of_warehouse_names · Deliver At Location</td><td>N:1</td><td>single</td><td>inactive</td></tr>
+          <tr class="inactive"><td>Inbound Shipments · Origin</td><td>z.list_of_warehouse_names · Deliver At Location</td><td>N:1</td><td>single</td><td>inactive</td></tr>
+          <tr><td>fact_estimated_future_daily_storage_fee · date</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_estimated_future_daily_storage_fee · key_marketplace_sku</td><td>SKUs · Marketplace | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_average_landed_cost · date</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_average_landed_cost · key_inventory_region_sku</td><td>SKUs · Inventory Region | Base SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr class="inactive"><td>Inbound Shipments · Order Date</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td>inactive</td></tr>
+          <tr><td>fact_order_records · Supplier</td><td>dim_SCPR_factory · Name</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_order_records · Freight Forwarder</td><td>dim_SCPR_freight · Name</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_SCPR_all_reviews · Company Name</td><td>dim_SCPR_freight · Name</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_SCPR_all_reviews · Company Name</td><td>dim_SCPR_factory · Name</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_exchange_rates · date</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>td_full_order_transfer_details · order_id</td><td>dim_order_IDs · Order Id</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_sb_search_terms · sponsored_ads_type</td><td>dim_sponsored_ads · sponsored_ads_type</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>td_full_order_transfer_details · key_inventory_region_sku</td><td>SKUs · Inventory Region | SKU</td><td>N:1</td><td><b>both</b></td><td>bidirecional</td></tr>
+          <tr><td>Inbound Shipments · Supplier</td><td>dim_SCPR_factory · Name</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>Inbound Shipments · Freight Forwarder</td><td>dim_SCPR_freight · Name</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_awd_monthly_storage_fee · date</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>f_aux_promo_tracker · activeDate</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>f_aux_promo_tracker · keyInventoryRegionSku</td><td>SKUs · Inventory Region | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>f_db_loss_leader · activeDate</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>f_db_loss_leader · key_country_sku</td><td>SKUs · Country | SKU</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_db_results_VO · Inventory Region | ASIN</td><td>SKUs · Inventory Region | ASIN</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_db_results_VO · Date</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>z.dynamic_inventory_line_axis · Inventory Type</td><td>z.dynamic_inventory_selector · Inventory Type</td><td>N:1</td><td>single</td><td>parâmetros internos</td></tr>
+          <tr><td>z.dynamic_inventory_column_axis · Inventory Type</td><td>z.dynamic_inventory_selector · Inventory Type</td><td>N:1</td><td>single</td><td>parâmetros internos</td></tr>
+          <tr><td>z.dynamic_parameter_difference_year_over_year · Category</td><td>z.dynamic_parameter_units_revenue_price · Sales</td><td>N:1</td><td>single</td><td>parâmetros internos</td></tr>
+          <tr><td>parameter_low_stock_tacos_acos · Theme</td><td>z.dynamic_parameter_units_revenue_price · Theme</td><td>N:1</td><td>single</td><td>parâmetros internos</td></tr>
+          <tr><td>z.dynamic_GC_Rows · Group</td><td>z.dynamic_GC_selector · Group</td><td>N:1</td><td>single</td><td>parâmetros internos</td></tr>
+          <tr><td>z.dynamic_GC_Values · Group</td><td>z.dynamic_GC_selector · Group</td><td>N:1</td><td>single</td><td>parâmetros internos</td></tr>
+          <tr><td>f.FBACustomerReturns · order_id_sk | key_marketplace_sku</td><td>f.AllOrders · order_id_sk | key_marketplace_sku</td><td>N:1</td><td><b>both</b></td><td>bidirecional · chave composta</td></tr>
+          <tr><td>f_seller_suport_cases · Inventory Region | ASIN</td><td>SKUs · Inventory Region | ASIN</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_amz_business_report · date</td><td>Calendar · Date</td><td>N:1</td><td>single</td><td></td></tr>
+          <tr><td>fact_amz_business_report · key_country_asin</td><td>SKUs · Country | ASIN</td><td>N:1</td><td>single</td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 08 MEASURES -->
+  <div class="section" id="measures">
+    <div class="section-header">
+      <span class="section-number">08</span>
+      <h2 class="section-title">Catálogo de Measures (DAX)</h2>
+    </div>
+    <div class="prose">
+      <p>São <strong>604 medidas</strong> centralizadas em <code>Measurement Table</code>, organizadas pelo DisplayFolder. Esta seção mostra os grupos principais com a finalidade de cada measure — não inclui o código DAX (consultar diretamente em <code>Measurement Table.tmdl</code> quando necessário).</p>
+    </div>
+
+    <div class="callout">
+      <div class="callout-icon">🏷️</div>
+      <div class="callout-text"><strong>Convenção de prefixo</strong> · <code>$_</code> moeda · <code>u_</code> unidade/quantidade · <code>%_</code> ratio/percentual · <code>q_</code> contagem · <code>d_</code> data · <code>i_</code> atributo de SKU · <code>b_</code> booleano · <code>aux_</code> auxiliar · <code>ux_ui_</code> formatação de UI</div>
+    </div>
+
+    <div class="subhead">Vendas (f.AllOrders)</div>
+    <table class="data-table compact">
+      <thead><tr><th>Measure</th><th>Tipo</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>u_units_sold</code></td><td>integer</td><td>Soma quantidade vendida (exclui Non-Amazon)</td></tr>
+        <tr><td><code>$_revenue</code></td><td>$</td><td>Soma item_price</td></tr>
+        <tr><td><code>$_average_price</code></td><td>$</td><td>$_revenue / u_units_sold</td></tr>
+        <tr><td><code>$_net_revenue</code></td><td>$</td><td>$_revenue − descontos de promoção</td></tr>
+        <tr><td><code>$_net_average_price</code></td><td>$</td><td>$_net_revenue / u_units_sold</td></tr>
+        <tr><td><code>$_organic_revenue</code></td><td>$</td><td>Receita não-PPC</td></tr>
+        <tr><td><code>u_organic_units_sold</code></td><td>u</td><td>Unidades orgânicas</td></tr>
+        <tr><td><code>%_discount</code></td><td>%</td><td>desconto / receita total</td></tr>
+        <tr><td><code>q_orders</code></td><td>q</td><td>Contagem de pedidos</td></tr>
+        <tr><td><code>u_units_sold_last_12_months</code> · <code>u_monthly_units_sold</code></td><td>u</td><td>Janelas de tempo curtas</td></tr>
+        <tr><td><code>$_commercial_profit</code> · <code>$_operational_profit</code> · <code>$_operational_profit_before_awd</code></td><td>$</td><td>Lucro comercial / operacional / sem custos AWD</td></tr>
+        <tr><td><code>%_commercial_profit_over_net_revenue</code> · <code>%_operational_profit_over_net_revenue</code> · <code>%_commercial_margin</code></td><td>%</td><td>Margens</td></tr>
+      </tbody>
+    </table>
+
+    <div class="subhead">Comparações de período (Vendas)</div>
+    <table class="data-table compact">
+      <thead><tr><th>Família</th><th>Variantes</th></tr></thead>
+      <tbody>
+        <tr><td>YoY</td><td><code>%_units_sold_year_over_year_yoy</code> · <code>%_revenue_yoy</code> · <code>%_net_revenue_yoy</code> · <code>%_average_price_yoy</code> · <code>%_net_average_price_yoy</code> · <code>%_organic_revenue_yoy</code></td></tr>
+        <tr><td>Previous Month</td><td><code>u_units_sold_previous_month</code> · <code>$_revenue_previous_month</code> · <code>$_net_revenue_previous_month</code> · <code>$_average_price_previous_month</code></td></tr>
+        <tr><td>Previous Year</td><td><code>u_units_sold_previous_year</code> · <code>$_revenue_previous_year</code> · <code>$_net_revenue_previous_year</code> · <code>$_average_price_previous_year</code></td></tr>
+        <tr><td>Sell-through</td><td><code>sell_through_last_30_days</code> · <code>sell_through_last_90_days</code></td></tr>
+      </tbody>
+    </table>
+
+    <div class="subhead">Estoque / FBA</div>
+    <table class="data-table compact">
+      <thead><tr><th>Measure</th><th>Tipo</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>u_inventory_starting</code> · <code>u_inventory_ending_plus_transit</code></td><td>u</td><td>Saldos do Inventory Ledger</td></tr>
+        <tr><td><code>u_inventory_3pl_current_plus_amazon_ending_plus_transit</code></td><td>u</td><td>Total 3PL + Amazon + trânsito</td></tr>
+        <tr><td><code>u_inventory_3pl_on_hand</code> · <code>u_inventory_awd_available</code></td><td>u</td><td>3PL on-hand · AWD disponível</td></tr>
+        <tr><td><code>u_fba_manage_inventory_real_time_available</code> · <code>_unsellable</code> · <code>_working</code> · <code>_receiving</code> · <code>_shipped</code> · <code>_reserved</code></td><td>u</td><td>FBA real-time por status</td></tr>
+        <tr><td><code>u_fba_inventory_aging_0_to_030</code> · <code>_031_to_060</code> · <code>_061_to_090</code> · <code>_091_to_180</code> · <code>_181_plus</code> · <code>_365_plus</code></td><td>u</td><td>Aging buckets</td></tr>
+        <tr><td><code>%_low_stock</code> · <code>count_low_stock</code> · <code>b_is_low_stock</code></td><td>%</td><td>Estoque baixo</td></tr>
+        <tr><td><code>%_low_stock_previous_month</code> · <code>%_low_stock_previous_year</code></td><td>%</td><td>Estoque baixo histórico</td></tr>
+        <tr><td><code>u_inventory_3pl_reports_on_hand</code> · <code>_available_for_transfer</code> · <code>_allocated</code> · <code>_receiving_area</code></td><td>u</td><td>Status 3PL</td></tr>
+      </tbody>
+    </table>
+
+    <div class="subhead">PPC / Anúncios</div>
+    <table class="data-table compact">
+      <thead><tr><th>Família</th><th>Measures principais</th></tr></thead>
+      <tbody>
+        <tr><td>SP Advertised Products</td><td><code>$_ppc_sp_adv_prod_sales</code> · <code>spend</code> · <code>%_acos</code> · <code>%_roas</code> · <code>%_cvr</code> · <code>%_ctr</code> · <code>$_cpc</code> · <code>q_clicks</code> · <code>q_impressions</code> · <code>q_orders</code></td></tr>
+        <tr><td>SP Adv. Prod. — SKU split</td><td><code>$_sales_advertised_sku</code> · <code>$_sales_other_sku</code> · <code>u_units_advertised_sku</code> · <code>u_units_other_sku</code> · <code>%_ratio_revenue_advertised_sku_sales</code></td></tr>
+        <tr><td>PPC Consolidated</td><td><code>q_ppc_clicks</code> · <code>u_ppc_units_sold</code> · <code>$_ppc_sales</code> · <code>$_ppc_spend</code> · <code>%_ppc_acos</code> · <code>%_ppc_tacos</code> · <code>%_ppc_ratio_revenue</code></td></tr>
+        <tr><td>SB Attributed Purchase</td><td><code>$_ppc_sb_att_pur_sales</code> · <code>$_spend_by_sku</code> · <code>%_acos</code> · <code>%_tacos</code> · <code>%_ratio_revenue</code></td></tr>
+        <tr><td>SD Advertised Products</td><td><code>$_ppc_sd_adv_prod_sales</code> · <code>spend</code> · <code>%_acos</code> · <code>%_tacos</code> · <code>%_cvr</code> · <code>$_cpc</code></td></tr>
+        <tr><td>Comparação histórica</td><td><code>$_ppc_spend_previous_month</code> · <code>$_ppc_revenue_previous_month</code> · <code>%_ppc_acos_previous_month</code> · <code>%_ppc_*_year_over_year_yoy</code></td></tr>
+      </tbody>
+    </table>
+
+    <div class="subhead">Custos / Fees</div>
+    <table class="data-table compact">
+      <thead><tr><th>Família</th><th>Measures principais</th></tr></thead>
+      <tbody>
+        <tr><td>Storage Fee Amazon</td><td><code>$_estimated_storage_fee</code> · <code>_actual</code> · <code>_forecast</code> · <code>%_storage_fee_over_revenue</code> · <code>%_amz_storage_fee_over_net_revenue</code> · <code>i_amazon_storage_fee_item_weight</code> · <code>i_amazon_storage_fee_item_volume</code></td></tr>
+        <tr><td>FBA Fees</td><td><code>$_total_fba_fee_fee_preview</code> · <code>$_unit_fba_fee_fee_preview</code> · <code>%_total_fba_fee_*_over_revenue</code> · <code>$_unit_last_fba_fee_calculation_expected</code> · <code>$_avg_fba_unit_fee</code> · <code>$_avg_fba_unit_fee_same_period_last_year</code></td></tr>
+        <tr><td>Aging Surcharge</td><td><code>$_aging_surcharge_snapshot</code> · <code>_actual_previous_month</code> · <code>_actual_projection</code> · <code>$_avg_aging_surcharge_actual_previous_12_months</code> · <code>sum_aging_surcharge_total</code></td></tr>
+        <tr><td>Referral Fee</td><td><code>$_referral_fee</code> · <code>%_referral_fee_over_revenue</code> · <code>%_referral_fee_over_net_revenue</code></td></tr>
+        <tr><td>AWD Fees</td><td><code>$_awd_storage_fee</code> · <code>$_awd_processing_fee</code> · <code>$_awd_transportation_fee</code> · <code>$_awd_transportation_processing_fees</code> · <code>%_awd_storage_fee_over_revenue</code> · <code>%_awd_storage_fee_over_net_revenue</code></td></tr>
+      </tbody>
+    </table>
+
+    <div class="subhead">Landed Cost & COGS</div>
+    <table class="data-table compact">
+      <thead><tr><th>Measure</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>$_unit_landed_cost</code> · <code>$_avg_landed_cost</code> · <code>$_avg_landed_cost_last_year</code></td><td>Custo unitário entregue</td></tr>
+        <tr><td><code>$_unit_landed_cost_inbound_shipments</code> · <code>$_total_landed_cost_inbound_shipments</code></td><td>Custos por inbound shipment</td></tr>
+        <tr><td><code>$_unit_purchase_cost_inbound_shipments</code> · <code>$_total_purchase_cost_inbound_shipments</code></td><td>Custo de compra</td></tr>
+        <tr><td><code>$_unit_transfer_cost_inbound_shipments</code> · <code>$_total_transfer_cost_inbound_shipments</code></td><td>Custo de transferência</td></tr>
+        <tr><td><code>%_cogs_over_net_revenue</code></td><td>COGS como % da receita líquida</td></tr>
+      </tbody>
+    </table>
+
+    <div class="subhead">Devoluções</div>
+    <table class="data-table compact">
+      <thead><tr><th>Measure</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>u_units_shipped</code></td><td>Unidades enviadas (base do denominador)</td></tr>
+        <tr><td><code>u_return_units</code> · <code>u_total_fba_returns</code> · <code>u_mapped_return_units</code></td><td>Unidades devolvidas</td></tr>
+        <tr><td><code>%_total_fba_returns</code> · <code>%_mapped_return_rate</code> · <code>%_total_fba_returns_sellable</code></td><td>Taxas de devolução</td></tr>
+        <tr><td><code>%_mapped_return_rate_US</code> · <code>_CA</code> · <code>_EU</code> · <code>_GB</code> · <code>_MX</code> · <code>%_avg_mapped_return_rate</code></td><td>Por região</td></tr>
+        <tr><td><code>return_impact_share</code></td><td>Impacto financeiro relativo</td></tr>
+        <tr><td><code>d_order_date</code> · <code>d_returns_return_date</code></td><td>Datas de referência</td></tr>
+      </tbody>
+    </table>
+
+    <div class="subhead">Velocidade e cobertura</div>
+    <table class="data-table compact">
+      <thead><tr><th>Família</th><th>Measures</th></tr></thead>
+      <tbody>
+        <tr><td>Cobertura</td><td><code>d_coverage_in_months</code> · <code>d_amazon_coverage_in_days</code> · <code>d_awd_coverage_in_days</code> · <code>u_inventory_coverage</code> · <code>u_one_week_coverage_velocity</code> · <code>u_daily_coverage</code></td></tr>
+        <tr><td>Velocidade diária</td><td><code>u_daily_velocity</code> · <code>_aggregated</code> · <code>_moving_average_fast</code> · <code>_medium</code></td></tr>
+        <tr><td>Velocidade semanal</td><td><code>u_weekly_velocity</code> · <code>_aggregated</code> · <code>_moving_average_fast</code> · <code>_medium</code> · <code>_slow</code></td></tr>
+        <tr><td>Time comparisons</td><td><code>u_sum_units_sold_last_30_days</code> · <code>_45_days</code> · <code>u_average_units_sold_previous_30_days</code> · <code>_21_days</code></td></tr>
+      </tbody>
+    </table>
+
+    <div class="subhead">Calendário & datas de referência</div>
+    <table class="data-table compact">
+      <thead><tr><th>Measure</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>d_report_last_date_of_inventory_ledger_daily</code> · <code>_weekly</code></td><td>Última data do ledger</td></tr>
+        <tr><td><code>d_report_last_date_of_inventory_3pl_daily</code> · <code>_weekly</code></td><td>Última data 3PL</td></tr>
+        <tr><td><code>d_report_last_date_of_velocity_daily</code></td><td>Última data velocity</td></tr>
+        <tr><td><code>d_inventory_first_date_of_week</code> · <code>_last_date_of_week</code></td><td>Bordas semanais</td></tr>
+        <tr><td><code>d_first_date_of_sku_by_inventory</code> · <code>_last_date_of_sku_by_inventory</code> · ASIN equivalent</td><td>Primeira / última data por SKU/ASIN no estoque</td></tr>
+        <tr><td><code>d_monthly_share_of_days</code></td><td>Proporção de dias no mês</td></tr>
+        <tr><td><code>q_count_difference_between_two_dates</code> · <code>_for_visuals</code></td><td>Diferença em dias</td></tr>
+      </tbody>
+    </table>
+
+    <div class="subhead">Atributos de SKU</div>
+    <table class="data-table compact">
+      <thead><tr><th>Family</th><th>Measures</th></tr></thead>
+      <tbody>
+        <tr><td>Listing &amp; pricing</td><td><code>$_amazon_all_listings_current_price</code> · <code>%_current_price_discount</code> · <code>$_base_price</code> · <code>$_market_price</code> · <code>$_promo_price</code></td></tr>
+        <tr><td>Classificação</td><td><code>i_11Brands_abc_classification</code> · <code>i_11Brands_abc_sales</code> · <code>i_11Brands_life_cycle</code> · <code>i_is_loss_leader</code> · <code>i_has_promo_week</code></td></tr>
+        <tr><td>Embalagem (Package)</td><td><code>i_11Brands_package_weight</code> · <code>_volume_converted</code> · <code>_longest_side_converted</code> · <code>_median_side_converted</code> · <code>_shortest_side_converted</code></td></tr>
+        <tr><td>Caixa (Carton)</td><td><code>i_11Brands_carton_volume_cbm</code> · <code>_volume_converted</code> · <code>_weight</code> · <code>_units_per_carton</code></td></tr>
+      </tbody>
+    </table>
+
+    <div class="subhead">Inactive Calendar (comparação livre)</div>
+    <table class="data-table compact">
+      <thead><tr><th>Measure</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>$_net_revenue_inactive_calendar</code> · <code>$_commercial_profit_inactive_calendar</code> · <code>$_operational_profit_inactive_calendar</code></td><td>Métricas calculadas sob calendário "inativo" (dim_calendar_aux)</td></tr>
+        <tr><td><code>%_revenue_difference_between_periods_inactive_calendar</code> · análogos para net revenue / commercial / operational profit</td><td>Variações entre períodos arbitrários</td></tr>
+        <tr><td><code>%_ppc_spend_difference_between_periods_inactive_calendar</code> · <code>%_ppc_acos_inactive_calendar</code> · <code>%_ppc_tacos_inactive_calendar</code></td><td>PPC sob calendário alternativo</td></tr>
+      </tbody>
+    </table>
+
+    <div class="subhead">Tráfego (Business Reports)</div>
+    <table class="data-table compact">
+      <thead><tr><th>Measure</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td><code>u_sessions_total</code> · <code>u_sessions_mobile</code> · <code>u_sessions_browser</code></td><td>Sessões</td></tr>
+        <tr><td><code>u_page_views_total</code> · <code>u_page_views_mobile</code> · <code>u_page_views_browser</code></td><td>Page views</td></tr>
+        <tr><td><code>%_unit_session</code> · <code>%_page_views_per_session</code></td><td>Conversões / engajamento</td></tr>
+        <tr><td><code>%_avg_buy_box_percentage</code> · <code>%_weighted_avg_buy_box_percentage</code> · <code>%_buy_box_last_date</code></td><td>Buy Box</td></tr>
+      </tbody>
+    </table>
+
+    <div class="subhead">Auxiliares de UX (slicers, cards, blanks)</div>
+    <table class="data-table compact">
+      <thead><tr><th>Family</th><th>Measures</th></tr></thead>
+      <tbody>
+        <tr><td>Slicer filters</td><td><code>aux_blank_measure_slicer_filter</code> e variantes blank</td></tr>
+        <tr><td>UX Cards (variações)</td><td><code>ux_ui_%_revenue_month_over_month_mom</code> · <code>_yoy</code> · <code>_units_sold_*</code> · <code>_ppc_revenue_*</code> · <code>_ppc_spend_*</code> · <code>_ppc_acos_*</code> · <code>_ppc_tacos_*</code> · <code>_low_stock_*</code></td></tr>
+      </tbody>
+    </table>
+
+    <div class="info-card">
+      <div class="info-card-title">Padrões observados em todas as measures</div>
+      <ul style="list-style:none; padding-left:0; display:flex; flex-direction:column; gap:8px; margin-top:8px;">
+        <li style="font-size:13px; color:var(--text-label);"><strong>Time intelligence explícito.</strong> Como <code>__PBI_TimeIntelligenceEnabled</code> está desabilitado, todas as comparações usam DATEADD, SAMEPERIODLASTYEAR ou janelas calculadas explicitamente. Não há cálculo automático escondido.</li>
+        <li style="font-size:13px; color:var(--text-label);"><strong>Composição de measures.</strong> Net revenue = revenue − promotion discount; ACOS = spend / sales; TACOS = spend / total revenue. Measures derivadas reusam outras measures em vez de recalcular do fato.</li>
+        <li style="font-size:13px; color:var(--text-label);"><strong>FILTER + CALCULATE para exclusões.</strong> Vendas excluem Non-Amazon marketplace via FILTER. PPC isola por <code>sponsored_ads_type</code>.</li>
+        <li style="font-size:13px; color:var(--text-label);"><strong>FormatString explícito.</strong> Moeda <code>\$#,0.00;(\$#,0.00);\$#,0.00</code> com negativo entre parênteses; percentuais <code>0.0%;-0.0%;0.0%</code>; inteiros <code>#,0</code>.</li>
+        <li style="font-size:13px; color:var(--text-label);"><strong>DisplayFolder hierárquico.</strong> Organização por domínio (Sales / Inventory / PPC / Fees) com sub-pastas para variantes (Previous Month / YoY / Inactive Calendar). Pastas <em>Delete?</em> sinalizam medidas em deprecação.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 09 CONVENÇÕES -->
+  <div class="section" id="convencoes">
+    <div class="section-header">
+      <span class="section-number">09</span>
+      <h2 class="section-title">Convenções e Padrões</h2>
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-title">Chaves compostas</div>
+      <p style="font-size:13px; color:var(--text-label); line-height:1.7; margin-top:8px;">As chaves de relacionamento são <em>concatenadas em texto com separador <code>|</code></em>, criadas em M e usadas como string. Há nove variações principais sobre <strong>SKUs</strong>: Marketplace|SKU, Marketplace|ASIN, Marketplace|FNSKU, Country|SKU, Country|ASIN, Inventory Region|SKU, Inventory Region|ASIN, Inventory Region|FNSKU e Country|Native Family. Cada fato escolhe a chave conforme sua granularidade — vendas costumam usar Marketplace|SKU, AWD usa Country|SKU, inventário 3PL usa Inventory Region|SKU.</p>
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-title">Camadas BigQuery (medallion)</div>
+      <p style="font-size:13px; color:var(--text-label); line-height:1.7; margin-top:8px;">O warehouse <code>amazon-sp-api-openbridge</code> segue Bronze / Silver / Gold:</p>
+      <ul style="list-style:none; padding-left:0; display:flex; flex-direction:column; gap:6px; margin-top:8px;">
+        <li style="font-size:13px; color:var(--text-label);"><strong>3_Bronze_Aux</strong> — lookups técnicos (countries, sponsored ads types).</li>
+        <li style="font-size:13px; color:var(--text-label);"><strong>2_Silver_*</strong> — limpeza e enriquecimento (Aux, Inventory, Business Reports).</li>
+        <li style="font-size:13px; color:var(--text-label);"><strong>1_Gold_*</strong> — pronto para consumo (Sales_Returns, Inventory, Fees, Amz_Ads, Aux, Google_Sheets, Business_Reports).</li>
+      </ul>
+      <p style="font-size:13px; color:var(--text-label); line-height:1.7; margin-top:8px;">O modelo Power BI consome principalmente Gold (vendas, devoluções, ads, fees, listings). Silver é usado para enriquecer dimensões; Bronze entra apenas em lookups pequenos.</p>
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-title">Estratégia de staging</div>
+      <p style="font-size:13px; color:var(--text-label); line-height:1.7; margin-top:8px;">Para dados muito recentes (Sponsored Products dos últimos 10 dias), o modelo usa <strong>tabelas STAGING</strong> em Excel local que são <em>append</em>-adas sobre o BigQuery após filtrar a janela já presente em cloud. Isso permite latência menor para US sem reprocessar tudo.</p>
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-title">Relacionamentos inativos com USERELATIONSHIP</div>
+      <p style="font-size:13px; color:var(--text-label); line-height:1.7; margin-top:8px;">Vários relacionamentos estão marcados como inativos (lista completa na seção 07). Eles existem para serem ativados via <code>USERELATIONSHIP</code> em measures específicas — comum em fatos com múltiplas datas (ex: <code>f_aging_projection</code> com <code>file_date</code> além de <code>date_aging_projection</code>; <code>f_promotion_tracker</code> com <code>start_date</code> além de <code>end_date</code>).</p>
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-title">Field parameters do Power BI</div>
+      <p style="font-size:13px; color:var(--text-label); line-height:1.7; margin-top:8px;">As tabelas <code>z.dynamic_*</code>, <code>parameter_*</code> e demais com <code>ParameterMetadata version 3, kind 2</code> são <strong>field parameters</strong> nativos do Power BI. Estrutura padrão: Value1 (display label), Value2 (NAMEOF do field), Value3 (sort order), opcionalmente Value4/5 para metadata. Permitem trocar campo/measure de um visual via slicer.</p>
+    </div>
+  </div>
+
+  <!-- 10 ATENÇÃO -->
+  <div class="section" id="atencao">
+    <div class="section-header">
+      <span class="section-number">10</span>
+      <h2 class="section-title">Pontos de Atenção</h2>
+    </div>
+    <div class="prose">
+      <p>Inconsistências e particularidades catalogadas durante a leitura do modelo. Não são bugs ativos, mas merecem ciência de quem for manter ou refatorar.</p>
+    </div>
+
+    <div class="rules-list">
+      <div class="rule-item"><div class="rule-dot amber"></div><span><strong>Typo "invenotry".</strong> A coluna <code>key_invenotry_region_sku</code> em <code>fact_db_results_tio</code> tem o nome digitado errado. O relacionamento aponta corretamente, mas a coluna de origem mantém o erro de digitação. Renomear envolveria atualizar referências em DAX/relationships.</span></div>
+      <div class="rule-item"><div class="rule-dot amber"></div><span><strong>Typo no raw "Monathly".</strong> A expressão <code>raw_awdMonathlyStorageFee</code> consumida por <code>fact_awd_monthly_storage_fee</code> tem typo no nome (Monathly em vez de Monthly).</span></div>
+      <div class="rule-item"><div class="rule-dot amber"></div><span><strong>Tabela "SWICTH_BUTTON_UNITS_SOLD_INVENTORY".</strong> Nome com letra invertida ("SWICTH" em vez de "SWITCH"). Renomear quebraria referências em visuais.</span></div>
+      <div class="rule-item"><div class="rule-dot amber"></div><span><strong>Tabela "f_seller_suport_cases".</strong> Falta um "p" em "support". Mantida assim por compatibilidade.</span></div>
+      <div class="rule-item"><div class="rule-dot"></div><span><strong>Relacionamentos duplicados.</strong> Vários SKU keys têm relacionamentos ativos e inativos para a mesma fato (ex: <code>fact_sp_advertised_products · key_marketplace_advertised_sku → SKUs</code> aparece duas vezes ativo). É intencional para suportar caminhos alternativos via <code>USERELATIONSHIP</code>, mas confunde quem analisa o diagrama.</span></div>
+      <div class="rule-item"><div class="rule-dot"></div><span><strong>Filtros bidirecionais.</strong> Apenas 5 relacionamentos têm filtro <code>both</code>: <code>z.dynamic_time_frame_switch ↔ Calendar</code>, <code>Calendar ↔ dim_calendar_aux</code> (1:1, inativo), <code>fact_SCPR_all_reviews ↔ dim_SCPR_category</code>, <code>Inbound Shipments ↔ dim_order_IDs</code>, <code>td_full_order_transfer_details ↔ SKUs</code>, e <code>f.FBACustomerReturns ↔ f.AllOrders</code> (chave composta). Bidirecional aumenta o risco de loops em modelos complexos — conferir antes de adicionar mais.</span></div>
+      <div class="rule-item"><div class="rule-dot"></div><span><strong>Pastas "Delete?" no DisplayFolder.</strong> Algumas measures estão em pastas marcadas <code>Delete?</code> indicando deprecação planejada, mas continuam carregadas. Auditar antes de remover qualquer medida — pode haver dependência em visual antigo.</span></div>
+      <div class="rule-item"><div class="rule-dot"></div><span><strong>Pipeline staging US-only.</strong> A tabela <code>STAGING - us_temp_last10d_SPPurchasedProducts</code> só cobre US dos últimos 10 dias. Outras regiões dependem 100% do BigQuery — se esse refresh atrasar, não há fallback automático.</span></div>
+      <div class="rule-item"><div class="rule-dot"></div><span><strong>Folders com nomes especiais.</strong> Tabelas como <code>fact_fbaGrade&amp;ResellReport</code>, <code>Inbound Shipments</code>, <code>Inventory Ledger</code> (espaços) e <code>teste Fees - $ and u</code> têm nomes com caracteres que dificultam comandos de shell e ferramentas que esperam identificadores limpos.</span></div>
+      <div class="rule-item"><div class="rule-dot"></div><span><strong>Logs operacionais como fonte.</strong> <code>fact_db_results_tio</code> e <code>fact_db_results_VO</code> leem o arquivo <em>mais recente</em> de uma pasta de logs de cálculo. Isso significa que apagar ou mover um log antigo pode mudar o output do modelo — esses folders são parte do pipeline mesmo sem parecerem.</span></div>
+    </div>
+  </div>
+
+  <!-- BOX FINAL -->
+  <div class="gov-box">
+    <div class="gov-icon">📊</div>
+    <div>
+      <div class="gov-title">O modelo é a fonte de verdade</div>
+      <div class="gov-text">Toda métrica exposta nos dashboards da OrganiHaus tem origem aqui. Mudanças neste modelo se propagam — alteração em chave, relacionamento ou measure pode afetar dezenas de relatórios. Antes de refatorar, verifique dependências; antes de remover, audite o uso.</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Eleven Brands · PRD do Modelo OrganiHaus Base Tables · Dados &amp; Analytics
+</div>
+
+<script src="../assets/nav.js"></script>
+</body>
+</html>
