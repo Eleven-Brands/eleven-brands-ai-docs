@@ -1,4 +1,4 @@
-$SKILL = "task-organizer"
+$SKILL = "clickup-manager"
 $ROOT = Split-Path -Parent $PSScriptRoot
 $DIST_PATH = Join-Path $ROOT "dist"
 
