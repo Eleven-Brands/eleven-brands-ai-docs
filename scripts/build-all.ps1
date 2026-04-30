@@ -6,6 +6,8 @@ Write-Host ""
 & "$PSScriptRoot\build-clickup-manager.ps1"
 & "$PSScriptRoot\build-skills-creator.ps1"
 & "$PSScriptRoot\build-presentation-creator.ps1"
+& "$PSScriptRoot\build-ai-setup.ps1"
+& "$PSScriptRoot\build-pivot-fields-from-powerbi.ps1"
 
 # Sync shared references to Claude Code
 $REFS_DEST = Join-Path $HOME ".claude\references"
