@@ -1,6 +1,6 @@
 ---
 name: pivot-fields-from-powerbi
-description: Analyzes pivot tables in the active Excel workbook and writes a structured field report sheet directly — runs inside the Claude Excel add-in, no macro or manual steps needed.
+description: Find Power BI, Power Query, and external data references in the active Excel workbook — including pivot tables backed by data models — and write a structured field report.
 ---
 
 # Pivot Fields from Power BI — Eleven Brands
@@ -16,6 +16,22 @@ The skill is for the Eleven Brands Data Team auditing Power BI pivot dependencie
 
 - **Artifact output** (sheet content, headers, labels written to Excel) is **English**.
 - **Chat interaction** (questions, confirmations, status updates) must **match the language of the requester's message**.
+
+---
+
+## Activation Triggers
+
+Invoke this skill whenever the user's message matches any of these patterns — even if they don't say "run it" or use the slash command:
+
+- "what are the Power BI references in this workbook?"
+- "what measures / fields / pivots are used in this workbook?"
+- "which fields does this workbook use?"
+- "what data sources are connected to my pivots?"
+- "can you analyze / audit / list the pivot tables?"
+- "what Power Query connections exist here?"
+- Any question about pivot table fields, measures, data sources, or connections in an Excel workbook
+
+When triggered by a question (rather than an explicit "run it"), enter **Brainstorm Mode** — explain what the skill will do and ask for confirmation before writing anything to the workbook.
 
 ---
 
