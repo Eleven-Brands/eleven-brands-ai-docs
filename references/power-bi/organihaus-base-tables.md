@@ -131,7 +131,15 @@ O modelo combina tres classes de fonte:
 **Categoria:** TIO (Tool for Inventory Optimization) — Log
 **Fonte:** Pasta `rootPathLang\OrganiHaus\5.2 - OH Inventory Management\TIO - Tool for Inventory Optimization\Logs de calculo\Oficial_For_Orders\`
 **Transformacoes:** carrega apenas o arquivo com Date modified mais recente (`List.Max`), combina todas as abas
-**Atencao:** depende do arquivo mais recente — apagar logs muda o output. Coluna `key_invenotry_region_sku` tem typo intencional (invenotry)
+**Atencao:** depende do arquivo mais recente — apagar logs muda o output.
+**Relacionamentos:**
+
+| Coluna (from) | Tabela (to) | Coluna (to) | Cardinalidade | Ativo |
+|---|---|---|---|---|
+| `fact_db_results_tio.start_of_week` | `Calendar` | `'Start of Week'` | many-to-one | ✓ |
+| `fact_db_results_tio.key_inventory_region_sku` | `SKUs` | `'Key Column: Inventory Region | SKU Consertado'` | many-to-one | ✓ |
+
+**Medidas DAX:** ⚠️ não documentadas — verificar `Measurement Table` no Power BI Desktop e filtrar por medidas que referenciam `fact_db_results_tio`.
 
 ### fact_db_results_VO
 **Categoria:** Voice of Customer — Log
@@ -325,7 +333,6 @@ O modelo combina tres classes de fonte:
 | `z.dynamic_traffic_channel` | Field parameter | Seletor de canal de trafego |
 | `z.dynamic_coupon_usage_percentage` | Field parameter | Seletor de % de uso de cupom |
 | `z.dynamic_parameter_low_stock_tacos_acos` | Field parameter | Toggle entre Low Stock / TACOS / ACOS |
-| `SWICTH_BUTTON_UNITS_SOLD_INVENTORY` | DATATABLE calculada | Toggle units sold vs inventory (typo intencional: SWICTH) |
 | `dim_calendar_aux` | Dimensao | Calendario auxiliar para comparacao de periodos inativos (Growth Comparison) |
 | `dim_skus_aux` | Dimensao | Copia auxiliar de SKUs para self-joins em PPC Cross Sales |
 | `dim_bar_chart_aging_projection` | DATATABLE calculada | Labels para eixo de grafico de aging |
@@ -341,10 +348,12 @@ O modelo combina tres classes de fonte:
 | `z.parameter_coverage_selection` | Parametro | Parametro de cobertura de inventario |
 | `z.RowHeaderScorecardPpc` | DATATABLE calculada | Labels para linhas do scorecard de PPC |
 | `z.RowHeaderScorecardCoverage` | DATATABLE calculada | Labels para linhas do scorecard de cobertura |
-| `field_picker_ads_performance` | Field parameter | Seletor de campo para Ads Performance |
-| `Unified Sponsored Products - $, u and %` | Field parameter | Seletor unificado de metricas SP |
-| `teste Fees - $ and u / %` | Field parameter | Seletores de metricas de fees (nomes com "teste" indicam WIP) |
-| `teste Sponsored Products - $ and u / %` | Field parameter | Seletores de metricas SP (WIP) |
+| `z.dynamic_Legend_Picker_ads performance` | Field parameter | Seletor de campo para legenda de Ads Performance |
+| `z.dynamic_SP_all_metrics` | Field parameter | Seletor unificado de metricas SP ($, u e %) |
+| `z.dynamic_SP_absolute` | Field parameter | Seletor de metricas SP absolutas ($ e u) |
+| `z.dynamic_SP_relative` | Field parameter | Seletor de metricas SP percentuais (%) |
+| `z.dynamic_Fees_absolute` | Field parameter | Seletor de metricas de fees absolutas ($ e u) |
+| `z.dynamic_Fees_relative` | Field parameter | Seletor de metricas de fees percentuais (%) |
 | `shifting_fba_costs_aux_table` | Auxiliar | Aux para calculo de FBA costs com defasagem |
 | `SCPR_Metrics` | DATATABLE calculada | Metricas da SCPR |
 
@@ -400,10 +409,7 @@ Organizadas por DisplayFolder:
 
 | Problema | Descricao |
 |---|---|
-| Typo `invenotry` | Coluna `key_invenotry_region_sku` em fact_db_results_tio |
-| Typo `SWICTH` | Tabela `SWICTH_BUTTON_UNITS_SOLD_INVENTORY` |
 | Typo `suport` | Tabela `fact_seller_suport_cases` |
-| Tabelas `teste *` | fee e SP com nomes "teste" — possivelmente WIP, carregadas no modelo |
 | Pastas `Delete?` | Algumas measures em pastas marcadas para delecao ainda ativas |
 | STAGING US-only | STAGING_fact_cross_sales cobre apenas US dos ultimos 10 dias |
 | Logs como fonte | fact_db_results_tio e VO leem o arquivo mais recente da pasta |
@@ -541,7 +547,7 @@ Analise completa de PPC por tipo de campanha (SP, SB, SD).
 
 #### Slicers
 
-`SKUs[Amazon Family]`, `SKUs[Native Family]` (2x: slicer e listSlicer), `SKUs[Country]`, `SKUs[SKU]`, `Calendar[Date]`, `z.dynamic_time_frame_switch[Time Frame]` (2x), `field_picker_ads_performance` (seletor de campo), `Unified Sponsored Products - $, u and %`, `teste Sponsored Products - $, u and %`, `teste Sponsored Products - %`
+`SKUs[Amazon Family]`, `SKUs[Native Family]` (2x: slicer e listSlicer), `SKUs[Country]`, `SKUs[SKU]`, `Calendar[Date]`, `z.dynamic_time_frame_switch[Time Frame]` (2x), `z.dynamic_Legend_Picker_ads performance` (seletor de campo), `z.dynamic_SP_all_metrics`, `z.dynamic_SP_absolute`, `z.dynamic_SP_relative`
 
 #### Grafico de Linha 1 — SB Units Sold por Familia
 
@@ -722,7 +728,7 @@ Analise de storage fees por SKU e regiao, com estimativa de cobertura de inventa
 
 #### Slicers
 
-`SKUs[Native Family]`, `SKUs[Amazon Family]`, `SKUs[Inventory Region]`, `SKUs[SKU]`, `SKUs[is_grade_and_resell]`, `Calendar[Date]`, `Calendar[Year]` + `Calendar[Year-Month]`, `z.dynamic_time_frame_switch[Time Frame]`, `teste Fees - %` (chiclet), `teste Fees - $ and u` (chiclet)
+`SKUs[Native Family]`, `SKUs[Amazon Family]`, `SKUs[Inventory Region]`, `SKUs[SKU]`, `SKUs[is_grade_and_resell]`, `Calendar[Date]`, `Calendar[Year]` + `Calendar[Year-Month]`, `z.dynamic_time_frame_switch[Time Frame]`, `z.dynamic_Fees_relative` (chiclet), `z.dynamic_Fees_absolute` (chiclet)
 
 #### Grafico de Linha — Storage Fee e Inventario
 
