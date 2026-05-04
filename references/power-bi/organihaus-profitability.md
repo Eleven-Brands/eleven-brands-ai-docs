@@ -606,3 +606,118 @@ Usada como tooltip customizado acionado por hover nos visuais da pagina Graphic 
 | Card | `medidas[%_net_sales_yoy]` - Net Sales YoY |
 | Card | `medidas[%_tacos_amazon_family]` - TACOS por Amazon Family |
 | pivotTable | Rows: `dim_Final DRE-like[Account]`, Columns: `Calendar[Year-Month]`, Values: `medidas[Scommercial_demonstrative_OLD]` |
+
+---
+
+## Relacionamentos
+
+Modelo Import puro, independente do Base Tables. Usa suas proprias tabelas `Calendar`, `SKUs` e `Country`. Diferente do Base Tables, muitas tabelas de fato aqui usam `SKU` simples como chave de join (nao chave composta), pois o modelo de Profitability e mais simples em termos de granularidade geografica.
+
+**Padrao geral:**
+- Tabelas de fato com data diaria → `Calendar.Date`
+- Tabelas de fees mensais → `Calendar.'Start of Month'` (many-to-many)
+- Joins de SKU: ora `SKUs.SKU` (direto), ora `SKUs.'Key Column: Country | SKU'` (composite)
+- Joins de pais: `Country.Country` ou `Country.BU`
+
+**Relacionamentos ativos:**
+
+| De | Para | Tipo de chave |
+|---|---|---|
+| `fact_P&L GERAL.Date` | `Calendar.Date` | Data diaria |
+| `fact_P&L GERAL.BU` | `Country.BU` | BU |
+| `fact_sp_advertised_products.date_sp_advertised_products` | `Calendar.Date` | Data diaria |
+| `fact_sp_advertised_products.advertised_sku` | `SKUs.SKU` | SKU simples |
+| `fact_sp_advertised_products.marketplace` | `Country.Country` | Pais |
+| `fact_sd_advertised_product.date_sb_advertised_products` | `Calendar.Date` | Data diaria |
+| `fact_sd_advertised_product.advertised_sku` | `SKUs.SKU` | SKU simples |
+| `fact_sd_advertised_product.marketplace` | `Country.Country` | Pais |
+| `fact_storage_fee_daily.date_daily_share_of_storage_fee` | `Calendar.Date` | Data diaria |
+| `fact_storage_fee_daily.sku` | `SKUs.SKU` | SKU simples |
+| `fact_storage_fee_daily.country` | `Country.Country` | Pais |
+| `fact_estimated_future_daily_storage_fee.date` | `Calendar.Date` | Data diaria |
+| `fact_estimated_future_daily_storage_fee.sku` | `SKUs.SKU` | SKU simples |
+| `fact_estimated_future_daily_storage_fee.marketplace` | `Country.Country` | Pais |
+| `fact_awd_monthly_storage_fee.date` | `Calendar.Date` | Data diaria |
+| `fact_awd_monthly_storage_fee.sku` | `SKUs.SKU` | SKU simples |
+| `fact_awd_monthly_storage_fee.inventory_country` | `Country.Country` | Pais |
+| `fact_awd_monthly_processing_fee.month_of_charge` | `Calendar.'Start of Month'` | Mes (many-many) |
+| `fact_awd_monthly_processing_fee.key_inventory_country_sku` | `SKUs.'Key Column: Country \| SKU'` | Chave composta |
+| `fact_awd_monthly_transportation_fee.month_of_charge` | `Calendar.'Start of Month'` | Mes (many-many) |
+| `fact_awd_monthly_transportation_fee.key_inventory_country_sku` | `SKUs.'Key Column: Country \| SKU'` | Chave composta |
+| `fact_payments_date_range.date_payments` | `Calendar.Date` | Data diaria |
+| `fact_payments_date_range.Country` | `Country.Country` | Pais |
+| `fact_payments_date_range.contenated_cols` | `SKUs.'Key Column: Country \| SKU'` | Chave composta |
+| `fact_payments_date_range.'Order Amazon ID'` | `fact_raw_allOrders.amazon_order_id` | Order ID |
+| `fact_aged_inventory_surcharge.date_payment` | `Calendar.Date` | Data diaria |
+| `fact_aged_inventory_surcharge.key_inventory_country_sku` | `SKUs.'Key Column: Country \| SKU'` | Chave composta |
+| `fact_removal_order_detail.date_payment` | `Calendar.Date` | Data diaria |
+| `fact_removal_order_detail.key_inventory_country_sku` | `SKUs.'Key Column: Country \| SKU'` | Chave composta |
+| `fact_returns_processing_fee.date_payments` | `Calendar.Date` | Data diaria |
+| `fact_returns_processing_fee.key_sales_country_sku` | `SKUs.'Key Column: Country \| SKU'` | Chave composta |
+| `fact_fulfillment_fee_credits.date_payments` | `Calendar.Date` | Data diaria |
+| `fact_fulfillment_fee_credits.Country` | `Country.Country` | Pais |
+| `fact_fulfillment_fee_credits.key_country_sku` | `SKUs.'Key Column: Country \| SKU'` | Chave composta |
+| `fact_payments_storage_fee_with_gst.date_daily_share_of_storage_fee` | `Calendar.Date` | Data diaria |
+| `fact_payments_storage_fee_with_gst.country` | `Country.Country` | Pais |
+| `fact_payments_storage_fee_with_gst.sku` | `SKUs.SKU` | SKU simples |
+| `fact_sb_spend_by_sku.date_sb` | `Calendar.Date` | Data diaria |
+| `fact_sb_spend_by_sku.marketplace` | `Country.Country` | Pais |
+| `fact_sb_spend_by_sku.key_marketplace_sku` | `SKUs.'Key Column: Marketplace \| SKU'` | Chave composta |
+| `fact_raw_allOrders.sales_channel_temporary` | `zz_sales_channel_temporary.sales_channel_temporary` | Canal de vendas |
+| `SKUs.Country` | `Country.Country` | Dim → Dim |
+
+**Relacionamentos inativos:**
+
+| De | Para | Motivo |
+|---|---|---|
+| `z.dynamic_time_frame_switch.'Start Date'` ↔ | `Calendar.Date` | Seletor de granularidade — inativo (bidir) |
+| `fact_payments_date_range.date_all_orders` | `Calendar.Date` | Data alternativa de orders — inativo |
+| `fact_payments_date_range.SKU` | `SKUs.SKU` | Join direto por SKU — inativo |
+| `fact_aged_inventory_surcharge.date_inventory` | `Calendar.Date` | Data do inventario vs data de pagamento — inativo |
+| `fact_removal_order_detail.date_request` | `Calendar.Date` | Data de requisicao vs data de pagamento — inativo |
+| `fact_awd_monthly_processing_fee.transaction_date` | `Calendar.Date` | Data de transacao vs data mensal — inativo |
+| `fact_awd_monthly_transportation_fee.transaction_date` | `Calendar.Date` | Data de transacao vs data mensal — inativo |
+
+---
+
+## Medidas DAX (medidas — tabela centralizada)
+
+Total: ~190 medidas. Organizadas por dominio:
+
+**Vendas e Receita:**
+`$_gross_sales`, `$_product_sales`, `$_net_sales`, `$_net_sales_commercial`, `$_net_average_price`, `$_net_average_price_commercial`, `u_units_sold`, `$_promotional_rebates`, `$_promotional_rebates_plus_shipping_credits`, `$_shipping_credits`, `$_taxes_collected`, `$_taxes_refunded`, `$_taxes_withheld`, `$_vat_gb_eu`, `$_vat_gst_balance_taxes_collected_refunded_withheld`, `$_gst_ca_provision`, `$_subscription_fee`
+
+**COGS e Custo do Produto:**
+`$_cogs`, `$_cogs_refund`, `$_cogs_net_of_refunds`, `$_cogs_per_unit_sold`, `$_product_refunds`, `$_landed_cost_on_adjustment`, `$_other_credits`, `$_giftwrap_credits`, `$_gst_ca_fulfillment_fee_credits`, `$_gst_ca_storage_fee_credits`, `$_fee_adjustment`
+
+**Fees Amazon:**
+`$_selling_fees`, `$_fulfillment_fee`, `$_fulfillment_fee_plus_giftwrap_credits`, `$_fulfillment_fee_per_unit_sold`, `$_coupon_fee`, `$_deal_fee`, `$_removal_order_fee`, `$_returns_processing_fee`, `$_grade_and_resell_fee`
+
+**Storage Fees:**
+`$_amz_storage_fee`, `$_amz_storage_fee_actual`, `$_amz_long_term_storage_fee_actual`, `$_amz_storage_fee_forecast`, `$_amz_awd_storage_fees`, `$_awd_storage_fee_actual`, `$_awd_processing_fee`, `$_awd_transportation_fee`, `$_awd_processing_transportation_fees`, `$_amz_storage_fee_payments_with_gst`
+
+**Ads Spend:**
+`$_sponsored_product_spend`, `$_sponsored_brands_spend`, `$_sponsored_display_spend`, `$_total_sponsored_ads_spend`, `$_total_sponsored_ads_spend_normalized_by_amazon_family`
+
+**Custos Operacionais (P&L GERAL):**
+`$_photograph_cost`, `$_logistic_storage_3pl_cost`, `$_professional_service_fee`, `$_bank_fee`, `$_training_education`, `$_marketing_services`, `$_local_cost`, `$_wages_cost`, `$_fixed_cost`, `$_office_cost`, `$_adjustments_credit_card`, `$_total_general_and_administrative_costs`, `$_total_other_expenses_local_cost_plus_general_adm`
+
+**Margens e Lucro:**
+`$_comercial_margin`, `$_commercial_expenses`, `$_commercial_profit`, `$_contribution_margin_1` a `$_contribution_margin_5`, `$_contribution_margin_4_1`, `$_partial_operational_profit`, `$_net_income`, `$_net_income_commercial`, `$_total_expenses`, `$_total_expenses_commercial`, `$_total_other_expenses_commercial`, `$_adjustments`, `$_cummulative_partial_operational_profit_by_amazon_family`
+
+**Margens Normalizadas por Amazon Family:**
+`$_contribution_margin_3_normalized_by_amazon_family`, `$_contribution_margin_4_normalized_by_amazon_family`, `$_partial_operational_profit_normalized_by_amazon_family`, `$_total_sponsored_ads_spend_normalized_by_amazon_family`
+
+**% Sobre Net Sales:**
+`%_cogs_net_of_refunds_over_net_sales`, `%_fulfillment_fee_over_net_sales`, `%_selling_fees_over_net_sales`, `%_amz_storage_fee_over_net_sales`, `%_amz_awd_storage_fees_over_net_sales`, `%_awd_storage_fee_over_net_sales`, `%_awd_processing_transportation_fees_over_net_sales`, `%_tacos`, `%_net_income_over_net_sales`, `%_operational_profit_over_product_sales`, `%_partial_operational_profit_over_product_sales`, `%_product_refunds_over_net_sales`, ... (padrao: `%_[line]_over_net_sales` para todas as linhas do P&L)
+
+**YoY e UI:**
+`%_net_sales_yoy`, `%_tacos_yoy`, `%_units_sold_yoy`, `%_net_margin_yoy`, `%_cogs_margin_yoy`, `%_fulfillment_fee_margin_yoy`, `%_amz_storage_fee_yoy`, `%_operational_profit_yoy`, `%_operational_margin_yoy`, `%_product_refunds_yoy`, `%_net_average_price_yoy` — e versoes `ui_%_*_yoy` com formatacao de simbolo +/- para cards
+
+**DRE / Statement:**
+`$_statement_financial`, `$_statement_financial_format`, `$_statement_commercial`, `%_statement_financial`, `statements_highlight_flag`
+
+**Auxiliares e UI:**
+`hamb_menu`, `ui_storage_fee_status`, `ui_tooltip_amz_awd_storage_fee`, `ui_tooltip_awd_processing_transportation_fees`, `'Last Refresh Datetime'`, `q_count_difference_between_two_dates`, `q_count_difference_between_two_dates_for_visuals`, `x_arrow_up`, `x_arrow_down`, `r_ranking_criteria_partial_operational_profit_by_amazon_family`, `r_ranking_partial_operational_profit_by_amazon_family`, `%_pareto_cummulative_partial_operational_profit_by_amazon_family`
+
+**Documentacao:** Eleven Brands · OrganiHaus - Profitability · Dados & Analytics

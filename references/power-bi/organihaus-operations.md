@@ -1069,6 +1069,75 @@ Rows: Inventory Region, SKU. Values: action ends on, Projected Aging Surcharge, 
 
 ---
 
+## Relacionamentos
+
+O modelo Operations e Composite: tabelas locais (Import) se juntam tanto com tabelas DirectQuery do Base Tables (Calendar, SKUs, dim_order_IDs, etc.) quanto entre si. O arquivo `.tmdl` define todos os relacionamentos — os listados abaixo sao os ativos; os inativos (ativados via USERELATIONSHIP) estao marcados.
+
+**Padrao geral:** quase toda fact table tem dois relacionamentos:
+1. `[coluna_de_data]` → `Calendar.Date` (many-to-one)
+2. `[chave_composta]` → `SKUs.[Key Column: Tipo | Tipo]` (many-to-many — heranca do modelo estrela do Base Tables)
+
+**Relacionamentos bidirecionais (ativos):**
+
+| De | Para | Descricao |
+|---|---|---|
+| `z.dynamic_time_frame_switch.'Start Date'` | `Calendar.Date` | Seletor de granularidade temporal |
+| `f.FBACustomerReturns.'order_id_sk \| key_marketplace_sku'` | `f.AllOrders.'order_id_sk \| key_marketplace_sku'` | Cross-filter returns ↔ orders |
+| `td_full_order_transfer_details.key_inventory_region_sku` | `SKUs.'Key Column: Inventory Region \| SKU'` | Transferencias ↔ SKUs |
+| `Inbound Shipments.'Order Id'` | `dim_order_IDs.'Order Id'` | Shipments ↔ order IDs |
+| `Inbound Shipments.'Amazon Shipment Id'` | `fact_case_log.'Amazon Shipment ID'` | Shipments ↔ casos |
+| `fact_SCPR_all_reviews.Attribute` | `dim_SCPR_category.Attribute` | SCPR reviews ↔ categorias |
+
+**Relacionamentos inativos notaveis:**
+
+| De | Para | Motivo |
+|---|---|---|
+| `Inbound Shipments.'Order Date'` | `Calendar.Date` | Alternativo ao Delivery Date — ativado em measures especificas |
+| `Calendar.Date` | `dim_calendar_aux.'Date aux'` | Growth Comparison (USERELATIONSHIP) |
+| `Inventory Ledger.'Key Column: Country \| ASIN'` | `SKUs.'Key Column: Country \| ASIN'` | Relacao ASIN inativa, usa Country\|SKU como ativa |
+| `f_aging_projection.file_date` | `Calendar.Date` | Data do arquivo vs data de projecao |
+| `f_promotion_tracker.start_date` | `Calendar.Date` | Alternativo ao end_date |
+| `f.FBACustomerReturns.date_fba_customer_return` | `Calendar.Date` | Alternativo ao purchase_date |
+| `fact_sp_purchased_products.key_marketplace_purchased_asin` | `dim_skus_aux.'Key Column: Marketplace \| ASIN'` | Cross-sales via SKU auxiliar |
+
+**Relacionamentos de campo dinamico (field parameters):**
+
+| De | Para |
+|---|---|
+| `z.dynamic_inventory_line_axis.'Inventory Type'` | `z.dynamic_inventory_selector.'Inventory Type'` |
+| `z.dynamic_inventory_column_axis.'Inventory Type'` | `z.dynamic_inventory_selector.'Inventory Type'` |
+| `z.dynamic_GC_Rows.Group` | `z.dynamic_GC_selector.Group` |
+| `z.dynamic_GC_Values.Group` | `z.dynamic_GC_selector.Group` |
+| `z.dynamic_parameter_difference_year_over_year.Category` | `z.dynamic_parameter_units_revenue_price.Sales` |
+| `z.dynamic_parameter_low_stock_tacos_acos.Theme` | `z.dynamic_parameter_units_revenue_price.Theme` |
+
+**Nota sobre fact_db_results_tio:** o relacionamento `fact_db_results_tio.key_invenotry_region_sku → SKUs.'Key Column: Inventory Region | SKU Consertado'` no arquivo `.tmdl` de Operations ainda referencia o nome antigo da coluna (`key_invenotry_region_sku` com typo). A coluna foi renomeada para `key_inventory_region_sku` no Base Tables — o modelo Operations pode precisar de republish para refletir essa mudanca.
+
+---
+
+## Medidas DAX (_Operations Metrics — 67 medidas)
+
+Todas as medidas locais do Operations ficam na tabela `_Operations Metrics`. Organizadas por dominio:
+
+**Inbound / Shipments:**
+`'Total Shipment Cases'`, `'Average Solution LT'`, `'Open Shipment Cases'`, `'Pending Status Shipment Cases'`, `'Cash Reimbursed (USD)'`, `'Inventory Recovered'`, `'Units Accounted For'`, `'Distinct SKUs by Shipment'`, `'GETIDA Cost (USD)'`, `'Cost Accounted For (USD)'`, `'Total SKU Quantity by Shipment'`, `'Total Remeasurement Cases'`, `'Avg Leadtime (days)'`, `Shipment_Board_HTML`, `'<HTML> Logo_Arrivals'`
+
+**Frete / OTIF:**
+`'Total Freight Cost'`, `'Avg Total Freight Cost'`, `'Avg Transit Time'`, `agora`, `Qty_approved_quotations`, `Total_approved_cost`, `Avg_approved_cost_CBM`, `Qty_FF`, `Avg_Cost_CBM`, `DelayDays`, `InFull_Score`, `OnTime_Score`, `OnTime_Weighted`, `OTIF_Score`, `delivery_tolerance`, `DeliveryStatus`, `OT_Final`, `Avg_Delay`, `LeadTime`, `Avg_LT`, `Qty_Shipments`
+
+**YoY (Frete / OTIF):**
+`'InFull_Score YoY'`, `'OT_Final YoY'`, `'OTIF_Score YoY'`, `'Avg_Delay YoY'`, `'Avg_LT YoY'`, `'Qty_Shipments YoY'`, `'OTIF_Score Prev. Year'`
+
+**Customer Support:**
+`'Total CS Messages'`, `'Total Complaints'`, `'Total Questions'`, `'Avg Resolution Time (days)'`, `'FCR Rate'`, `'>48h Open Messages'`, `'CS Refund Rate'`, `'CS Replacement Rate'`, `'Product Issue Rate'`, `'Total Refund Amount'`, `'Total Replacement Amount'`, `'Total Product Issues'`, `'Total Refund Messages'`, `'Total Replacement Messages'`, `'Complaint Rate'`
+
+**Reembolsos FBA (GETIDA):**
+`'Total Refunds (USD)'`, `'Cases with Changes'`, `'No Change Cases'`, `'Total Open Cases'`, `'Cases with Refund'`, `'% Cases with Refund'`, `'% Cases with Changes'`, `'% Cases with No Changes'`, `_d_days_since_last_support_case`
+
+Medidas externas do Base Tables sao acessadas via `EXTERNALMEASURE` (ex: medidas da `Measurement Table` como `$_revenue`, `u_units_sold`, metricas de SCPR, etc.).
+
+---
+
 ## Pontos de Atencao
 
 - **fact_seller_suport_cases typo:** Nome da tabela tem "suport" sem segundo "p" — typo herdado do Base Tables.

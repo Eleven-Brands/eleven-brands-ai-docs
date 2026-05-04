@@ -799,6 +799,51 @@ Colunas: `fact_COMP_sales[Brand]`, Rank, Change (Δ Rank), Growth Rate, Sales
 
 ---
 
+## Relacionamentos
+
+Modelo Import puro com calendario proprio (`dim_calendar`, nao o `Calendar` do Base Tables). A `SKUs` no Market Research e uma tabela local (importada via BigQuery), nao DQ do Base Tables.
+
+**Relacionamentos ativos principais:**
+
+| De | Para | Cardinalidade |
+|---|---|---|
+| `OH_Output.Date` | `dim_calendar.Date` | many-to-one |
+| `COMP_Output.Date` | `dim_calendar.Date` | many-to-one |
+| `fact_COMP_sales.Date` | `dim_calendar.Date` | many-to-one |
+| `fact_promotion_tracker.activeDate` | `dim_calendar.Date` | many-to-one |
+| `fact_RankRadar_KWs.originalDate` | `dim_calendar.Date` | many-to-one |
+| `fact_sqp_asin.start_date` | `dim_calendar.Date` | many-to-one |
+| `fact_sqp_sv.start_date` | `dim_calendar.Date` | many-to-one |
+| `fact_sqp_sv_funnel_totals.start_date` | `dim_calendar.Date` | many-to-one |
+| `z.dynamic_time_frame_switch.'Start Date'` ↔ | `dim_calendar.Date` | bidir |
+| `Competitors ASINs.'Key Country \| Native Family'` | `OH ASINs.'Key Country \| Native Family'` | many-to-many |
+| `OH_Output.'Key: Country \| ASIN'` | `OH ASINs.'Key Country \| ASIN'` | many-to-many |
+| `COMP_Output.'Key Country \| ASIN \| Brand'` | `Competitors ASINs.'Key Country \| ASIN \| Brand'` | many-to-many |
+| `fact_COMP_sales.Marketplace` | `dim_country.Marketplace` | many-to-one |
+| `fact_sqp_asin.'Key Country \| ASIN'` | `dim_AmzFamily.'Key Country \| ASIN'` | many-to-one |
+| `fact_sqp_asin.'Key SQ'` | `dim_sq.'Key SQ'` | many-to-one |
+| `fact_sqp_sv.'Key SQ'` | `dim_sq.'Key SQ'` | many-to-one |
+| `fact_sqp_sv_funnel_totals.'Key SQ'` | `dim_sq.'Key SQ'` | many-to-one |
+| `fact_RankRadar_KWs.'Key Country \| Search Term'` | `aux_DD_SV.'Key Country \| Search Term'` | many-to-one |
+| `fact_RankRadar_KWs.'Key Amazon Family \| Top Variation'` | `OH ASINs.'Key Amazon Family \| Top Variation'` | many-to-many |
+| `OH ASINs.'Key Country \| ASIN'` ↔ | `dim_AmzFamily.'Key Country \| ASIN'` | bidir (one-to-many) |
+| `Competitors ASINs.Highlight` | `dim_important_competitors.Id` | many-to-one |
+| `fact_promotion_tracker.keyCountryAsin` | `OH ASINs.'Key Country \| ASIN'` | many-to-one |
+| `dim_country.Region` | `dim_marketplace.Marketplace` | many-to-one |
+| `Competitors ASINs.ASIN` / `OH ASINs.ASIN` / `SKUs.ASIN` | `ASIN Brand.ASIN` | many-to-one (3 rels) |
+
+**Relacionamentos inativos notaveis:**
+
+| De | Para | Motivo |
+|---|---|---|
+| `fact_RankRadar_KWs.'Key Country \| Amazon Family'` | `OH ASINs.'Key Country \| Amazon Family'` | Join alternativo por familia — inativo, usa `Top Variation` como ativo |
+| `fact_promotion_tracker.keyCountryAsin` | `dim_AmzFamily.'Key Country \| ASIN'` | Relacao direta inativa — usa `OH ASINs` como ativo |
+
+**Relacionamentos `joinOnDateBehavior: datePartOnly`** (automaticos do Power BI para tabelas de data):
+`PARAM_AvailableDates`, `PARAM_AvailableDates_Comp`, `zz_Refresh_Control`, `SKUs.'Refresh Date'`, `COMP_Output.'Date Created'`, `OH_Output.'Date Created'`, `fact_promotion_tracker.startDate`, `fact_promotion_tracker.endDate`, `z.dynamic_time_frame_switch.'Date order'` — todos apontam para `LocalDateTable_*` geradas automaticamente.
+
+---
+
 ## Pontos de Atencao
 
 - **SQP via CSV local:** A fonte `resultado_final.csv` estava originalmente no BigQuery (`2_Silver_Business_Reports.vw_search_query_performance`); foi migrada para um CSV local em `z_personal_folders`. Atualizacao manual necessaria para novos dados.
