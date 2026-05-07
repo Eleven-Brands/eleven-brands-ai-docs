@@ -93,3 +93,4 @@ Skill commands for Claude Code live in `~/.claude/commands/` and are available g
 | `skills-creator` | Creates and reviews skill files following this standard |
 | `ai-setup` | Onboarding: generates personalized "Instructions for Claude" for every employee |
 | `pivot-fields-from-powerbi` | Inspects pivot tables in the active Excel workbook and writes a field report sheet via the Claude Excel add-in |
+| `powerbi-query` | Executes DAX queries against Eleven Brands Power BI semantic models via REST API using natural language input |
