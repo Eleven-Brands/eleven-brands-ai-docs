@@ -381,7 +381,7 @@ O modelo usa **chaves compostas concatenadas** com separador ` | `. Ha 9 variaco
 
 ---
 
-## Medidas DAX — Measurement Table (722 medidas)
+## Medidas DAX — Measurement Table (735 medidas)
 
 
 ### 3PL Reports
@@ -5714,6 +5714,182 @@ RETURN
 ```
 
 
+### Inv Aging\New
+
+#### `u_skus_with_inventory`
+
+**Depende de medidas:** `[d_last_file_aging]`  
+**Depende de colunas:** `f_aging_projection[aging_bucket]`, `f_aging_projection[file_date]`, `f_aging_projection[inventory_by_inbound_shipments]`, `f_aging_projection[key_inventory_region_sku]`  
+```dax
+VAR LastAgingDate = [d_last_file_aging]
+RETURN
+    CALCULATE (
+        DISTINCTCOUNT ( f_aging_projection[key_inventory_region_sku] ),
+        REMOVEFILTERS ( f_aging_projection[aging_bucket] ),
+        f_aging_projection[file_date] = LastAgingDate,
+        f_aging_projection[inventory_by_inbound_shipments] > 0
+    )
+```
+
+#### `u_skus_at_risk`
+
+**Depende de medidas:** `[d_last_file_aging]`  
+**Depende de colunas:** `f_aging_projection[aging_bucket]`, `f_aging_projection[file_date]`, `f_aging_projection[inventory_by_inbound_shipments]`, `f_aging_projection[key_inventory_region_sku]`  
+```dax
+VAR LastAgingDate = [d_last_file_aging]
+RETURN
+    CALCULATE (
+        DISTINCTCOUNT ( f_aging_projection[key_inventory_region_sku] ),
+        REMOVEFILTERS ( f_aging_projection[aging_bucket] ),
+        f_aging_projection[file_date] = LastAgingDate,
+        f_aging_projection[aging_bucket] = "At Risk",
+        f_aging_projection[inventory_by_inbound_shipments] > 0
+    )
+```
+
+#### `u_skus_aged`
+
+**Depende de medidas:** `[d_last_file_aging]`  
+**Depende de colunas:** `f_aging_projection[aging_bucket]`, `f_aging_projection[file_date]`, `f_aging_projection[inventory_by_inbound_shipments]`, `f_aging_projection[key_inventory_region_sku]`  
+```dax
+VAR LastAgingDate = [d_last_file_aging]
+RETURN
+    CALCULATE (
+        DISTINCTCOUNT ( f_aging_projection[key_inventory_region_sku] ),
+        REMOVEFILTERS ( f_aging_projection[aging_bucket] ),
+        f_aging_projection[file_date] = LastAgingDate,
+        f_aging_projection[aging_bucket] = "Aged",
+        f_aging_projection[inventory_by_inbound_shipments] > 0
+    )
+```
+
+#### `%_skus_at_risk`
+
+**Depende de medidas:** `[u_skus_at_risk]`, `[u_skus_with_inventory]`  
+```dax
+DIVIDE ( [u_skus_at_risk], [u_skus_with_inventory] )
+```
+
+#### `%_skus_aged`
+
+**Depende de medidas:** `[u_skus_aged]`, `[u_skus_with_inventory]`  
+```dax
+DIVIDE ( [u_skus_aged], [u_skus_with_inventory] )
+```
+
+#### `u_inventory_at_risk`
+
+**Depende de medidas:** `[d_last_file_aging]`, `[u_inventory_ending_plus_transit]`  
+**Depende de colunas:** `'Calendar'[Date]`, `f_aging_projection[aging_bucket]`, `f_aging_projection[file_date]`, `f_aging_projection[inventory_by_inbound_shipments]`  
+```dax
+VAR LastAgingDate = [d_last_file_aging]
+VAR ShareAtRisk =
+    DIVIDE (
+        CALCULATE (
+            SUM ( f_aging_projection[inventory_by_inbound_shipments] ),
+            REMOVEFILTERS ( f_aging_projection[aging_bucket] ),
+            f_aging_projection[file_date] = LastAgingDate,
+            f_aging_projection[aging_bucket] = "At Risk"
+        ),
+        CALCULATE (
+            SUM ( f_aging_projection[inventory_by_inbound_shipments] ),
+            REMOVEFILTERS ( f_aging_projection[aging_bucket] ),
+            f_aging_projection[file_date] = LastAgingDate
+        )
+    )
+VAR InventoryAtAgingDate =
+    CALCULATE (
+        [u_inventory_ending_plus_transit],
+        'Calendar'[Date] = LastAgingDate
+    )
+RETURN
+    ShareAtRisk * InventoryAtAgingDate
+```
+
+#### `u_inventory_aged`
+
+**Depende de medidas:** `[d_last_file_aging]`, `[u_inventory_ending_plus_transit]`  
+**Depende de colunas:** `'Calendar'[Date]`, `f_aging_projection[aging_bucket]`, `f_aging_projection[file_date]`, `f_aging_projection[inventory_by_inbound_shipments]`  
+```dax
+VAR LastAgingDate = [d_last_file_aging]
+VAR ShareAged =
+    DIVIDE (
+        CALCULATE (
+            SUM ( f_aging_projection[inventory_by_inbound_shipments] ),
+            REMOVEFILTERS ( f_aging_projection[aging_bucket] ),
+            f_aging_projection[file_date] = LastAgingDate,
+            f_aging_projection[aging_bucket] = "Aged"
+        ),
+        CALCULATE (
+            SUM ( f_aging_projection[inventory_by_inbound_shipments] ),
+            REMOVEFILTERS ( f_aging_projection[aging_bucket] ),
+            f_aging_projection[file_date] = LastAgingDate
+        )
+    )
+VAR InventoryAtAgingDate =
+    CALCULATE (
+        [u_inventory_ending_plus_transit],
+        'Calendar'[Date] = LastAgingDate
+    )
+RETURN
+    ShareAged * InventoryAtAgingDate
+```
+
+#### `%_aging_surcharge_over_normal_storage_fee`
+
+**Depende de medidas:** `[$_aging_surcharge_actual_projection]`, `[$_estimated_storage_fee_actual]`  
+```dax
+DIVIDE (
+    [$_aging_surcharge_actual_projection],
+    [$_estimated_storage_fee_actual]
+)
+```
+
+#### `_test_inv_at_aging`
+
+**Depende de medidas:** `[u_inventory_ending_plus_transit]`  
+**Depende de colunas:** `'Calendar'[Date]`  
+```dax
+CALCULATE (
+    [u_inventory_ending_plus_transit],
+    'Calendar'[Date] = DATE ( 2026, 4, 16 )
+)
+```
+
+#### `_debug_numerator`
+
+**Depende de medidas:** `[d_last_file_aging]`  
+**Depende de colunas:** `f_aging_projection[aging_bucket]`, `f_aging_projection[file_date]`, `f_aging_projection[inventory_by_inbound_shipments]`  
+```dax
+VAR LastAgingDate = [d_last_file_aging]
+RETURN
+CALCULATE (
+    SUM ( f_aging_projection[inventory_by_inbound_shipments] ),
+    FILTER (
+        ALL ( f_aging_projection ),
+        f_aging_projection[file_date] = LastAgingDate
+            && f_aging_projection[aging_bucket] = "At Risk"
+    )
+)
+```
+
+#### `_debug_denominator `
+
+**Depende de medidas:** `[d_last_file_aging]`  
+**Depende de colunas:** `f_aging_projection[file_date]`, `f_aging_projection[inventory_by_inbound_shipments]`  
+```dax
+VAR LastAgingDate = [d_last_file_aging]
+RETURN
+CALCULATE (
+    SUM ( f_aging_projection[inventory_by_inbound_shipments] ),
+    FILTER (
+        ALL ( f_aging_projection ),
+        f_aging_projection[file_date] = LastAgingDate
+    )
+)
+```
+
+
 ### Inventory\FBA Inventory\Actual Quantity
 
 #### `d_last_fba_inventory`
@@ -9980,23 +10156,25 @@ CALCULATE(
 
 #### `u_mapped_return_units`
 
-**Depende de colunas:** `'Calendar'[Date]`, `'f.FBACustomerReturns'[purchase_date]`, `'f.FBACustomerReturns'[quantity]`, `fFBACustomerReturns[status]`  
+**Depende de colunas:** `'f.FBACustomerReturns'[date_fba_customer_return]`, `'f.FBACustomerReturns'[purchase_date]`, `'f.FBACustomerReturns'[quantity]`  
 ```dax
-VAR _result= 
-    SUMX(
-        'f.FBACustomerReturns',
-        VAR _orderDate = 'f.FBACustomerReturns'[purchase_date]
-        VAR _endDate = EOMONTH(_orderDate, 2)
-        RETURN
-            CALCULATE(
-                SUM('f.FBACustomerReturns'[quantity])
-                , DATESINPERIOD('Calendar'[Date], _endDate, -3, MONTH)
-                //, fFBACustomerReturns[status] IN {"Unit returned to inventory"}
-            )
-    )
+// Soma unidades devolvidas cuja compra (purchase_date) está no
+// contexto filtrado e cuja devolução ocorreu em ate 60 dias.
+// Janela definida empiricamente em 2026-05-07: cobre 98% das
+// devolucoes nos ultimos 18-24 meses (BQ analysis).
 
-RETURN
-    _result
+SUMX(
+    FILTER(
+        'f.FBACustomerReturns',
+        NOT ISBLANK('f.FBACustomerReturns'[date_fba_customer_return])
+        && DATEDIFF(
+            'f.FBACustomerReturns'[purchase_date],
+            'f.FBACustomerReturns'[date_fba_customer_return],
+            DAY
+        ) <= 60
+    ),
+    'f.FBACustomerReturns'[quantity]
+)
 ```
 
 #### `%_mapped_return_rate`
@@ -10079,6 +10257,21 @@ CALCULATE(
     SUM('f.FBACustomerReturns'[quantity])
     , USERELATIONSHIP('Calendar'[Date],'f.FBACustomerReturns'[date_fba_customer_return])
 )
+```
+
+#### `%_returns_quality_share`
+
+**Depende de medidas:** `[u_mapped_return_units]`  
+**Depende de colunas:** `'f.FBACustomerReturns'[Return Reason Group]`  
+```dax
+VAR _qty_quality =
+    CALCULATE (
+        [u_mapped_return_units],
+        'f.FBACustomerReturns'[Return Reason Group] = "Product Quality"
+    )
+VAR _qty_total = [u_mapped_return_units]
+RETURN
+    DIVIDE ( _qty_quality, _qty_total )
 ```
 
 
@@ -12982,6 +13175,16 @@ RETURN
 DIVIDE(PrevMonthLossRevenue, PrevMonthPotentialRevenue, 0)
 ```
 
+#### `$_revenue_loss`
+
+**Depende de colunas:** `'fact_db_results_VO'[Calc_Loss_of_Revenue]`  
+```dax
+CALCULATE(
+    SUM('fact_db_results_VO'[Calc_Loss_of_Revenue]),
+    'fact_db_results_VO'[Calc_Loss_of_Revenue] > 0
+)
+```
+
 
 ### Velocity\Daily
 
@@ -13493,9 +13696,6 @@ return
 ```
 
 
-
----
-
 ## Fontes das Tabelas (90 tabelas)
 
 
@@ -13935,7 +14135,7 @@ in
 ### `f_aging_projection`
 
 **Modo:** `import`  **Grupo:** `'Standalone Files'`  
-**Colunas:** `file_date` dateTime, `simulation` int64, `date_aging_projection` dateTime, `inbound_date` dateTime, `current_inventory` double, `inventory_by_inbound_shipments` double, `range` string, `aging_surcharge` double, `has_surcharge` boolean, `estimated_storage_fee_aging_inventory` double, `key_inventory_region_sku` string, `aging_bucket = ````  
+**Colunas:** `file_date` dateTime, `simulation` int64, `date_aging_projection` dateTime, `inbound_date` dateTime, `current_inventory` double, `inventory_by_inbound_shipments` double, `range` string, `aging_surcharge` double, `has_surcharge` boolean, `estimated_storage_fee_aging_inventory` double, `key_inventory_region_sku` string, `aging_bucket = ````, `aging_bucket_order =`  
 ```powerquery
 let
     Source = Folder.Files(path_to_files & "standalone_files\db_aging_projection"),
@@ -15945,4 +16145,5 @@ ADDCOLUMNS(
     "LastRefresh", NOW()
 )
 ```
+
 

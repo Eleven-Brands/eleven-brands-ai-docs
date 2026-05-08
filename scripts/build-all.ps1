@@ -14,6 +14,7 @@ Write-Host ""
 & "$PSScriptRoot\build-pivot-fields-from-powerbi.ps1"
 & "$PSScriptRoot\build-clickup-commenter.ps1"
 & "$PSScriptRoot\build-powerbi-query.ps1"
+& "$PSScriptRoot\build-dashboard-guide.ps1"
 
 # Sync shared references to Claude Code
 $REFS_DEST = Join-Path $HOME ".claude\references"
