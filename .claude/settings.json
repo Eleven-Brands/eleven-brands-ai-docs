@@ -13,7 +13,10 @@
       "Glob(**)",
       "Grep(**)",
       "Bash(git *)",
-      "Bash(bash scripts/*)"
+      "Bash(bash scripts/*)",
+      "Bash(pip show *)",
+      "Bash(python -c \"import os; print\\('TENANT_ID:', os.environ.get\\('POWERBI_TENANT_ID', 'NAO DEFINIDO'\\)\\); print\\('CLIENT_ID:', os.environ.get\\('POWERBI_CLIENT_ID', 'NAO DEFINIDO'\\)\\)\")",
+      "Bash(python -c ' *)"
     ],
     "deny": [
       "Bash(rm *)",

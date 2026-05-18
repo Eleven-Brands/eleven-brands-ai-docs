@@ -1,6 +1,10 @@
 Write-Host "Building all Eleven Brands skills..."
 Write-Host ""
 
+# Atualiza documentacao Power BI a partir dos TMDL (zero tokens)
+& "$PSScriptRoot\update-powerbi-docs.ps1"
+Write-Host ""
+
 & "$PSScriptRoot\build-agile-management.ps1"
 & "$PSScriptRoot\build-documentation-editor.ps1"
 & "$PSScriptRoot\build-clickup-manager.ps1"
@@ -8,6 +12,9 @@ Write-Host ""
 & "$PSScriptRoot\build-presentation-creator.ps1"
 & "$PSScriptRoot\build-ai-setup.ps1"
 & "$PSScriptRoot\build-pivot-fields-from-powerbi.ps1"
+& "$PSScriptRoot\build-clickup-commenter.ps1"
+& "$PSScriptRoot\build-powerbi-query.ps1"
+& "$PSScriptRoot\build-dashboard-guide.ps1"
 
 # Sync shared references to Claude Code
 $REFS_DEST = Join-Path $HOME ".claude\references"
