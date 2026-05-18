@@ -4,6 +4,10 @@ dist/
 # Local Claude Code settings
 .claude/settings.local.json
 
+# Ruflo runtime data — generated, not committed
+.claude-flow/
+agentdb.rvf
+
 # Source documents — binary formats not suitable for version control
 *.docx
 *.xlsx
