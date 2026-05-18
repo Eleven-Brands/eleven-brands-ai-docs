@@ -381,7 +381,7 @@ O modelo usa **chaves compostas concatenadas** com separador ` | `. Ha 9 variaco
 
 ---
 
-## Medidas DAX — Measurement Table (735 medidas)
+## Medidas DAX — Measurement Table (736 medidas)
 
 
 ### 3PL Reports
@@ -13177,11 +13177,31 @@ DIVIDE(PrevMonthLossRevenue, PrevMonthPotentialRevenue, 0)
 
 #### `$_revenue_loss`
 
-**Depende de colunas:** `'fact_db_results_VO'[Calc_Loss_of_Revenue]`  
+**Depende de colunas:** `'fact_db_results_VO'[Calc_Loss_of_Revenue]`, `fact_db_results_VO[Calc_Loss_of_Revenue]`, `fact_db_results_VO[Key Inventory Region | Base SKU]`, `fact_db_results_VO[Year-Week]`  
 ```dax
-CALCULATE(
-    SUM('fact_db_results_VO'[Calc_Loss_of_Revenue]),
-    'fact_db_results_VO'[Calc_Loss_of_Revenue] > 0
+SUMX(
+    SUMMARIZE(
+        fact_db_results_VO,
+        fact_db_results_VO[Key Inventory Region | Base SKU],
+        fact_db_results_VO[Year-Week]
+    ),
+    CALCULATE( MAX( fact_db_results_VO[Calc_Loss_of_Revenue] ),
+    'fact_db_results_VO'[Calc_Loss_of_Revenue] > 0)
+)
+```
+
+#### `u_sales_loss`
+
+**Depende de colunas:** `'fact_db_results_VO'[Calc_Loss_of_Sales]`, `fact_db_results_VO[Calc_Loss_of_Sales]`, `fact_db_results_VO[Key Inventory Region | Base SKU]`, `fact_db_results_VO[Year-Week]`  
+```dax
+SUMX(
+    SUMMARIZE(
+        fact_db_results_VO,
+        fact_db_results_VO[Key Inventory Region | Base SKU],
+        fact_db_results_VO[Year-Week]
+    ),
+    CALCULATE( MAX( fact_db_results_VO[Calc_Loss_of_Sales] ),
+    'fact_db_results_VO'[Calc_Loss_of_Sales] > 0 )
 )
 ```
 

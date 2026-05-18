@@ -4602,9 +4602,6 @@ RETURN
 ```
 
 
-
----
-
 ## Fontes das Tabelas (34 tabelas)
 
 
@@ -5573,4 +5570,5 @@ DATATABLE(
     }
 )
 ```
+
 
