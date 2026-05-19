@@ -1,20 +1,18 @@
-# Contributing to Eleven-Brands-Monorepo
+# Contributing to Eleven Brands Repositories
 
-This document outlines the process for contributing code, reporting issues, and maintaining quality.
+This document outlines the process for contributing code, reporting issues, and maintaining quality across all Eleven Brands repositories.
 
 > **Note:** Before you begin, make sure your local setup is fully up‑to‑date by following [setup_local_development.md](setup_local_development.md)
 
 ## Who Can Contribute
 
-Only current developers at Eleven Brands are permitted to contribute to this repository. If you are unsure whether you have access or rights, please consult the project maintainer.
+Only current developers at Eleven Brands are permitted to contribute to these repositories. If you are unsure whether you have access or rights, please consult the project maintainer.
 
 ## Project Structure
 
-- `common/` holds shared utilities and reusable functions
-- `pipelines/` contains modular ingestion flows by domain
-- `webapps/` includes Streamlit apps and related UIs
+Each repository has its own internal structure. Before making changes, read the repo's `README.md` and `CLAUDE.md` (if present) to understand its conventions and folder layout.
 
-Please follow the existing folder structure and reuse shared utilities when possible.
+Please follow the existing folder structure within each repo and reuse shared utilities when possible.
 
 ## Contribution Guidelines
 

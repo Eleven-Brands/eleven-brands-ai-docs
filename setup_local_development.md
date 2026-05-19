@@ -1,13 +1,13 @@
 # Local Development Setup
 
-This guide walks you through cloning the repository, configuring Git remotes, and creating a Python virtual environment for working with the Eleven-Brands-Monorepo locally.
+This guide walks you through cloning a repository, configuring Git remotes, and creating a Python virtual environment. Each Eleven Brands repo follows the same setup process — just substitute the repo name where indicated.
 
 ## 1. Clone the Repository
 
 ```bash
-# Clone the repository
-git clone https://github.com/Eleven-Brands/Eleven-Brands-Mainrepo.git
-cd Eleven-Brands-Monorepo
+# Replace <repo-name> with the target repo, e.g. eleven-brands-bigquery-ingestion
+git clone https://github.com/Eleven-Brands/<repo-name>.git
+cd <repo-name>
 ```
 
 ## 2. Verify Git Remotes
@@ -20,8 +20,8 @@ git remote -v
 
 Should output:
 ```bash
-origin	git@github.com:Eleven-Brands/Eleven-Brands-Monorepo.git (fetch)
-origin	git@github.com:Eleven-Brands/Eleven-Brands-Monorepo.git (push)
+origin	git@github.com:Eleven-Brands/<repo-name>.git (fetch)
+origin	git@github.com:Eleven-Brands/<repo-name>.git (push)
 ```
 
 ## 3. Initialize Your Local Git Environment
@@ -66,16 +66,14 @@ pip install -r requirements.txt
 
 ## 6. Verify Your Setup
 
-Run a simple command or tests to confirm everything is working:
+Run a quick check to confirm everything is working. The exact command depends on the repo — refer to its README for specifics. Common examples:
 
 ```bash
-# List available Make targets or run a smoke test
-make help
+# Python repos: run the test suite
+pytest -q
+
+# Or verify the main entry point imports correctly
+python -c "import <main_module>"
 ```
 
-```bash
-# or run a sample pipeline, if any
-python pipelines/sample_pipeline.py
-```
-
-You’re now ready to create branches, write code, and follow the CONTRIBUTING guidelines! If you run into issues, please reach out to the project maintainer
+You’re now ready to create branches, write code, and follow the CONTRIBUTING guidelines! If you run into issues, please reach out to the project maintainer.
