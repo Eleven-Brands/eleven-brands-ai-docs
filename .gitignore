@@ -1,12 +1,21 @@
 # Generated skill packages — upload to claude.ai/customize/skills, never commit
 dist/
 
-# Local Claude Code settings
-.claude/settings.local.json
+# Local Claude Code settings (entire folder is local-only)
+.claude/
 
 # Ruflo runtime data — generated, not committed
 .claude-flow/
 agentdb.rvf
+
+# MCP config — local only
+.mcp.json
+
+# Junk files created by shell escaping accidents (no extension, root level)
+# These appear when code snippets are accidentally executed in the terminal
+'
+{
+{,+
 
 # Source documents — binary formats not suitable for version control
 *.docx
