@@ -2076,7 +2076,7 @@ CALCULATE(
 ```
 
 
-## Fontes das Tabelas (108 tabelas)
+## Fontes das Tabelas (107 tabelas)
 
 
 ### `Calendar`
@@ -2097,7 +2097,7 @@ CALCULATE(
 ### `d.fulfillmentCentersAddress`
 
 **Modo:** `directQuery`  
-**Colunas:** `inventory_region` string, `inventory_country` string, `fulfillment_center_id` string, `city` string, `state` string, `state_abreviation` string, `country_name` string, `country` string, `zip` string, `address` string, `latitude` string, `longitude` string, `is_problematic` boolean, `state_country` string, `fc_city_state` string  
+**Colunas:** `inventory_region` string, `inventory_country` string, `fulfillment_center_id` string, `city` string, `state` string, `state_abreviation` string, `country_name` string, `country` string, `zip` string, `address` string, `latitude` string, `longitude` string, `state_country` string, `fc_city_state` string, `Country Region (US/CA Only)` string  
 
 ### `dim_awd_fee_type`
 
@@ -2133,11 +2133,6 @@ in
 **Modo:** `directQuery`  
 **Colunas:** `Order Id` string, `Region` string, `Type` string  
 
-### `dim_scatter_plot_mapped_returns`
-
-**Modo:** `directQuery`  
-**Colunas:** `dim_scatter_plot_mapped_returns` string, `dim_scatter_plot_mapped_returns Fields` string, `dim_scatter_plot_mapped_returns Order` int64  
-
 ### `dim_SCPR_category`
 
 **Modo:** `directQuery`  
@@ -2171,13 +2166,12 @@ in
 ### `dim_td_fulfillment_centers_address`
 
 **Modo:** `import`  
-**Colunas:** `Inventory Region` string, `Inventory Country` string, `FC` string, `City` string, `State` string, `State Abrev.` string, `Country Name` string, `Country` string, `Zip` string, `Address` string, `Latitude` double, `Longitude` double, `Country Region (US/CA Only)` string  
+**Colunas:** `Country Region (US/CA Only)` string, `inventory_region` string, `inventory_country` string, `fulfillment_center_id` string, `city` string, `state` string, `state_abreviation` string, `country_name` string, `country` string, `zip` string, `address` string, `latitude` double, `longitude` double  
 ```powerquery
 let
-    Source = Excel.Workbook(File.Contents("G:\Shared drives\OrganiHaus\3.1 - OH Data & Reports\standalone_files\db_fulfillment_centers_address.xlsx"), null, true),
-    #"Fulfillment Centers Address_Sheet" = Source{[Item="Fulfillment Centers Address",Kind="Sheet"]}[Data],
-    #"Promoted Headers" = Table.PromoteHeaders(#"Fulfillment Centers Address_Sheet", [PromoteAllScalars=true]),
-    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Inventory Region", type text}, {"Inventory Country", type text}, {"FC", type text}, {"City", type text}, {"State", type text}, {"State Abrev.", type text}, {"Country Name", type text}, {"Country", type text}, {"Zip", type any}, {"Address", type text}, {"Latitude", type number}, {"Longitude", type number}, {"Country Region (US/CA Only)", type text}}),
+    Source = Csv.Document(File.Contents("G:\Shared drives\OrganiHaus\3.1 - OH Data & Reports\standalone_files\ref_fulfillment_centers_address.csv"),[Delimiter=",", Columns=13, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"inventory_region", type text}, {"inventory_country", type text}, {"fulfillment_center_id", type text}, {"city", type text}, {"state", type text}, {"state_abreviation", type text}, {"country_name", type text}, {"country", type text}, {"zip", type text}, {"address", type text}, {"latitude", type number}, {"longitude", type number}}),
     #"Removed Blank Rows" = Table.SelectRows(#"Changed Type", each not List.IsEmpty(List.RemoveMatchingItems(Record.FieldValues(_), {"", null}))),
     #"Replaced Value" = Table.ReplaceValue(#"Removed Blank Rows","","N/A",Replacer.ReplaceValue,{"Country Region (US/CA Only)"})
 in
@@ -2193,7 +2187,7 @@ in
 ### `f.AmazonFulfilledShipments`
 
 **Modo:** `directQuery`  
-**Colunas:** `shipped_quantity` int64, `currency` string, `item_price` double, `FC` string, `order_id_SK` int64, `shipment_date` dateTime, `key_marketplace_sku` string  
+**Colunas:** `date_shipment` dateTime, `quantity_shipped` int64, `currency` string, `item_price` double, `fulfillment_center_id` string, `sk_order_id` int64, `key_sales_marketplace_sku` string  
 
 ### `f.FBACustomerReturns`
 
@@ -2208,7 +2202,7 @@ in
 ### `f_aging_projection`
 
 **Modo:** `directQuery`  
-**Colunas:** `file_date` dateTime, `simulation` int64, `date_aging_projection` dateTime, `inbound_date` dateTime, `current_inventory` double, `inventory_by_inbound_shipments` double, `range` string, `aging_surcharge` double, `has_surcharge` boolean, `estimated_storage_fee_aging_inventory` double, `key_inventory_region_sku` string  
+**Colunas:** `file_date` dateTime, `simulation` int64, `date_aging_projection` dateTime, `inbound_date` dateTime, `current_inventory` double, `inventory_by_inbound_shipments` double, `range` string, `aging_surcharge` double, `has_surcharge` boolean, `estimated_storage_fee_aging_inventory` double, `key_inventory_region_sku` string, `aging_bucket` string, `aging_bucket_order` int64  
 
 ### `f_aux_promo_tracker`
 
@@ -2318,7 +2312,7 @@ in
 ```powerquery
 let
     Source = Csv.Document(
-        File.Contents("G:\Shared drives\OrganiHaus\3.1 - OH Data & Reports\standalone_files\customer_support_clickup_tasks.csv"),
+        File.Contents("G:\Shared drives\OrganiHaus\3.1 - OH Data & Reports\standalone_files\db_customer_support_clickup_tasks.csv"),
         [
             Delimiter        = ",",
             Columns          = 20,
@@ -2425,7 +2419,7 @@ let
     //     Source = if EngSource[HasError] then PtSource else EngSource[Value]
     // in
     //     Source,
-    Source = Csv.Document(File.Contents("G:\Shared drives\OrganiHaus\3.1 - OH Data & Reports\standalone_files\freight_quotations.csv"),[Delimiter=","]),
+    Source = Csv.Document(File.Contents("G:\Shared drives\OrganiHaus\3.1 - OH Data & Reports\standalone_files\db_freight_quotations.csv"),[Delimiter=","]),
     #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
     #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Quotation_Date", type date}, {"CBM_m3", type number}, {"Freight_cost_CBM_USD", type number}, {"Freight_cost_USD", type number}, {"Additional_taxes_USD", type number}, {"Total_cost_USD", type number}, {"Transit_Time", type number}}),
     #"Added Custom" = Table.AddColumn(#"Changed Type", "Custom", each if [Freight_cost_CBM_USD] is null and [Mode_of_Transport] = "FCL" then ([Total_cost_USD]/64)
@@ -2785,11 +2779,6 @@ in
 **Modo:** `directQuery`  
 **Colunas:** `Name` string, `Ordinal` int64  
 
-### `Time range avg selling price`
-
-**Modo:** `directQuery`  
-**Colunas:** `Time range avg selling price` int64  
-
 ### `z.dynamic_coupon_usage_percentage`
 
 **Modo:** `directQuery`  
@@ -2864,6 +2853,11 @@ in
 }
 ```
 
+
+### `z.dynamic_scatter_plot_mapped_returns`
+
+**Modo:** `directQuery`  
+**Colunas:** `dim_scatter_plot_mapped_returns` string, `dim_scatter_plot_mapped_returns Fields` string, `dim_scatter_plot_mapped_returns Order` int64  
 
 ### `z.dynamic_Solution_LT_Fields`
 
