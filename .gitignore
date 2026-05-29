@@ -4,6 +4,10 @@ dist/
 # Local Claude Code settings (entire folder is local-only)
 .claude/
 
+# Ruflo — local use only, never commit
+skills/ruflo-setup/
+scripts/build-ruflo-setup.ps1
+
 # Ruflo runtime data — generated, not committed
 .claude-flow/
 agentdb.rvf
