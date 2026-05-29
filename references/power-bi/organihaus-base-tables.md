@@ -10143,13 +10143,13 @@ RETURN
 
 #### `u_units_shipped`
 
-**Depende de colunas:** `'f.AmazonFulfilledShipments'[key_marketplace_sku]`, `'f.AmazonFulfilledShipments'[shipped_quantity]`  
+**Depende de colunas:** `'f.AmazonFulfilledShipments'[key_sales_marketplace_sku]`, `'f.AmazonFulfilledShipments'[quantity_shipped]`  
 ```dax
 CALCULATE(
-    SUM ( 'f.AmazonFulfilledShipments'[shipped_quantity] )
+    SUM ( 'f.AmazonFulfilledShipments'[quantity_shipped] )
     , FILTER(
         'f.AmazonFulfilledShipments'
-        , NOT(CONTAINSSTRING('f.AmazonFulfilledShipments'[key_marketplace_sku], "Non-Amazon"))
+        , NOT(CONTAINSSTRING('f.AmazonFulfilledShipments'[key_sales_marketplace_sku], "Non-Amazon"))
     )
 )
 ```
@@ -12590,7 +12590,7 @@ return
 #### `sell_through_last_90_days`
 
 **Depende de medidas:** `[u_units_sold]`  
-**Depende de colunas:** `'Calendar'[Date]`, `'Inventory Ledger'[Date]`, `'Inventory Ledger'[Disposition]`, `'Inventory Ledger'[Ending Warehouse Balance]`, `'Inventory Ledger'[In Transit Between Warehouses]`, `'Inventory Ledger'[ending_plus_transit]`, `'f.AmazonFulfilledShipments'[key_marketplace_sku]`, `'f.AmazonFulfilledShipments'[shipment_date]`, `'f.AmazonFulfilledShipments'[shipped_quantity]`, `SKUs[SKU]`  
+**Depende de colunas:** `'Calendar'[Date]`, `'Inventory Ledger'[Date]`, `'Inventory Ledger'[Disposition]`, `'Inventory Ledger'[Ending Warehouse Balance]`, `'Inventory Ledger'[In Transit Between Warehouses]`, `'Inventory Ledger'[ending_plus_transit]`, `'f.AmazonFulfilledShipments'[date_shipment]`, `'f.AmazonFulfilledShipments'[key_marketplace_sku]`, `'f.AmazonFulfilledShipments'[key_sales_marketplace_sku]`, `'f.AmazonFulfilledShipments'[quantity_shipped]`, `'f.AmazonFulfilledShipments'[shipment_date]`, `'f.AmazonFulfilledShipments'[shipped_quantity]`, `SKUs[SKU]`  
 ```dax
 // VAR _maxDate = MAXX ( 'Calendar', DATEADD ( 'Calendar'[Date], -1, DAY ) )
     // VAR _minDate = MAXX ( 'Calendar', DATEADD ( 'Calendar'[Date], -91, DAY ) )
@@ -12714,10 +12714,10 @@ VAR Inventory90 =
 
 VAR UnitsShipped = 
     CALCULATE(
-        SUM('f.AmazonFulfilledShipments'[shipped_quantity]),
-        NOT(CONTAINSSTRING('f.AmazonFulfilledShipments'[key_marketplace_sku], "Non-Amazon")),
-        'f.AmazonFulfilledShipments'[shipment_date] >= _LastDate - 90 + 1,
-        'f.AmazonFulfilledShipments'[shipment_date] <= _LastDate,
+        SUM('f.AmazonFulfilledShipments'[quantity_shipped]),
+        NOT(CONTAINSSTRING('f.AmazonFulfilledShipments'[key_sales_marketplace_sku], "Non-Amazon")),
+        'f.AmazonFulfilledShipments'[date_shipment] >= _LastDate - 90 + 1,
+        'f.AmazonFulfilledShipments'[date_shipment] <= _LastDate,
         ALL('Calendar')
     )
 
@@ -12731,7 +12731,7 @@ RETURN
 
 #### `sell_through_last_30_days_plus_awd`
 
-**Depende de colunas:** `'Inventory Ledger'[Date]`, `'Inventory Ledger'[Disposition]`, `'Inventory Ledger'[ending_plus_transit]`, `'f.AmazonFulfilledShipments'[key_marketplace_sku]`, `'f.AmazonFulfilledShipments'[shipment_date]`, `'f.AmazonFulfilledShipments'[shipped_quantity]`, `'fact_awd_inventory_ledger_by_country'[date_awd_inventory_ledger]`, `'fact_awd_inventory_ledger_by_country'[ending_warehouse_balance_units]`  
+**Depende de colunas:** `'Inventory Ledger'[Date]`, `'Inventory Ledger'[Disposition]`, `'Inventory Ledger'[ending_plus_transit]`, `'f.AmazonFulfilledShipments'[date_shipment]`, `'f.AmazonFulfilledShipments'[key_sales_marketplace_sku]`, `'f.AmazonFulfilledShipments'[quantity_shipped]`, `'fact_awd_inventory_ledger_by_country'[date_awd_inventory_ledger]`, `'fact_awd_inventory_ledger_by_country'[ending_warehouse_balance_units]`  
 ```dax
 VAR _LastDate = MAX('Inventory Ledger'[Date])
 VAR ThirtyDaysAgo = _LastDate - 30
@@ -12770,10 +12770,10 @@ VAR InventoryThirtyDaysAgoAwd =
 
 VAR UnitsShippedLast30Days = 
     CALCULATE(
-        SUM('f.AmazonFulfilledShipments'[shipped_quantity]),
-        NOT(CONTAINSSTRING('f.AmazonFulfilledShipments'[key_marketplace_sku], "Non-Amazon")),
-        'f.AmazonFulfilledShipments'[shipment_date] >= ThirtyDaysAgo + 1,
-        'f.AmazonFulfilledShipments'[shipment_date] <= _LastDate,
+        SUM('f.AmazonFulfilledShipments'[quantity_shipped]),
+        NOT(CONTAINSSTRING('f.AmazonFulfilledShipments'[key_sales_marketplace_sku], "Non-Amazon")),
+        'f.AmazonFulfilledShipments'[date_shipment] >= ThirtyDaysAgo + 1,
+        'f.AmazonFulfilledShipments'[date_shipment] <= _LastDate,
         ALL('Calendar')
     )
 
@@ -12787,7 +12787,7 @@ RETURN
 
 #### `sell_through_last_30_days`
 
-**Depende de colunas:** `'Inventory Ledger'[Date]`, `'Inventory Ledger'[Disposition]`, `'Inventory Ledger'[ending_plus_transit]`, `'f.AmazonFulfilledShipments'[key_marketplace_sku]`, `'f.AmazonFulfilledShipments'[shipment_date]`, `'f.AmazonFulfilledShipments'[shipped_quantity]`  
+**Depende de colunas:** `'Inventory Ledger'[Date]`, `'Inventory Ledger'[Disposition]`, `'Inventory Ledger'[ending_plus_transit]`, `'f.AmazonFulfilledShipments'[date_shipment]`, `'f.AmazonFulfilledShipments'[key_sales_marketplace_sku]`, `'f.AmazonFulfilledShipments'[quantity_shipped]`  
 ```dax
 VAR _LastDate = MAX('Inventory Ledger'[Date])
 VAR ThirtyDaysAgo = _LastDate - 30
@@ -12810,10 +12810,10 @@ VAR InventoryThirtyDaysAgo =
 
 VAR UnitsShippedLast30Days = 
     CALCULATE(
-        SUM('f.AmazonFulfilledShipments'[shipped_quantity]),
-        NOT(CONTAINSSTRING('f.AmazonFulfilledShipments'[key_marketplace_sku], "Non-Amazon")),
-        'f.AmazonFulfilledShipments'[shipment_date] >= ThirtyDaysAgo + 1,
-        'f.AmazonFulfilledShipments'[shipment_date] <= _LastDate,
+        SUM('f.AmazonFulfilledShipments'[quantity_shipped]),
+        NOT(CONTAINSSTRING('f.AmazonFulfilledShipments'[key_sales_marketplace_sku], "Non-Amazon")),
+        'f.AmazonFulfilledShipments'[date_shipment] >= ThirtyDaysAgo + 1,
+        'f.AmazonFulfilledShipments'[date_shipment] <= _LastDate,
         ALL('Calendar')
     )
 
@@ -13805,12 +13805,16 @@ in
 ### `d.fulfillmentCentersAddress`
 
 **Modo:** `import`  **Grupo:** `'Standalone Files'`  
-**Colunas:** `inventory_region` string, `inventory_country` string, `fulfillment_center_id` string, `city` string, `state` string, `state_abreviation` string, `country_name` string, `country` string, `zip` string, `address` string, `latitude` string, `longitude` string, `is_problematic` boolean, `state_country` string, `fc_city_state` string  
+**Colunas:** `inventory_region` string, `inventory_country` string, `fulfillment_center_id` string, `city` string, `state` string, `state_abreviation` string, `country_name` string, `country` string, `zip` string, `address` string, `latitude` string, `longitude` string, `state_country` string, `fc_city_state` string, `Country Region (US/CA Only)` string  
 ```powerquery
 let
-    Source = Csv.Document(File.Contents(path_to_files & "standalone_files\td_fulfillment_centers_address.csv"),[Delimiter=","]),
+    Source = Csv.Document(File.Contents(path_to_files & "standalone_files\ref_fulfillment_centers_address.csv"),[Delimiter=","]),
     #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
-    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"fulfillment_center_id", type text}, {"state", type text}, {"country", type text}, {"zip", type any}, {"address", type text}, {"is_problematic", type logical}}),
+    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{
+        {"fulfillment_center_id", type text}, {"state", type text}
+        , {"country", type text}, {"zip", type any}, {"address", type text}
+        // , {"is_problematic", type logical}
+        }),
     #"Inserted Merged Column" = Table.AddColumn(#"Changed Type", "state_country", each Text.Combine({[state], ", ", [country_name]}), type text),
     #"Inserted Merged Column1" = Table.AddColumn(#"Inserted Merged Column", "fc_city_state", each Text.Combine({[fulfillment_center_id], " - ", [city], ", ", [state]}), type text),
     #"Filtered Rows" = Table.SelectRows(#"Inserted Merged Column1", each ([inventory_region] <> null)),
@@ -13877,7 +13881,7 @@ in
 **Colunas:** `Category` string, `Attribute` string, `Description` string, `Short Name` string, `Weight` int64  
 ```powerquery
 let  
-    Fonte = Excel.Workbook(File.Contents(path_to_files & "standalone_files\Supply Chain Performance Review (SCPR).xlsx"), null, true),
+    Fonte = Excel.Workbook(File.Contents(path_to_files & "standalone_files\db_supply_chain_performance_review.xlsx"), null, true),
     Category_Sheet = Fonte{[Item="Category",Kind="Sheet"]}[Data],
     #"Tipo Alterado" = Table.TransformColumnTypes(Category_Sheet,{{"Column1", type text}, {"Column2", type text}, {"Column3", type text}}),
     #"Cabeçalhos Promovidos" = Table.PromoteHeaders(#"Tipo Alterado", [PromoteAllScalars=true]),
@@ -13895,7 +13899,7 @@ in
 **Colunas:** `Name` string, `Type` string  
 ```powerquery
 let
-    Fonte = Excel.Workbook(File.Contents(path_to_files & "\standalone_files\Supply Chain Performance Review (SCPR).xlsx"), null, true),
+    Fonte = Excel.Workbook(File.Contents(path_to_files & "\standalone_files\db_supply_chain_performance_review.xlsx"), null, true),
     Type_Sheet = Fonte{[Item="Type",Kind="Sheet"]}[Data],
     #"Tipo Alterado" = Table.TransformColumnTypes(Type_Sheet,{{"Column1", type text}, {"Column2", type text}}),
     #"Cabeçalhos Promovidos" = Table.PromoteHeaders(#"Tipo Alterado", [PromoteAllScalars=true]),
@@ -13912,7 +13916,7 @@ in
 **Colunas:** `Name` string, `Type` string  
 ```powerquery
 let
-    Fonte = Excel.Workbook(File.Contents(path_to_files & "\standalone_files\Supply Chain Performance Review (SCPR).xlsx"), null, true),
+    Fonte = Excel.Workbook(File.Contents(path_to_files & "\standalone_files\db_supply_chain_performance_review.xlsx"), null, true),
     Type_Sheet = Fonte{[Item="Type",Kind="Sheet"]}[Data],
     #"Tipo Alterado" = Table.TransformColumnTypes(Type_Sheet,{{"Column1", type text}, {"Column2", type text}}),
     #"Cabeçalhos Promovidos" = Table.PromoteHeaders(#"Tipo Alterado", [PromoteAllScalars=true]),
@@ -13929,7 +13933,7 @@ in
 **Colunas:** `Name` string, `Type` string  
 ```powerquery
 let
-    Fonte = Excel.Workbook(File.Contents(path_to_files & "\standalone_files\Supply Chain Performance Review (SCPR).xlsx"), null, true),
+    Fonte = Excel.Workbook(File.Contents(path_to_files & "\standalone_files\db_supply_chain_performance_review.xlsx"), null, true),
     Type_Sheet = Fonte{[Item="Type",Kind="Sheet"]}[Data],
     #"Tipo Alterado" = Table.TransformColumnTypes(Type_Sheet,{{"Column1", type text}, {"Column2", type text}}),
     #"Cabeçalhos Promovidos" = Table.PromoteHeaders(#"Tipo Alterado", [PromoteAllScalars=true]),
@@ -14082,18 +14086,14 @@ in
 ### `f.AmazonFulfilledShipments`
 
 **Modo:** `import`  **Grupo:** `Amazon\Fulfillment\reports_fulfillment`  
-**Colunas:** `shipped_quantity` int64, `currency` string, `item_price` double, `FC` string, `order_id_SK` int64, `shipment_date` dateTime, `key_marketplace_sku` string  
+**Colunas:** `date_shipment` dateTime, `quantity_shipped` int64, `currency` string, `item_price` double, `fulfillment_center_id` string, `sk_order_id` int64, `key_sales_marketplace_sku` string  
 ```powerquery
 let
-    Source = Table.Combine({raw_usCaMx_amazonFulfilledShipments, raw_gbEu_amazonFulfilledShipments}),
-    merged_d.AmazonOrderId = Table.NestedJoin(Source, {"Amazon Order Id"}, d.AmazonOrderId, {"amazon_order_id"}, "d.AmazonOrderId", JoinKind.LeftOuter),
-    expanded_d.AmazonOrderId = Table.ExpandTableColumn(merged_d.AmazonOrderId, "d.AmazonOrderId", {"order_id_SK", "sales_marketplace"}, {"order_id_SK", "sales_marketplace"}),
-    #"Key Column: Marketplace | SKU" = Table.AddColumn(expanded_d.AmazonOrderId, "key_marketplace_sku", each [sales_marketplace] & " | " & [Merchant SKU], type text),
-    extractedDate = Table.TransformColumns(#"Key Column: Marketplace | SKU",{{"Purchase Date", DateTime.Date, type date}, {"Shipment Date", DateTime.Date, type date}}),
-    #"Removed Other Columns" = Table.SelectColumns(extractedDate,{"Shipment Date", "Shipped Quantity", "Currency", "Item Price", "FC", "order_id_SK", "key_marketplace_sku"}),
-    #"Renamed Columns" = Table.RenameColumns(#"Removed Other Columns",{{"Currency", "currency"}, {"Item Price", "item_price"}, {"Shipment Date", "shipment_date"}, {"Shipped Quantity", "shipped_quantity"}})
+    Source = raw_amazonFulfilledShipments,
+    extractedDate = Table.TransformColumns(Source,{{"date_purchase", DateTime.Date, type date}, {"date_shipment", DateTime.Date, type date}}),
+    #"Removed Other Columns" = Table.SelectColumns(extractedDate,{"date_shipment", "quantity_shipped", "currency", "item_price", "fulfillment_center_id", "sk_order_id", "key_sales_marketplace_sku"})
 in
-    #"Renamed Columns"
+    #"Removed Other Columns"
 ```
 
 
@@ -14320,7 +14320,7 @@ in
 **Colunas:** `date_base_price` dateTime, `key_salesCountry_nativeFamily` string, `base_price` double  
 ```powerquery
 let
-    Source = Excel.Workbook(File.Contents(path_to_files & "standalone_files\db_market_base_price.xlsx"), true, true),
+    Source = Excel.Workbook(File.Contents(path_to_files & "standalone_files\pricing\db_market_base_price.xlsx"), true, true),
     db_base_price_Sheet = Source{[Item="db_base_price",Kind="Sheet"]}[Data],
     renamedColumns = Table.RenameColumns(db_base_price_Sheet,{{"Update", "date_base_price"}, {"Base Price", "base_price"}, {"Country", "country"}, {"Native Family", "native_family"}}),
     changedType = Table.TransformColumnTypes(renamedColumns,{{"date_base_price", type date}, {"country", type text}, {"native_family", type text}, {"base_price", type number}}),
@@ -14337,7 +14337,7 @@ in
 **Colunas:** `start_date` dateTime, `end_date` dateTime, `country` string, `sku` string, `price` double, `activeDate` dateTime, `key_country_sku` string  
 ```powerquery
 let
-    Source = Excel.Workbook(File.Contents(rootPathLang & "OrganiHaus\3.1 - OH Data & Reports\standalone_files\db_loss_leader.xlsx"), null, true),
+    Source = Excel.Workbook(File.Contents(rootPathLang & "OrganiHaus\3.1 - OH Data & Reports\standalone_files\pricing\db_loss_leader.xlsx"), null, true),
     Sheet1_Sheet = Source{[Item="Sheet1",Kind="Sheet"]}[Data],
     promotedHeaders = Table.PromoteHeaders(Sheet1_Sheet, [PromoteAllScalars=true]),
     selectedColumns = Table.SelectColumns(promotedHeaders,{"start_date", "end_date", "country", "sku", "price"}),
@@ -14368,7 +14368,7 @@ in
 **Colunas:** `date_market_price` dateTime, `key_salesCountry_nativeFamily` string, `market_price` double, `promo_price` double, `loss_leader` double, `Coments` string  
 ```powerquery
 let
-    Source = Excel.Workbook(File.Contents(path_to_files & "standalone_files\db_market_base_price.xlsx"), true, true),
+    Source = Excel.Workbook(File.Contents(path_to_files & "standalone_files\pricing\db_market_base_price.xlsx"), true, true),
     db_market_price_Sheet = Source{[Item="db_market_price",Kind="Sheet"]}[Data],
     rename_columns = Table.RenameColumns(db_market_price_Sheet,{{"Update", "date_market_price"}, {"Country", "country"}, {"Native Family", "native_family"}, {"Market Price", "market_price"}, {"Promo Price", "promo_price"}, {"Loss Leader", "loss_leader"}}),
     replace_hyphen = Table.ReplaceValue(rename_columns,"-","",Replacer.ReplaceValue,{"market_price", "promo_price", "loss_leader"}),
@@ -14410,7 +14410,7 @@ in
 **Colunas:** `date_update` dateTime, `inventory_region` string, `value` double, `quarter` string  
 ```powerquery
 let
-    Source = Excel.Workbook(File.Contents(path_to_files & "standalone_files\db.storagefee_rate.xlsx"), true, true),
+    Source = Excel.Workbook(File.Contents(path_to_files & "standalone_files\fees\db_storage_fee_rate.xlsx"), true, true),
     Storage_Fee_Rate_Sheet = Source{[Item="Storage_Fee_Rate",Kind="Sheet"]}[Data],
     changed_type_full_table = Table.TransformColumnTypes(Storage_Fee_Rate_Sheet,{{"DATA UPDATE", type date}, {"DATA QUARTER", type date}, {"QUARTER", type text}, {"COUNTRY", type text}, {"VALUE", type number}}),
     selected_columns = Table.SelectColumns(changed_type_full_table,{"DATA UPDATE", "QUARTER", "COUNTRY", "VALUE"}),
@@ -14475,7 +14475,7 @@ in
 ```powerquery
 let
     // Common ETL
-    Source = Excel.Workbook(File.Contents(path_to_files & "standalone_files\Average Landed Cost - Base SKU.xlsx"), true, true),
+    Source = Excel.Workbook(File.Contents(path_to_files & "standalone_files\landed_cost\db_average_landed_cost_base_sku.xlsx"), true, true),
     DataBase_Sheet = Source{[Item="DataBase",Kind="Sheet"]}[Data],
     change_type_full_table = Table.TransformColumnTypes(DataBase_Sheet,{{"Base SKU", type text}, {"Date", type date}, {"Inventory Region", type text}, {"u_inventory", Int64.Type}, {"$_inventory", type number}, {"unit_cost", type number}}),
     fltered_out_empty = Table.SelectRows(change_type_full_table, each [Date] <> null and [Date] <> ""),
@@ -14784,7 +14784,7 @@ in
 **Colunas:** `date` dateTime, `currency_from` string, `currency_to` string, `ticker` string, `exchange_rate` double  
 ```powerquery
 let
-    Source = Csv.Document(File.Contents(rootPathLang & "OrganiHaus\3.1 - OH Data & Reports\standalone_files\td_exchange_rates.csv"),[Delimiter=",", Columns=5, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+    Source = Csv.Document(File.Contents(rootPathLang & "OrganiHaus\3.1 - OH Data & Reports\standalone_files\ref_exchange_rates.csv"),[Delimiter=",", Columns=5, Encoding=65001, QuoteStyle=QuoteStyle.None]),
     #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
     #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"date", type date}, {"exchange_rate", type number}})
 in
@@ -14798,7 +14798,7 @@ in
 **Colunas:** `key_sales_country_asin` string, `date_list` dateTime, `size_tier` string, `index` int64, `fulfillment_fee` double, `fulfillment_fee_w_sipp` double, `fulfillment_fee_low_price` double, `fulfillment_fee_low_price_w_sipp` double  
 ```powerquery
 let
-    Source = Excel.Workbook(File.Contents(path_to_files & "standalone_files\db_fba_fee_expected.xlsx"), true, true),
+    Source = Excel.Workbook(File.Contents(path_to_files & "standalone_files\fees\db_fba_fee_expected.xlsx"), true, true),
     fbaFeeExpected_Sheet = Source{[Item="db_fbaFeeExpected",Kind="Sheet"]}[Data],
     added_keySalesCountryAsin = Table.AddColumn(fbaFeeExpected_Sheet, "key_sales_country_asin", each [country] & " | " & [asin],type text),
     selectImportantColumns = Table.SelectColumns(added_keySalesCountryAsin,{"date_start", "date_end", "size_tier", "index", "fulfillment_fee", "fulfillment_fee_w_sipp", "fulfillment_fee_low_price", "fulfillment_fee_low_price_w_sipp", "key_sales_country_asin"}),
@@ -15182,7 +15182,7 @@ in
 **Colunas:** `Quarter` string, `Year` string, `Company Name` string, `Attribute` string, `Grade` int64, `Comment` string, `Weight` int64, `Category` string, `Period` string  
 ```powerquery
 let
-Fonte = Excel.Workbook(File.Contents(path_to_files & "\standalone_files\Supply Chain Performance Review (SCPR).xlsx"), null, true),
+Fonte = Excel.Workbook(File.Contents(path_to_files & "\standalone_files\db_supply_chain_performance_review.xlsx"), null, true),
     #"Form Answers_Sheet" = Fonte{[Item="Form Answers",Kind="Sheet"]}[Data],
     #"Cabeçalhos Promovidos" = Table.PromoteHeaders(#"Form Answers_Sheet", [PromoteAllScalars=true]),
     #"Tipo Alterado" = Table.TransformColumnTypes(#"Cabeçalhos Promovidos",{{"Id", Int64.Type}, {"Start time", type datetime}, {"Completion time", type datetime}, {"Email", type text}, {"Name", type any}, {"Quarter", type any}, {"Year", type any}, {"Type", type any}, {"Company", type text}, {"Company1", type any}, {"Payment Terms & Conditions", type any}, {"Payment Terms & Conditions - Comment", type any}, {"Cost", type any}, {"Cost - Comment", type any}, {"Transparent cost composition", type any}, {"Transparent cost composition - Comment", type any}, {"Negotiation", type any}, {"Negotiation - Comment", type any}, {"Communication", Int64.Type}, {"Communication - Comment", type text}, {"Response Time", Int64.Type}, {"Response Time - Comment", type any}, {"Adherence to instructions (SLA)", Int64.Type}, {"Adherence to instructions (SLA) - Comment", type any}, {"On-time delivery / Efficient lead Time", Int64.Type}, {"On-time delivery / Efficient lead Time - Comment", type any}, {"Flexibility", Int64.Type}, {"Flexibility - Comment", type text}, {"Problem management", Int64.Type}, {"Problem management - Comment", type text}, {"Overall product and/or service quality", Int64.Type}, {"Overall product and/or service quality - Comment", type any}, {"Capacity to detect and solve issues", Int64.Type}, {"Capacity to detect and solve issues - Comment", type text}, {"Open for improvement & optimization", Int64.Type}, {"Open for improvement & optimization - Comment", type text}}),
@@ -15362,7 +15362,7 @@ in
 **Colunas:** `Date` dateTime, `Key Column: Country | ASIN` string, `Updated Daily Velocity` double, `Updated Weekly Velocity` double, `Weekly MA Slow` double, `Weekly MA Medium` double, `Weekly MA Fast` double, `Minimum Inventory` double  
 ```powerquery
 let
-    Source = Excel.Workbook(File.Contents(path_to_files & "standalone_files\Velocity Database.xlsx"), null, true),
+    Source = Excel.Workbook(File.Contents(path_to_files & "standalone_files\db_velocity.xlsx"), null, true),
     Sheet1_Sheet = Source{[Item="Sheet1",Kind="Sheet"]}[Data],
     promotedHeaders = Table.PromoteHeaders(Sheet1_Sheet, [PromoteAllScalars=true]),
     changedType = Table.TransformColumnTypes(promotedHeaders,{{"Start Date", type date}, {"End Date", type date}, {"Region", type text}, {"Region-Base SKU", type text}, {"ASIN", type text}, {"Minimum Inventory", type number}, {"Updated Daily Velocity", type number}, {"Updated Weekly Velocity", type number}, {"Weekly MA Slow", type number}, {"Weekly MA Medium", type number}, {"Weekly MA Fast", type number}}),

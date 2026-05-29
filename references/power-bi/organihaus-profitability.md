@@ -1717,8 +1717,8 @@ RETURN
 **Depende de colunas:** `fact_payments_date_range[Marketplace]`  
 ```dax
 CALCULATE( [$_vat_gst_balance_taxes_collected_refunded_withheld], fact_payments_date_range[Marketplace] = "CA") // Negative
-//+ [$_gst_ca_fulfillment_fee_credits]                  // Positive
-//+ [$_gst_ca_storage_fee_credits]                      // Positive
++ [$_gst_ca_fulfillment_fee_credits]                  // Positive
++ [$_gst_ca_storage_fee_credits]                      // Positive
 ```
 
 #### `$_gst_ca_fulfillment_fee_credits`
@@ -2106,13 +2106,16 @@ RETURN
 **Depende de colunas:** `'Calendar'[Date]`, `SKUs[SKU]`  
 ```dax
 VAR _ads_spend = 
-        SUMX(
-            VALUES('Calendar'[Date])
-            , SUMX(
-                VALUES( SKUs[SKU] )
-                , [%_tacos_amazon_family] * [$_product_sales] * -1
-            )
-        )
+        [%_tacos_amazon_family] * [$_product_sales] * -1
+        
+    // OLD VERSION
+        // SUMX(
+        //     VALUES('Calendar'[Date])
+        //     , SUMX(
+        //         VALUES( SKUs[SKU] )
+        //         , [%_tacos_amazon_family] * [$_product_sales] * -1
+        //     )
+        // )
 
 RETURN
     _ads_spend
@@ -4611,7 +4614,7 @@ RETURN
 **Colunas:** `key_inventory_region_sku` string, `currency` string, `date` dateTime, `freight_unit_cost` double  
 ```powerquery
 let
-    Source = Excel.Workbook(File.Contents("G:\Shared drives\OrganiHaus\3.1 - OH Data & Reports\standalone_files\Average Freight Cost - Base SKU.xlsx"), null, true),
+    Source = Excel.Workbook(File.Contents("G:\Shared drives\OrganiHaus\3.1 - OH Data & Reports\standalone_files\landed_cost\db_average_freight_cost_base_sku.xlsx"), null, true),
     DataBase_Sheet = Source{[Item="DataBase",Kind="Sheet"]}[Data],
     promoted_headers = Table.PromoteHeaders(DataBase_Sheet, [PromoteAllScalars=true]),
 
@@ -4689,7 +4692,7 @@ in
 ```powerquery
 let
     // Folder Extraction
-    Source = Excel.Workbook(File.Contents("G:\Shared drives\OrganiHaus\3.1 - OH Data & Reports\standalone_files\Average Purchase Cost - Base SKU.xlsx"), null, true),
+    Source = Excel.Workbook(File.Contents("G:\Shared drives\OrganiHaus\3.1 - OH Data & Reports\standalone_files\landed_cost\db_average_purchase_cost_base_sku.xlsx"), null, true),
     DataBase_Sheet = Source{[Item="DataBase",Kind="Sheet"]}[Data], 
     
     // Transformations Necessary due to folder extratcion
@@ -4894,7 +4897,7 @@ in
 **Colunas:** `account_order` int64, `account_description` string, `account_id` string, `level_1_item` string, `level_2_item` string, `level_1_sort` int64, `highlight` int64  
 ```powerquery
 let
-    Source = Excel.Workbook(File.Contents(path_to_files & "standalone_files\db_statement_items_commercial.xlsx"), true, true),
+    Source = Excel.Workbook(File.Contents(path_to_files & "standalone_files\statement_items\db_statement_items_commercial.xlsx"), true, true),
     financial_statement_Sheet = Source{[Item="financial_statement",Kind="Sheet"]}[Data],
     #"Changed Type" = Table.TransformColumnTypes(financial_statement_Sheet,{{"account_order", Int64.Type}, {"account_description", type text}, {"account_id", type text}, {"level_1_item", type text}, {"level_2_item", type text}, {"level_1_sort", Int64.Type}, {"highlight", Int64.Type}})
 in
@@ -4908,7 +4911,7 @@ in
 **Colunas:** `account_order` int64, `account_description` string, `account_id` string, `level_1_item` string, `level_2_item` string, `level_1_sort` int64, `highlight` int64  
 ```powerquery
 let
-    Source = Excel.Workbook(File.Contents(path_to_files & "standalone_files\db_statement_items_financial.xlsx"), true, true),
+    Source = Excel.Workbook(File.Contents(path_to_files & "standalone_files\statement_items\db_statement_items_financial.xlsx"), true, true),
     financial_statement_Sheet = Source{[Item="financial_statement",Kind="Sheet"]}[Data],
     #"Changed Type" = Table.TransformColumnTypes(financial_statement_Sheet,{{"account_order", Int64.Type}, {"account_description", type text}, {"account_id", type text}, {"level_1_item", type text}, {"level_2_item", type text}, {"level_1_sort", Int64.Type}, {"highlight", Int64.Type}})
 in
@@ -4926,7 +4929,7 @@ in
 **Colunas:** `Refresh Date` dateTime, `Region` string, `Amazon Family` string, `ASIN` string, `Inventory Region | BaseSKU` string, `Average Weekly Units` int64, `Average Weekly Revenue` int64, `Revenue% Co.` double, `Units% Family` double, `ABC Co. Revenue` string, `ABC Family Units` string, `ABC Family Search Rank` string, `Final ABC Classification` string, `ABC Sales` string  
 ```powerquery
 let
-    Source = Excel.Workbook(File.Contents("G:\Shared drives\OrganiHaus\3.1 - OH Data & Reports\standalone_files\db_abc_classification.xlsx"), null, true),
+    Source = Excel.Workbook(File.Contents("G:\Shared drives\OrganiHaus\3.1 - OH Data & Reports\standalone_files\product\db_abc_classification.xlsx"), null, true),
     Classification1 = Source{[Name="Classification"]}[Data],
     #"Promoted Headers" = Table.PromoteHeaders(Classification1, [PromoteAllScalars=true]),
     filtered_refresh_data_latest = Table.SelectRows(#"Promoted Headers", let latest = List.Max(#"Promoted Headers"[Refresh Date]) in each [Refresh Date] = latest),
@@ -4966,7 +4969,7 @@ in
 ```powerquery
 let
     // Common ETL
-    Source = Excel.Workbook(File.Contents(path_to_files & "standalone_files\Average Landed Cost - Base SKU.xlsx"), true, true),
+    Source = Excel.Workbook(File.Contents(path_to_files & "standalone_files\landed_cost\db_average_landed_cost_base_sku.xlsx"), true, true),
     DataBase_Sheet = Source{[Item="DataBase",Kind="Sheet"]}[Data],
     change_type_full_table = Table.TransformColumnTypes(DataBase_Sheet,{{"Base SKU", type text}, {"Date", type date}, {"Inventory Region", type text}, {"u_inventory", Int64.Type}, {"$_inventory", type number}, {"unit_cost", type number}}),
     fltered_out_empty = Table.SelectRows(change_type_full_table, each [Date] <> null and [Date] <> ""),
@@ -5110,7 +5113,7 @@ in
 
 ### `fact_fulfillment_fee_credits`
 
-**Modo:** `import`  **Grupo:** `'STAGING\Fulfillment Fee Credits'`  
+**Modo:** `import`  **Grupo:** `'Amazon\Payments\Derived from Payments\Fulfillment Fee Credits'`  
 **Colunas:** `date_payments` dateTime, `key_country_sku` string, `Country` string, `SKU` string, `fba_fee` double, `exchange_rate_to_usd` decimal, `exchange_rate_to_eur` decimal  
 ```powerquery
 let
@@ -5154,7 +5157,7 @@ in
 **Colunas:** `BU` string, `Empresa` string, `Descrição` string, `Valor` double, `Categoria 1` string, `Categoria 2` string, `Date` dateTime, `exchange_rate_to_usd` decimal, `exchange_rate_to_eur` decimal, `exchange_rate_to_gbp` decimal  
 ```powerquery
 let
-    Source = Excel.Workbook(File.Contents("G:\Shared drives\Eleven Brands - Finance\10. PROFITABILITY\P&L BI.xlsx"), true, true),
+    Source = Excel.Workbook(File.Contents("G:\Shared drives\Eleven Brands - Finance\10. PROFITABILITY\BI\P&L BI.xlsx"), true, true),
     #"P&L GERAL_Sheet" = Source{[Item="P&L GERAL",Kind="Sheet"]}[Data],
     filtered_out_bu_null = Table.SelectRows(#"P&L GERAL_Sheet", each [BU] <> null and [BU] <> ""),
     added_date = Table.AddColumn(filtered_out_bu_null, "Date", each Date.From(Date.EndOfMonth(#date([Ano], [Mês], 1))), type date),
@@ -5185,7 +5188,7 @@ in
 
 ### `fact_payments_storage_fee_with_gst`
 
-**Modo:** `import`  **Grupo:** `STAGING\GST`  
+**Modo:** `import`  **Grupo:** `'Amazon\Payments\Derived from Payments'`  
 **Colunas:** `date_daily_share_of_storage_fee` dateTime, `country` string, `daily_storage_fee` double, `exchange_rate_to_usd` decimal, `exchange_rate_to_eur` decimal, `exchange_rate_to_gbp` decimal, `sku` string  
 ```powerquery
 let
