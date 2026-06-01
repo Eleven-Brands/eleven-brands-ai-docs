@@ -33,4 +33,8 @@ if [ -f "$tmp_dir/standards/.github/CODEOWNERS" ]; then
   cp -f "$tmp_dir/standards/.github/CODEOWNERS" .github/CODEOWNERS
 fi
 
+# ---- Sync shared workflows ----
+mkdir -p .github/workflows
+cp -f "$tmp_dir/standards/.github/workflows/create-clickup-task.yml" .github/workflows/
+
 echo "Sync complete."
