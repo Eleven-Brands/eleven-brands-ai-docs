@@ -37,6 +37,15 @@ jobs:
           git config --global --unset-all http.https://github.com/.extraheader || true
           bash scripts/sync_engineering_standards.sh
 
+      - name: Sync shared workflows
+        env:
+          STANDARDS_REF: ${{ github.event.client_payload.ref || github.event.inputs.standards_ref || 'main' }}
+          GITHUB_TOKEN: ${{ secrets.STANDARDS_REPO_TOKEN }}
+        run: |
+          mkdir -p .github/workflows
+          gh api "repos/Eleven-Brands/eleven-brands-engineering-standards/contents/.github/workflows/create-clickup-task.yml?ref=${STANDARDS_REF}" \
+            --jq '.content' | base64 -d > .github/workflows/create-clickup-task.yml
+
       - name: Create or update PR
         uses: peter-evans/create-pull-request@v8
         with:
@@ -57,6 +66,7 @@ jobs:
             - setup_gcp.md
             - setup_local_development.md
             - .github (enforced from standards repo)
+            - .github/workflows/create-clickup-task.yml
           labels: |
             automation
             docs
