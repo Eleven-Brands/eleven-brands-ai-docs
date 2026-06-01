@@ -1,0 +1,25 @@
+name: Create ClickUp Task on PR
+on:
+  pull_request:
+    types: [opened]
+jobs:
+  create_task:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create ClickUp Task
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          DUE_DATE=$(( $(date +%s) * 1000 ))
+          curl -X POST "https://api.clickup.com/api/v2/list/${{ secrets.CLICKUP_LIST_ID }}/task" \
+            -H "Authorization: ${{ secrets.CLICKUP_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"name\": \"GH: Review PR $PR_TITLE\",
+              \"description\": \"Review PR here: $PR_URL\",
+              \"status\": \"To Do\",
+              \"assignees\": [49012475],
+              \"priority\": 1,
+              \"due_date\": $DUE_DATE
+            }"
