@@ -49,7 +49,7 @@ jobs:
       - name: Create or update PR
         uses: peter-evans/create-pull-request@v8
         with:
-          token: ${{ secrets.STANDARDS_REPO_TOKEN }}
+          token: ${{ secrets.STANDARDS_PR_TOKEN }}
           base: main
           branch: chore/sync-engineering-standards
           delete-branch: true
