@@ -14,7 +14,6 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  workflows: write
 
 concurrency:
   group: sync-engineering-standards
@@ -50,7 +49,7 @@ jobs:
       - name: Create or update PR
         uses: peter-evans/create-pull-request@v8
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.STANDARDS_REPO_TOKEN }}
           base: main
           branch: chore/sync-engineering-standards
           delete-branch: true
