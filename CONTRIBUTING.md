@@ -31,12 +31,13 @@ Please follow the existing folder structure within each repo and reuse shared ut
      git push -u origin <type>/<scope>
 
      # Pick a type that fits your work:
-     # • bugfix    – for small fixes  
-     # • feature   – for incremental features  
-     # • chore     – for maintenance, deps, etc.
-     # • app       – for whole‑app  
-     # • pipeline  – for whole ingestion pipelines  
-     # • webscrape – for whole webscraping scripts  
+     # • feat      – for new features or enhancements
+     # • fix       – for bug fixes
+     # • hotfix    – for urgent fixes that go directly to production
+     # • chore     – for maintenance, dependencies, config, etc.
+     # • docs      – for documentation changes only
+     # • refactor  – for code restructuring without changing behavior
+     # • release   – for release preparation commits
 
      # Example: Sales Dashboard app
      git checkout -b app/sales-dashboard
@@ -101,7 +102,7 @@ Please follow the existing folder structure within each repo and reuse shared ut
      <type>(<module_or_filename>): <short description>
      ```
 
-     - **type**: feat, fix, docs, chore, refactor, etc.
+     - **type**: feat, fix, hotfix, chore, docs, refactor, release.
      - **scope**: the file or module name (without path separators), in snake_case or PascalCase as it appears in the repo.
      - **description**: a concise summary of what changed.
 
