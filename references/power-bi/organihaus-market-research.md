@@ -2,11 +2,13 @@
 
 ## Visao Geral
 
-Dashboard de inteligencia de mercado da OrganiHaus. Cobre monitoramento de preco e promocoes de concorrentes (MAE), share de mercado por marca (DataDive), performance de keywords e ranking organico (DataDive Rank Radar / Helium10), Search Query Performance (SQP) da Amazon e rastreamento de hijackers de Buy Box.
+Dashboard de inteligencia de mercado da OrganiHaus. Cobre monitoramento de preco e promocoes de concorrentes (MAE), performance de keywords e ranking organico (DataDive Rank Radar / Helium10), Search Query Performance (SQP) da Amazon e rastreamento de hijackers de Buy Box.
 
-**Caminho do modelo:** `G:\Shared drives\OrganiHaus\3.1 - OH Data & Reports\Dashboards\OrganiHaus - Market Research\OrganiHaus - Market Research.SemanticModel`
+**Caminho do modelo (producao):** `G:\Shared drives\OrganiHaus\3.1 - OH Data & Reports\Dashboards\OrganiHaus - Market Research\OrganiHaus - Market Research.SemanticModel`
 
-**Arquitetura:** Modelo Import puro — sem DirectQuery a outros modelos. Todas as fontes sao carregadas localmente via M.
+**Arquitetura:** Composite Model — Import para dados MAE-especificos + DirectQuery ao OrganiHaus - Base Tables (para SKUs). Refresh agendado via gateway no Power BI Service.
+
+**Fora do escopo desta versao:** Market Share (fonte manual desatualizada, responsavel saiu — tabelas, medidas e pagina removidas).
 
 ---
 
@@ -20,23 +22,21 @@ Ferramenta customizada que extrai dados de listings da Amazon (preco, rating, es
 
 | Expressao | Arquivo | Descricao |
 |---|---|---|
-| `new_output_mae` | `market_analyser_extractor_mae\OUTPUT\OUTPUT_FILE.csv` | Output atual do MAE (UTF-8, parsing robusto de datas e precos) |
-| `old_output_mae` | Formato legado | Historico de outputs anteriores com schema compativel |
+| `new_output_mae` | `market_analyser_extractor_mae\OUTPUT\OUTPUT_FILE.csv` | Output atual do MAE (UTF-8, parsing robusto de datas e precos). RangeStart = set/2025. earlyDateFilter aplicado antes das transformacoes caras. |
+| `old_output_mae` | Pasta `market_analyser_extractor_mae\OUTPUT\Old\` | Historico de outputs anteriores com schema compativel |
 | `fact_output` | Combinacao de `old_output_mae` + `new_output_mae` | Tabela base de todos os listings monitorados, deduplicada por {Date, ASIN, Brand, Country} |
 
-**Colunas principais de `fact_output`:** Date, ASIN, Price, Ratings Stars, Number of ratings, Name, Link, Stock, Coupon, Brand, Deal, Badge, Merchant, Prime, PED (Prime Exclusive Discount), Limited Time Deal, List Price, Product Category GL, Prev Month Qty, Country, Key: Country | ASIN, Marketplace, Key Marketplace | ASIN, Coupon Type, Coupon Value, Promotion Type, Full Price, Final Price, Total Discount Value, Coupon Price, Color Name, Size Name
+**Tabela central: `fact_mae`**
 
-### 2. DataDive — Market Share
+Unificacao de OH e Competitors em uma unica tabela com coluna discriminadora `Brand_Type`:
+- `Brand_Type = "OrganiHaus"` — dados de listings da OrganiHaus
+- `Brand_Type = "Competitor"` — dados de listings de concorrentes
 
-Exportacoes CSV mensais de share de mercado por marca e familia de produto.
+Substituiu as antigas tabelas separadas `OH_Output` e `COMP_Output`. Relacionamento ativo com `OH ASINs` (por `Key: Country | ASIN`) e com `Competitors ASINs` (por `Key Country | ASIN | Brand`).
 
-| Expressao | Fonte | Descricao |
-|---|---|---|
-| `COMP_sales` | Pasta `2.2 - OH Ranking & PPC\Market Research\Market Share\Data Dive\` | Todos os CSVs da pasta (exceto `marketshare.csv`), processados com `ProcessCSVFile`, combinados e deduplicados |
-| `aux_comp_sales` | Arquivo historico consolidado pelo time de Marketing | Historico de vendas de concorrentes em formato compativel |
-| `fact_COMP_sales` | Combinacao `COMP_sales` + `aux_comp_sales` | Fato de vendas mensais por Marketplace, Amazon Family, Brand — maior valor por grupo, sem duplicatas |
+**Colunas principais de `fact_mae`:** Date, ASIN, Price, Ratings Stars, Number of ratings, Name, Link, Stock, Coupon, Brand, Brand_Type, Deal, Badge, Merchant, Prime, PED (Prime Exclusive Discount), Limited Time Deal, List Price, Product Category GL, Prev Month Qty, Country, Key: Country | ASIN, Marketplace, Key Marketplace | ASIN, Coupon Type, Coupon Value, Promotion Type, Full Price, Final Price, Total Discount Value, Coupon Price, BSR 1 Rank, BSR 1 Category, BSR 2 Rank, BSR 2 Category
 
-### 3. DataDive Rank Radar — Keywords e Ranking
+### 2. DataDive Rank Radar — Keywords e Ranking
 
 Exportacoes CSV de rastreamento de posicao organica por keyword, processadas por uma funcao customizada `ProcessDDFile`.
 
@@ -44,23 +44,24 @@ Exportacoes CSV de rastreamento de posicao organica por keyword, processadas por
 |---|---|---|
 | `fact_RankRadar_KWs` | Pasta `Data Base Keyword and Ranking\DataBase Keyword and Ranking\2. Keyword\DataDive\Rank_Radar\` | Todos os CSVs da pasta, processados, expandidos, filtrados por `RangeStart` (parametro de data) |
 
-### 4. SQP — Search Query Performance (Amazon Seller Central)
+### 3. SQP — Search Query Performance (Amazon Seller Central)
 
 Dados de Search Query Performance da Amazon — impressoes, cliques, adicoes ao carrinho e compras por ASIN e keyword, por semana.
 
 | Expressao | Fonte | Descricao |
 |---|---|---|
-| `fact_seller_utils_SQP` | CSV local — `z_personal_folders\lucca_lanzellotti\Projetos\SQP\resultado_final.csv` | 42 colunas tipadas: year, week, inventory_region_code, country_code, start_date, asin, search_query, search_query_score, search_query_volume, IMP/CLK/CART/PUR (total_count + asin_count + share + price_median + shipping_counts) |
+| `fact_seller_utils_SQP` | CSV local — `code_repository\sqp_downloader\processed\resultado_final.csv` | 42 colunas tipadas: year, week, inventory_region_code, country_code, start_date, asin, search_query, search_query_score, search_query_volume, IMP/CLK/CART/PUR (total_count + asin_count + share + price_median + shipping_counts) |
 | `fact_search_query_performance` | Transformacao de `fact_seller_utils_SQP` | Adiciona chaves compostas (Key Country|ASIN, Year-Week, Key SV, Key SQ), deduplica |
 
-### 5. Arquivos de configuracao e controle
+### 4. Arquivos de configuracao e controle
 
 | Arquivo | Expressao/Tabela | Descricao |
 |---|---|---|
-| `01 - OH Sourcing and Orders\01.1 - Suppliers - Active\Product Information and Pricing Database.xlsx` aba `skusByRegion` | `SKUs (raw)` | Dimensao mestre de produtos OrganiHaus |
+| `01 - OH Sourcing and Orders\01.1 - Suppliers - Active\Product Information and Pricing Database.xlsx` abas `skusByRegion`, `hierarchy`, `dimensions` | `SKUs (raw)` → `SKUs` | Dimensao mestre de produtos OrganiHaus. SKUs agora em DirectQuery ao Base Tables. |
 | `standalone_files\db_promotion_tracker.xlsx` aba `db` | `fact_promotion_tracker` | Planejamento de promocoes com datas, preco simulado, margens |
-| `market_analyser_extractor_mae\Competitors Mapping\MAE Competitors - Editado v2.xlsx` | Funcao `GetCompetitorData` | Mapeamento de ASINs de concorrentes por marketplace (CA, EU, UK, US) |
-| Hardcoded em M | `dim_featured_brands` | Lista de marcas destacadas para filtros de competidores |
+| `market_analyser_extractor_mae\Competitors Mapping\MAE Competitors - Editado v2.xlsx` e `v3.xlsx` | Expressoes `CA`, `UK`, `US`, `EU` (queries inline) | Mapeamento de ASINs de concorrentes por marketplace. Paths literais diretos (sem parametros). |
+| `standalone_files\db_abc_classification.xlsx` | `fact_abc_classification` | Classificacao ABC de produtos |
+| `standalone_files\db_life_cycle.xlsx` | `raw_lifeCycle` | Ciclo de vida dos SKUs |
 
 ---
 
@@ -68,53 +69,40 @@ Dados de Search Query Performance da Amazon — impressoes, cliques, adicoes ao 
 
 | Nome | Tipo | Descricao |
 |---|---|---|
-| `GetCompetitorData` | Funcao M | Carrega uma aba do Excel de mapeamento de competidores, tipifica, expande por pais (quando EU) e cria chaves compostas |
-| `ProcessCSVFile` | Funcao M | Processa cada arquivo CSV de market share do DataDive (nome, conteudo, pasta) e padroniza colunas |
 | `ProcessDDFile` | Funcao M | Processa CSVs de Rank Radar (DataDive), extrai keyword, rank, search volume, data, Amazon Family |
-| `fnGetCSVFromFolder` | Funcao M | Helper para leitura de CSVs de pasta (Helium10 KW Tracker) |
-| `bigQuery_customFunction` | Funcao M | Conecta ao BigQuery `amazon-sp-api-openbridge` (usada em SKUs; SQP foi migrada para CSV local) |
+| `TransformMAEOutput` | Funcao M | Processa cada arquivo CSV legado do MAE |
 | `fact_search_query_performance` | Expressao tabela | Transformacao central do SQP: add chaves, deduplica |
 | `fact_output` | Expressao tabela | Combina old + new output do MAE, deduplica por Date|ASIN|Brand|Country |
-| `RangeStart` | Parametro (Date) | Data inicial para filtro de keywords do Rank Radar (default: 2025-01-01) |
-| `path_to_MAE` | Parametro (Path) | Raiz do folder do MAE: `SharedDrivesFolder\OrganiHaus\3.1 - OH Data & Reports\market_analyser_extractor_mae` |
-| `path_to_DD` | Parametro (Path) | Raiz dos arquivos DataDive de market share |
-| `path_to_files` | Parametro (Path) | `SharedDrivesFolder\OrganiHaus\3.1 - OH Data & Reports\` |
-| `de_para_file` | Parametro (Path) | Caminho do arquivo de mapeamento de competidores (`MAE Competitors - Editado v2.xlsx`) |
+| `RangeStart` | Parametro (Date) | Data inicial para filtro do MAE e Rank Radar (default: 2025-09-01) |
+| `RangeEnd` | Parametro (Date) | Data final (parametro de controle — atualmente nao ativo no filtro principal) |
+
+> Todas as expressoes que anteriormente usavam parametros de path (`path_to_MAE`, `path_to_files`, `SharedDrivesFolder`, `GetCompetitorData`, etc.) foram migradas para strings literais diretamente no `File.Contents()` / `Folder.Files()` — necessario para refresh via gateway no PBI Service.
 
 ---
 
 ## Tabelas do Modelo
 
-### OH_Output
-**Categoria:** Fato — Listings OrganiHaus
-**Fonte:** Filtro de `fact_output` onde Brand = "OrganiHaus"
-**Colunas:** Todas as colunas de `fact_output` (Date, ASIN, Price, Final Price, Full Price, Rating, Coupon, Deal, Badge, Merchant, PED, Promotion Type, Country, Marketplace, Color Name, Size Name, etc.)
-
-### COMP_Output
-**Categoria:** Fato — Listings de Concorrentes
-**Fonte:** Filtro de `fact_output` onde Brand ≠ "OrganiHaus"; adiciona coluna `Key Country | ASIN | Brand`
-**Colunas:** Mesmas de `fact_output` (Date, ASIN, Brand, Final Price, Full Price, Rating, Coupon, Promotion Type, Country, etc.)
+### fact_mae
+**Categoria:** Fato unificado — Listings OrganiHaus e Concorrentes
+**Fonte:** `fact_output` (dados MAE combinados), com coluna calculada `Brand_Type`
+**Coluna discriminadora:** `Brand_Type` — "OrganiHaus" para OH, "Competitor" para concorrentes
+**Colunas:** Date, ASIN, Brand, Brand_Type, Price, Final Price, Full Price, Rating Stars, Number of ratings, Coupon, Coupon Type, Coupon Value, Deal, Badge, Merchant, Prime, PED, Limited Time Deal, List Price, Promotion Type, Total Discount Value, Stock, Prev Month Qty, Country, Marketplace, Key: Country | ASIN, Key Marketplace | ASIN, Key Country | ASIN | Brand, Date Created, BSR 1 Rank, BSR 1 Category, BSR 2 Rank, BSR 2 Category
 
 ### OH ASINs
 **Categoria:** Dimensao — ASINs OrganiHaus
-**Fonte:** `SKUs (raw)` selecionando Base SKU, Sales Region, Country, Amazon Family, ASIN, Native Family; enriquecida com variacao de cor/tamanho de `OH_Output`
+**Fonte:** `Table.SelectRows(fact_mae, each [Brand_Type] = "OrganiHaus")` — filtro direto de `fact_mae`
 **Transformacoes:** Renomeia Sales Region para Marketplace; cria chaves compostas (SKU Limpo = `Country | Base SKU`, Key Marketplace | Native Family, Key Country | ASIN, Key Country | Amazon Family, Key Country | Native Family); adiciona Brand = "OrganiHaus"; filtra ASIN nao nulo, Marketplace != "Erro"/"BR"/"MX"; deduplica por SKU Limpo
 **Colunas:** SKU Limpo, Key Marketplace | Native Family, Key Country | ASIN, Key Country | Native Family, Key Country | Amazon Family, Brand, Country, Base SKU, Marketplace, Native Family, ASIN, Color Name, Size Name
 
 ### Competitors ASINs
 **Categoria:** Dimensao — ASINs de Concorrentes
-**Fonte:** `Table.Combine({CA, EU, UK, US})` — cada um carregado por `GetCompetitorData` do Excel de mapeamento
+**Fonte:** `Table.Combine({CA, EU, UK, US})` — cada um com query inline carregando diretamente do Excel (v2 + v3)
 **Transformacoes:** Padroniza tipos, cria Key Marketplace|ASIN e Key Marketplace|Native Family, adiciona coluna `Highlight` (1 se Brand esta em `dim_featured_brands`), cria Key Country|ASIN e Key Country|Native Family, filtra ASINs validos, adiciona Key Country|ASIN|Brand
 **Colunas:** Marketplace, ASIN, Native Family, Brand, Country, Key Marketplace|ASIN, Key Marketplace|Native Family, Highlight, Key Country|ASIN, Key Country|Native Family, Key Country|ASIN|Brand
 
 ### ASIN Brand
 **Categoria:** Dimensao auxiliar — lookup de Brand por ASIN
 **Fonte:** Combinacao de `OH ASINs` + `Competitors ASINs`, seleciona Brand/Native Family/ASIN, deduplica por ASIN; adiciona Brand Type ("OrganiHaus" ou "Competitor")
-
-### fact_COMP_sales
-**Categoria:** Fato — Vendas mensais de mercado (Market Share)
-**Fonte:** Combinacao de `COMP_sales` (DataDive folder) + `aux_comp_sales` (historico); agrupado por {Marketplace, Amazon Family, Brand, year_month} selecionando MAX(Sales); filtra registros invalidos (ex: Bagnizer OHFB-RH-CUBE no US)
-**Colunas:** Marketplace, Amazon Family, Brand, Month, Year, Sales, year_month, Date
 
 ### fact_RankRadar_KWs
 **Categoria:** Fato — Ranking organico por keyword (DataDive)
@@ -150,11 +138,6 @@ Dados de Search Query Performance da Amazon — impressoes, cliques, adicoes ao 
 **Fonte:** Derivada de `fact_search_query_performance`, seleciona country_code e search_query, deduplica por Key SQ
 **Colunas:** country_code, search_query, Key SQ
 
-### dim_AmzFamily
-**Categoria:** Dimensao — Familias de Produto OrganiHaus
-**Fonte:** `SKUs (raw)` + `dgradeAndResellAmazonFoundSkus`, com adicao de is_grade_and_resell, GradeCode, ProductID (join com Dim_Product)
-**Colunas:** Amazon Family, Native Family, Country, Sales Region, ProductID, is_grade_and_resell, GradeCode
-
 ### dim_calendar
 **Categoria:** Dimensao temporal
 **Fonte:** Calculada em M de 2023-01-01 ate hoje+14 dias
@@ -175,7 +158,7 @@ Dados de Search Query Performance da Amazon — impressoes, cliques, adicoes ao 
 
 ### SKUs
 **Categoria:** Dimensao mestre de produtos
-**Fonte:** `SKUs (raw)` + `dgradeAndResellAmazonFoundSkus`, com multiplas chaves compostas (Sales Region|SKU, Sales Region|ASIN, Sales Region|FNSKU, Sales Region|Amazon Family, Country|SKU, Country|ASIN, Country|FNSKU, Inventory Region|SKU, Inventory Region|ASIN, Inventory Region|FNSKU)
+**Fonte:** DirectQuery ao OrganiHaus - Base Tables (via XMLA). `SKUs (raw)` + `dgradeAndResellAmazonFoundSkus`, com multiplas chaves compostas (Sales Region|SKU, Sales Region|ASIN, Sales Region|FNSKU, Sales Region|Amazon Family, Country|SKU, Country|ASIN, Country|FNSKU, Inventory Region|SKU, Inventory Region|ASIN, Inventory Region|FNSKU)
 
 ### PARAM_AvailableDates / PARAM_AvailableDates_Comp
 **Categoria:** Parametros de data para comparacao de keywords (Keyword Gain/Loss)
@@ -211,7 +194,20 @@ Dados de Search Query Performance da Amazon — impressoes, cliques, adicoes ao 
 | `OH_current_final_price` | Final Price no dia selecionado |
 | `OH_hijackers` | Count de merchants diferentes de "Amazon" e "OrganiHaus" |
 
+### Dominio: MAE_OH\BSR (OrganiHaus — Best Seller Rank)
+
+| Medida | Descricao |
+|---|---|
+| `OH_last_BSR1` | Rank BSR1 mais recente (OH) |
+| `OH_last_BSR1_cat` | Categoria BSR1 mais recente (OH) |
+| `OH_best_BSR1` | MIN(BSR1 Rank) no periodo selecionado (OH) — menor = melhor |
+| `OH_avg_BSR1` | AVG(BSR1 Rank) no periodo (OH) |
+| `OH_last_BSR2` | Rank BSR2 mais recente (OH) |
+| `OH_last_BSR2_cat` | Categoria BSR2 mais recente (OH) |
+
 ### Dominio: MAE_COMP (Competidores — Preco e Promo)
+
+> **Padrao DAX das medidas COMP:** `VAR _families = VALUES('OH ASINs'[Key Country | Native Family])` capturado ANTES do `CALCULATE`, seguido de `REMOVEFILTERS('OH ASINs')` + `TREATAS(_families, 'Competitors ASINs'[Key Country | Native Family])`. Isso resolve o problema de slicer de OH ASINs anulando dados de competidores apos a unificacao em `fact_mae`.
 
 | Medida | Descricao |
 |---|---|
@@ -235,7 +231,18 @@ Dados de Search Query Performance da Amazon — impressoes, cliques, adicoes ao 
 | `COMP_final_price_deal` / `COMP_final_price_coupon` | Preco com deal / cupom para grafico |
 | `COMP_current_final_price` | Final Price no dia selecionado |
 
-### Dominio: MAE_AUX (Analise de Preco Comparativa)
+### Dominio: MAE_COMP\BSR (Competidores — Best Seller Rank)
+
+| Medida | Descricao |
+|---|---|
+| `COMP_last_BSR1` | Rank BSR1 mais recente (COMP) — REMOVEFILTERS+TREATAS |
+| `COMP_last_BSR1_cat` | Categoria BSR1 mais recente (COMP) |
+| `COMP_best_BSR1` | MIN(BSR1 Rank) no periodo (COMP) |
+| `COMP_avg_BSR1` | AVG(BSR1 Rank) no periodo (COMP) |
+| `COMP_last_BSR2` | Rank BSR2 mais recente (COMP) |
+| `COMP_last_BSR2_cat` | Categoria BSR2 mais recente (COMP) |
+
+### Dominio: MAE_AUX (Analise de Preco Comparativa e BSR)
 
 | Medida | Descricao |
 |---|---|
@@ -247,8 +254,10 @@ Dados de Search Query Performance da Amazon — impressoes, cliques, adicoes ao 
 | `is_price_alert` | Flag binario de alerta de preco |
 | `has_valid_data` | Verifica se ha dados validos no periodo |
 | `is_featured_competitor` | 1 se dim_featured_brands esta filtrado |
-| `last_update_date` | MAX(COMP_Output[Date]) |
+| `last_update_date` | MAX(fact_mae[Date]) para competidores |
 | `count_total_asins` / `count_price_down` / `count_price_up` / `count_price_neutral` / `count_price_under` / `count_price_over` / `count_price_equal` | Contagens de ASINs por status de preco |
+| `BSR1_advantage` | COMP_last_BSR1 - OH_last_BSR1 (positivo = OH melhor posicao) |
+| `BSR1_status` | "OH Better" / "COMP Better" / "Equal" |
 
 ### Dominio: SQP (Search Query Performance)
 
@@ -291,26 +300,6 @@ Dados de Search Query Performance da Amazon — impressoes, cliques, adicoes ao 
 | `KW_New` / `KW_Lost` / `KW_Remained` | Contagem de keywords por status |
 | `Last_Search_Volume` | Volume de busca mais recente por keyword |
 
-### Dominio: Market Share
-
-| Medida | Descricao |
-|---|---|
-| `Total_Sales` | SUM de vendas do filtro atual |
-| `Total_Sales_OH` | Total de vendas OrganiHaus |
-| `Total_Market_Sales (S/OH)` | Total do mercado excluindo OrganiHaus |
-| `Total_Sales_Market` | Total geral do mercado |
-| `Mkt_Share` | Share de mercado OrganiHaus |
-| `Avg_Sales` | Media mensal de vendas |
-| `Growth_Rate` | Taxa de crescimento periodo a periodo |
-| `Avg_Growth_Rate` / `Avg_Mkt_Growth_Rate` | CAGR ou media de crescimento |
-| `Growth_Rate_StdDev` | Volatilidade do crescimento |
-| `Competitor_Count` | Numero de marcas concorrentes |
-| `Pareto_CmlPct` | % cumulativo para curva de Pareto |
-| `Rank_Current_Month` / `Rank_Difference` | Rank no mes atual e variacao vs mes anterior |
-| `Total_Sales_Current_Month` | Vendas no mes do filtro |
-| `Brand_Rank` | Posicao da marca no ranking |
-| `period_filtered` / `Calendar_Selected_Period` / `Selected_Period` | Labels de periodo para cards |
-
 ### Dominio: Promotions (Promotion Tracker)
 
 | Medida | Descricao |
@@ -336,17 +325,15 @@ Dados de Search Query Performance da Amazon — impressoes, cliques, adicoes ao 
 | `z.dynamic_SQP_metrics_secd_REL` | Metrica secundaria SQP — relativos |
 | `z.dynamic_SQP_metrics_secd_SQ` | Metrica secundaria SQP — Search Query |
 | `z.dynamic_SQP_metrics_secd_y` | Eixo Y secundario SQP |
-| `z.dynamic_mkt_metrics_qtde` | Alterna metrica de quantidade no Market Share |
 | `z.dynamic_Category_Tracker` | Alterna categoria para tracker |
 | `z.dynamic_Price_Alert_Treshold` | Limite de alerta de variacao de preco |
-| `z.dynamic_Top_N_Competitors` | Seleciona Top N concorrentes |
 | `z_dynamic_metrics_comp` | Metricas dinamicas para competidores |
 | `z_dynamic_metrics_OH` | Metricas dinamicas para OrganiHaus |
 | `z_dynamic_metrics_product` | Metricas dinamicas por produto |
 | `z_dynamic_price_evo` | Opcoes de preco para grafico de evolucao (Full Price / Final Price / PED) |
 | `z_dynamic_promo_evo` | Opcoes de promo para grafico de evolucao (Coupon / Deal / None) |
 | `aux_DD_SV` | Auxiliar de Search Volume para DataDive |
-| `aux_first_available` | Auxiliar de primeira data disponivel por ASIN |
+| `aux_first_available` | Auxiliar de primeira data disponivel por ASIN/marca |
 | `PARAM_AvailableDates` | Datas disponíveis para seletor de periodo (Keyword Tracker) |
 | `PARAM_AvailableDates_Comp` | Datas disponíveis para comparacao (Keyword Gain/Loss) |
 | `dim_promo_type` | Tipos de promocao (PED, Coupon, Deal, etc.) |
@@ -389,8 +376,8 @@ Colunas: `dim_marketplace[Marketplace]`, `_Medidas[current_date]` (label: Update
 | Coluna | Campo | Label |
 |---|---|---|
 | | `ASIN Brand[Native Family]` | |
-| | `COMP_Output[Brand]` | |
-| | `COMP_Output[ASIN]` | |
+| | `Competitors ASINs[Brand]` | |
+| | `fact_mae[ASIN]` | |
 | | `_Medidas[COMP_last_QTY]` | Bought Past Month |
 | | `_Medidas[COMP_price_variation]` | Price Variation % |
 | | `_Medidas[COMP_last_price]` | Comp. Last Final Price |
@@ -408,11 +395,7 @@ Analise comparativa de preco entre OrganiHaus e concorrentes — tabelas de prec
 
 #### Slicers
 
-`dim_marketplace[Marketplace]`, `OH ASINs[Native Family]`, `dim_AmzFamily[Amazon Family]`, `Competitors ASINs[Brand]`, `COMP_Output[Brand]`, `dim_promo_type[Promotion Type]`, `dim_calendar[Date]`, `z.dynamic_time_frame_switch[Time Frame]` (advancedSlicer), `dim_important_competitors[Category]` (advancedSlicer), `z_dynamic_promo_evo[Promo]`, `z_dynamic_price_evo[Price]`
-
-#### Visual: Card — Periodo Selecionado
-
-| Values | `_Medidas[Calendar_Selected_Period]` |
+`dim_marketplace[Marketplace]`, `OH ASINs[Native Family]`, `Competitors ASINs[Brand]`, `dim_promo_type[Promotion Type]`, `dim_calendar[Date]`, `z.dynamic_time_frame_switch[Time Frame]` (advancedSlicer), `dim_important_competitors[Category]` (advancedSlicer), `z_dynamic_promo_evo[Promo]`, `z_dynamic_price_evo[Price]`
 
 #### Visual: Table — Preco por SKU OrganiHaus (tableEx)
 
@@ -469,7 +452,6 @@ Analise comparativa de preco entre OrganiHaus e concorrentes — tabelas de prec
 | Y | `_Medidas[OH_final_price_deal]` | OH Deal |
 | Y | `_Medidas[COMP_final_price_coupon]` | Comp. Coupon |
 | Y | `_Medidas[OH_final_price_coupon]` | OH Coupon |
-| Y | `_Medidas[--]` | None |
 
 ---
 
@@ -479,7 +461,7 @@ Analise de performance organica nas buscas Amazon por keyword — impressoes, cl
 
 #### Slicers
 
-`dim_marketplace[Marketplace]`, `dim_country[Marketplace]`, `dim_AmzFamily[Amazon Family]`, `OH ASINs[Base SKU]`, `dim_calendar[Year]`, `dim_calendar[Week Number 544]`, `fact_sqp_sv[Search Volume]`, `fact_sqp_sv[Search Query Score]`, `dim_sq[search_query]` (textSlicer), `z.dynamic_SQP_metrics_prim_ABS`, `z.dynamic_SQP_metrics_prim_REL`, `z.dynamic_SQP_metrics_prim_SQ`, `z.dynamic_SQP_metrics_secd_ABS`, `z.dynamic_SQP_metrics_secd_REL`, `z.dynamic_SQP_metrics_secd_SQ` (todos advancedSlicer)
+`dim_marketplace[Marketplace]`, `dim_country[Marketplace]`, `OH ASINs[Base SKU]`, `dim_calendar[Year]`, `dim_calendar[Week Number 544]`, `fact_sqp_sv[Search Volume]`, `fact_sqp_sv[Search Query Score]`, `dim_sq[search_query]` (textSlicer), `z.dynamic_SQP_metrics_prim_ABS`, `z.dynamic_SQP_metrics_prim_REL`, `z.dynamic_SQP_metrics_prim_SQ`, `z.dynamic_SQP_metrics_secd_ABS`, `z.dynamic_SQP_metrics_secd_REL`, `z.dynamic_SQP_metrics_secd_SQ` (todos advancedSlicer)
 
 #### Visual: KPI Cards — Funil OrganiHaus (cardVisual)
 
@@ -514,7 +496,7 @@ Analise de performance organica nas buscas Amazon por keyword — impressoes, cl
 
 #### Visual: Table — SQP por Search Query (tableEx)
 
-Colunas: `dim_sq[search_query]`, SQ Score, Total Search Vol, Impr. OH, Clicks OH, CTR OH, Δ CTR, Pur. Rate OH, Pur. OH, CVR OH, Δ CVR
+Colunas: `dim_sq[search_query]`, SQ Score, Total Search Vol, Impr. OH, Clicks OH, CTR OH, Delta CTR, Pur. Rate OH, Pur. OH, CVR OH, Delta CVR
 
 #### Visual: Table — SQP por Semana e Keyword (tableEx)
 
@@ -529,11 +511,11 @@ Colunas: `dim_calendar[Year]`, `dim_calendar[Week Number 544]`, `dim_sq[search_q
 | Values | `_Medidas[IMP_OH]` | Impr. OH |
 | Values | `_Medidas[CLK_OH]` | Clicks OH |
 | Values | `_Medidas[CTR_OH]` | CTR OH |
-| Values | `_Medidas[delta_CTR]` | Δ CTR |
+| Values | `_Medidas[delta_CTR]` | Delta CTR |
 | Values | `_Medidas[PUR_Rate_OH]` | Pur. Rate OH |
 | Values | `_Medidas[PUR_OH]` | Pur. OH |
 | Values | `_Medidas[CVR_OH]` | CVR OH |
-| Values | `_Medidas[delta_CVR]` | Δ CVR |
+| Values | `_Medidas[delta_CVR]` | Delta CVR |
 
 ---
 
@@ -571,80 +553,13 @@ Mesmas series do grafico MAE: OH/COMP Final Price, PED, Deal, Coupon ao longo do
 
 ---
 
-### Pagina: Market Share
-
-Analise de share de mercado mensal por marca, familia de produto e marketplace.
-
-#### Slicers
-
-`fact_COMP_sales[Marketplace]`, `fact_COMP_sales[Amazon Family]`, `fact_COMP_sales[Brand]`, `dim_calendar[Year]`, `dim_calendar[Month Abrev]`, `z.dynamic_mkt_metrics_qtde[Metric]`
-
-#### Visual: KPI Card — Metricas OrganiHaus (cardVisual)
-
-| Medida | Label |
-|---|---|
-| `_Medidas[Total_Sales]` | OH Total Sales |
-| `_Medidas[Avg_Sales]` | OH Avg. Monthly Sales |
-| `_Medidas[Mkt_Share]` | OH Market Share |
-| `_Medidas[Avg_Growth_Rate]` | OH Avg. Growth Rate |
-| `_Medidas[Growth_Rate_StdDev]` | OH Volatility (StdDev) |
-| `_Medidas[Competitor_Count]` | Competitors |
-
-#### Visual: Card — Periodo Filtrado
-
-| Values | `_Medidas[period_filtered]` |
-
-#### Visual: Line Chart — Vendas por Marca ao Longo do Tempo (lineChart)
-
-| Role | Campo |
-|---|---|
-| Category | `dim_calendar[Year]`, `dim_calendar[Quarter Q]`, `dim_calendar[Month Abrev]` |
-| Series | `fact_COMP_sales[Brand]` |
-| Y | `_Medidas[Total_Sales]` |
-
-#### Visual: Line Chart — OrganiHaus vs Mercado (lineChart)
-
-| Role | Campo | Label |
-|---|---|---|
-| Category | `dim_calendar[Year]`, `dim_calendar[Quarter Q]`, `dim_calendar[Month Abrev]` | |
-| Y | `_Medidas[Total_Market_Sales (S/OH)]` | Market Total Sales |
-| Y | `_Medidas[Total_Sales_OH]` | OH Total Sales |
-
-#### Visual: Combo Chart — Pareto por Marca (lineClusteredColumnComboChart)
-
-| Role | Campo | Label |
-|---|---|---|
-| Category | `fact_COMP_sales[Brand]` | |
-| Tooltips | `_Medidas[Total_Sales]` | Total Sales |
-| Tooltips | `_Medidas[Pareto_CmlPct]` | Cumulative % |
-| Y | `_Medidas[Total_Sales]` | Total Sales |
-| Y2 | `_Medidas[Pareto_CmlPct]` | Cumulative % |
-
-#### Visual: Bar Chart — Share por Marca (clusteredBarChart)
-
-| Role | Campo | Label |
-|---|---|---|
-| Category | `fact_COMP_sales[Brand]` | |
-| Tooltips | `_Medidas[Pareto_CmlPct]` | Cumulative % |
-| Tooltips | `_Medidas[Total_Sales]` | Total Sales |
-| Y | `_Medidas[Mkt_Share]` | Market Share |
-
-#### Visual: Pie Chart — Distribuicao de Vendas (pieChart)
-
-| Role | Campo |
-|---|---|
-| Category | `fact_COMP_sales[Brand]` |
-| Y | `_Medidas[Total_Sales]` |
-
----
-
 ### Pagina: Keyword Tracker
 
 Monitoramento de palavras-chave indexadas e ranking organico (DataDive Rank Radar).
 
 #### Slicers
 
-`dim_marketplace[Marketplace]`, `dim_AmzFamily[Amazon Family]`, `fact_RankRadar_KWs[Search Volume]`, `fact_RankRadar_KWs[rank]`, `dim_calendar[Date]`, `fact_RankRadar_KWs[Search Terms]` (textSlicer), `z.dynamic_time_frame_switch[Time Frame]`
+`dim_marketplace[Marketplace]`, `fact_RankRadar_KWs[Search Volume]`, `fact_RankRadar_KWs[rank]`, `dim_calendar[Date]`, `fact_RankRadar_KWs[Search Terms]` (textSlicer), `z.dynamic_time_frame_switch[Time Frame]`
 
 #### Visual: KPI Card (cardVisual)
 
@@ -690,7 +605,7 @@ Comparativo de keywords entre dois periodos — ganhos, perdas e permanencias.
 
 #### Slicers
 
-`dim_marketplace[Marketplace]`, `dim_AmzFamily[Amazon Family]`, `fact_RankRadar_KWs[Search Volume]`, `fact_RankRadar_KWs[rank]`, `fact_RankRadar_KWs[Search Terms]` (textSlicer), `PARAM_AvailableDates[Date]`, `PARAM_AvailableDates_Comp[Date]`
+`dim_marketplace[Marketplace]`, `fact_RankRadar_KWs[Search Volume]`, `fact_RankRadar_KWs[rank]`, `fact_RankRadar_KWs[Search Terms]` (textSlicer), `PARAM_AvailableDates[Date]`, `PARAM_AvailableDates_Comp[Date]`
 
 #### Visual: KPI Card — Status de Keywords (cardVisual)
 
@@ -726,7 +641,7 @@ Monitoramento de hijackers na Buy Box dos produtos OrganiHaus (merchants nao aut
 | Role | Campo |
 |---|---|
 | Category | `z.dynamic_time_frame_switch[Abbreviated Date]` |
-| Series | `OH_Output[Country]` |
+| Series | `fact_mae[Country]` |
 | Y | `_Medidas[OH_hijackers]` |
 
 #### Visual: KPI Card — Hijackers por Pais (cardVisual)
@@ -734,18 +649,18 @@ Monitoramento de hijackers na Buy Box dos produtos OrganiHaus (merchants nao aut
 | Role | Campo |
 |---|---|
 | Data | `_Medidas[OH_hijackers]` |
-| Rows | `OH_Output[Country]` |
+| Rows | `fact_mae[Country]` |
 
 #### Visual: Bar Chart — Hijackers por Merchant (barChart)
 
 | Role | Campo |
 |---|---|
-| Category | `OH_Output[Merchant]` |
+| Category | `fact_mae[Merchant]` |
 | Y | `_Medidas[OH_hijackers]` |
 
 #### Visual: Table — Detalhe de Hijackers (tableEx)
 
-Colunas: `dim_marketplace[Marketplace]`, `OH ASINs[Amazon Family]`, `OH_Output[Merchant]`, `OH ASINs[Base SKU]`, Final Price, Link
+Colunas: `dim_marketplace[Marketplace]`, `OH ASINs[Amazon Family]`, `fact_mae[Merchant]`, `OH ASINs[Base SKU]`, Final Price, Link
 
 ---
 
@@ -757,34 +672,6 @@ Visao do funil de conversao SQP — OrganiHaus vs mercado total — para o perio
 
 ---
 
-### Pagina: Leaderboard
-
-Ranking mensal de marcas por volume de vendas com variacao de posicao e growth rate.
-
-#### Slicers
-
-`dim_marketplace[Marketplace]`, `fact_COMP_sales[Amazon Family]`, `fact_COMP_sales[Brand]`, `dim_calendar[Year-Month]`, `dim_important_competitors[Category]` (advancedSlicer)
-
-#### Visual: Card — Total de Vendas do Mercado
-
-| Values | `_Medidas[Total_Sales_Market]` |
-
-#### Visual: Combo Chart — Pareto do Mes (lineClusteredColumnComboChart)
-
-| Role | Campo | Label |
-|---|---|---|
-| Category | `fact_COMP_sales[Brand]` | |
-| Tooltips | `_Medidas[Total_Sales]` | Total Sales |
-| Tooltips | `_Medidas[Pareto_CmlPct]` | Cumulative % |
-| Y | `_Medidas[Total_Sales]` | Total Sales |
-| Y2 | `_Medidas[Pareto_CmlPct]` | Cumulative % |
-
-#### Visual: Table — Leaderboard (2x tableEx)
-
-Colunas: `fact_COMP_sales[Brand]`, Rank, Change (Δ Rank), Growth Rate, Sales
-
----
-
 ### Paginas Tooltip e Ocultas
 
 | Pagina | Tipo | Conteudo |
@@ -792,7 +679,7 @@ Colunas: `fact_COMP_sales[Brand]`, Rank, Change (Δ Rank), Growth Rate, Sales
 | `SQP Tool Tip` | Tooltip (ActualSize) | Vazio / placeholder |
 | `Freq Tooltip` | Tooltip (ActualSize) | Tabela com historico de preco e promo do competidor: Date, Coupon Type, Limited Time Deal, Final Price, PED, Promotion Type |
 | `Promo Tooltip` | Tooltip | Tabela de acoes de promocao planejadas: Base SKU, Native Family, actionDescription, pricePromotionAction, Objective, Current Price, Simulated Price, startDate, endDate |
-| `Rank Tooltip` | Tooltip (ActualSize) | Tabela de ranking: Brand_Rank, Brand, Total Sales + card Competitor_Count |
+| `Rank Tooltip` | Tooltip (ActualSize) | Placeholder (Market Share removido) |
 | `Last Date Tooltip` | Tooltip (ActualSize) | Multi Row Card: last_update_date (Last Updated), last_date_compared (Last Price Date) |
 | `Page 2` | Oculta | Line chart de evolucao de preco + table de ASINs (versao de desenvolvimento) |
 | `Page 1` | Oculta | Tables de SKUs para debug/validacao |
@@ -801,58 +688,63 @@ Colunas: `fact_COMP_sales[Brand]`, Rank, Change (Δ Rank), Growth Rate, Sales
 
 ## Relacionamentos
 
-Modelo Import puro com calendario proprio (`dim_calendar`, nao o `Calendar` do Base Tables). A `SKUs` no Market Research e uma tabela local (importada via BigQuery), nao DQ do Base Tables.
+Composite Model com calendario proprio (`dim_calendar`, nao o `Calendar` do Base Tables). `SKUs` em DirectQuery ao Base Tables.
+
+**Por que 5 relacionamentos estao desativados:** Apos a unificacao de `OH_Output` + `COMP_Output` em `fact_mae`, criaram-se caminhos ambiguos. O erro `PFE_XL_USERELATIONSHIP_AMBIGUOUS_PATH` impede o modelo de abrir. A solucao foi desativar os 5 relacionamentos que formavam triangulos/diamantes. Nenhum deles precisa de `USERELATIONSHIP()` nas medidas — o padrao REMOVEFILTERS+TREATAS ja cobre todos os casos de uso.
 
 **Relacionamentos ativos principais:**
 
 | De | Para | Cardinalidade |
 |---|---|---|
-| `OH_Output.Date` | `dim_calendar.Date` | many-to-one |
-| `COMP_Output.Date` | `dim_calendar.Date` | many-to-one |
-| `fact_COMP_sales.Date` | `dim_calendar.Date` | many-to-one |
+| `fact_mae.'Key: Country \| ASIN'` | `OH ASINs.'Key Country \| ASIN'` | many-to-many |
+| `fact_mae.'Key Country \| ASIN \| Brand'` | `Competitors ASINs.'Key Country \| ASIN \| Brand'` | many-to-many |
+| `fact_mae.Date` | `dim_calendar.Date` | many-to-one |
+| `fact_mae.Brand` | `dim_featured_brands.Brand` | many-to-one |
+| `fact_mae.'Promotion Type'` | `dim_promo_type.Custom` | many-to-one |
 | `fact_promotion_tracker.activeDate` | `dim_calendar.Date` | many-to-one |
 | `fact_RankRadar_KWs.originalDate` | `dim_calendar.Date` | many-to-one |
 | `fact_sqp_asin.start_date` | `dim_calendar.Date` | many-to-one |
 | `fact_sqp_sv.start_date` | `dim_calendar.Date` | many-to-one |
 | `fact_sqp_sv_funnel_totals.start_date` | `dim_calendar.Date` | many-to-one |
-| `z.dynamic_time_frame_switch.'Start Date'` ↔ | `dim_calendar.Date` | bidir |
-| `Competitors ASINs.'Key Country \| Native Family'` | `OH ASINs.'Key Country \| Native Family'` | many-to-many |
-| `OH_Output.'Key: Country \| ASIN'` | `OH ASINs.'Key Country \| ASIN'` | many-to-many |
-| `COMP_Output.'Key Country \| ASIN \| Brand'` | `Competitors ASINs.'Key Country \| ASIN \| Brand'` | many-to-many |
-| `fact_COMP_sales.Marketplace` | `dim_country.Marketplace` | many-to-one |
-| `fact_sqp_asin.'Key Country \| ASIN'` | `dim_AmzFamily.'Key Country \| ASIN'` | many-to-one |
-| `fact_sqp_asin.'Key SQ'` | `dim_sq.'Key SQ'` | many-to-one |
-| `fact_sqp_sv.'Key SQ'` | `dim_sq.'Key SQ'` | many-to-one |
-| `fact_sqp_sv_funnel_totals.'Key SQ'` | `dim_sq.'Key SQ'` | many-to-one |
-| `fact_RankRadar_KWs.'Key Country \| Search Term'` | `aux_DD_SV.'Key Country \| Search Term'` | many-to-one |
-| `fact_RankRadar_KWs.'Key Amazon Family \| Top Variation'` | `OH ASINs.'Key Amazon Family \| Top Variation'` | many-to-many |
-| `OH ASINs.'Key Country \| ASIN'` ↔ | `dim_AmzFamily.'Key Country \| ASIN'` | bidir (one-to-many) |
+| `z.dynamic_time_frame_switch.'Start Date'` | `dim_calendar.Date` | bidir |
+| `OH ASINs.Country` | `dim_country.Marketplace` | many-to-one |
+| `OH ASINs.ASIN` | `ASIN Brand.ASIN` | many-to-one |
 | `Competitors ASINs.Highlight` | `dim_important_competitors.Id` | many-to-one |
 | `fact_promotion_tracker.keyCountryAsin` | `OH ASINs.'Key Country \| ASIN'` | many-to-one |
 | `dim_country.Region` | `dim_marketplace.Marketplace` | many-to-one |
-| `Competitors ASINs.ASIN` / `OH ASINs.ASIN` / `SKUs.ASIN` | `ASIN Brand.ASIN` | many-to-one (3 rels) |
+| `SKUs.ASIN` | `ASIN Brand.ASIN` | many-to-one |
+| `fact_RankRadar_KWs.'Key Amazon Family \| Top Variation'` | `OH ASINs.'Key Amazon Family \| Top Variation'` | many-to-many |
+| `fact_RankRadar_KWs.'Key Country \| Search Term'` | `aux_DD_SV.'Key Country \| Search Term'` | many-to-one |
+| `fact_sqp_asin.'Key SQ'` | `dim_sq.'Key SQ'` | many-to-one |
+| `fact_sqp_sv.'Key SQ'` | `dim_sq.'Key SQ'` | many-to-one |
+| `fact_sqp_sv_funnel_totals.'Key SQ'` | `dim_sq.'Key SQ'` | many-to-one |
+| `fact_sqp_asin.'Key Country \| ASIN'` | `OH ASINs.'Key Country \| ASIN'` | many-to-one |
 
-**Relacionamentos inativos notaveis:**
+**Relacionamentos inativos (desativados para evitar ambiguous path):**
 
 | De | Para | Motivo |
 |---|---|---|
+| `Competitors ASINs.ASIN` | `ASIN Brand.ASIN` | Evita diamante — ASIN Brand acessivel via OH ASINs |
+| `Competitors ASINs.Brand` | `dim_featured_brands.Brand` | Evita diamante — dim_featured_brands acessivel via fact_mae |
+| `fact_mae.Country` | `dim_country.Marketplace` | Auto-detectado — evita 3 caminhos; filtro vai via OH ASINs |
+| `Competitors ASINs.Country` | `dim_country.Marketplace` | Evita 3 caminhos; filtro vai via OH ASINs |
 | `fact_RankRadar_KWs.'Key Country \| Amazon Family'` | `OH ASINs.'Key Country \| Amazon Family'` | Join alternativo por familia — inativo, usa `Top Variation` como ativo |
-| `fact_promotion_tracker.keyCountryAsin` | `dim_AmzFamily.'Key Country \| ASIN'` | Relacao direta inativa — usa `OH ASINs` como ativo |
 
 **Relacionamentos `joinOnDateBehavior: datePartOnly`** (automaticos do Power BI para tabelas de data):
-`PARAM_AvailableDates`, `PARAM_AvailableDates_Comp`, `zz_Refresh_Control`, `SKUs.'Refresh Date'`, `COMP_Output.'Date Created'`, `OH_Output.'Date Created'`, `fact_promotion_tracker.startDate`, `fact_promotion_tracker.endDate`, `z.dynamic_time_frame_switch.'Date order'` — todos apontam para `LocalDateTable_*` geradas automaticamente.
+`PARAM_AvailableDates`, `PARAM_AvailableDates_Comp`, `zz_Refresh_Control`, `fact_promotion_tracker.startDate`, `fact_promotion_tracker.endDate`, `z.dynamic_time_frame_switch.'Date order'`, `fact_mae.'Date Created'` — todos apontam para `LocalDateTable_*` geradas automaticamente.
 
 ---
 
 ## Pontos de Atencao
 
-- **SQP via CSV local:** A fonte `resultado_final.csv` estava originalmente no BigQuery (`2_Silver_Business_Reports.vw_search_query_performance`); foi migrada para um CSV local em `z_personal_folders`. Atualizacao manual necessaria para novos dados.
-- **MAE Output_FILE.csv:** Arquivo gerado pela ferramenta MAE (script externo). Deve ser atualizado regularmente; o modelo nao automatiza o scraping, apenas a leitura do CSV gerado.
-- **Historico de market share:** `fact_COMP_sales` combina DataDive (folder) com `aux_comp_sales` (historico manual do time de Marketing). Inconsistencias entre os dois podem gerar duplicatas — o modelo usa MAX(Sales) por grupo como desempate.
-- **Mapeamento de competidores v2 vs v3:** Existem dois arquivos (`MAE Competitors - Editado v2.xlsx` e `v3.xlsx`). O modelo usa o v2 como default via `de_para_file`; o v3 existe como `de_para_file_new` mas esta comentado.
-- **RangeStart hardcoded:** O parametro `RangeStart = #date(2025, 1, 1)` filtra os CSVs do Rank Radar. Se o valor nao for atualizado, dados anteriores a 2025 serao excluidos do Keyword Tracker.
+- **Composite Model + Gateway:** O modelo usa DirectQuery ao Base Tables via XMLA (`powerbi://...OrganiHaus Marketing Intelligence Center - MIC`). Refresh agendado via gateway no PBI Service — gateway precisa estar na maquina com Google Drive for Desktop autenticado. Fontes de arquivo usam paths literais (sem parametros dinamicos) para compatibilidade com o gateway.
+- **fact_mae unifica OH e COMP:** As tabelas `OH_Output` e `COMP_Output` foram substituidas por `fact_mae` com coluna `Brand_Type`. Medidas COMP usam padrao `REMOVEFILTERS('OH ASINs') + TREATAS(_families, 'Competitors ASINs'[Key Country | Native Family])` para que slicer de OH ASINs nao anule dados de competidores.
+- **BSR (Best Seller Rank):** ETL parseia texto `"#1,234 in Kitchen"` via funcao `fn_ParseBSR` gerando colunas `BSR 1 Rank` (Int64), `BSR 1 Category`, `BSR 2 Rank`, `BSR 2 Category` em `fact_mae`. 14 medidas BSR disponiveis (OH e COMP last/best/avg + comparativo).
+- **SQP via CSV local:** A fonte `resultado_final.csv` esta em `code_repository\sqp_downloader\processed\`. Atualizacao manual necessaria para novos dados.
+- **MAE OUTPUT_FILE.csv:** Arquivo gerado pelo scraper MAE. Deve ser atualizado regularmente; o modelo nao automatiza o scraping. `RangeStart = #date(2025, 9, 1)` filtra dados anteriores a set/2025 para otimizar o refresh.
+- **Mapeamento de competidores v2 vs v3:** CA/UK/US/EU carregam tanto `MAE Competitors - Editado v2.xlsx` quanto `v3.xlsx` (inline nas expressoes). V3 removeu FR/ES/IT — intencional.
+- **Market Share removido:** Tabela `fact_COMP_sales`, 29 medidas `displayFolder: MKTSHARE` e pagina "Market Share" foram removidos desta versao. Fonte era manual e desatualizada.
 - **Filtro de paises:** `dim_country` filtra explicitamente para CA/DE/ES/FR/GB/IT/US — MX e BR sao excluidos do modelo.
-- **`aux_comp_sales`:** Fonte de historico de vendas de competidores consolidado manualmente. Nao e automatica; depende de atualizacao pelo time de Marketing.
 
 ---
 
