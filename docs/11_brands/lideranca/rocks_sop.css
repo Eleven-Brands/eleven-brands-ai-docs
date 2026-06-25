@@ -1,0 +1,149 @@
+/* ══ ROCKS SOP ══ */
+
+/* CONVENTION CARDS */
+.convention-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+.convention-card { background: var(--bg-visual); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; }
+.convention-card-title { font-weight: 600; font-size: 13px; color: var(--text-title); margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+.convention-badge { font-family: var(--font-mono); font-size: 9px; padding: 2px 7px; border-radius: 4px; background: rgba(104,144,126,0.1); color: var(--sage); letter-spacing: 0.06em; }
+.convention-badge.blue { background: rgba(102,129,151,0.1); color: var(--blue-gray); }
+.convention-card p { font-size: 12.5px; color: var(--text-label); line-height: 1.55; }
+
+/* FORMAT EXAMPLE */
+.format-example {
+  margin-top: 14px;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 18px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--sage);
+  letter-spacing: 0.02em;
+}
+.format-samples { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.format-sample {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-label);
+  background: var(--bg-page);
+  border-radius: 4px;
+  padding: 5px 10px;
+}
+.format-sample::before {
+  content: '→ ';
+  color: var(--gray-mid);
+}
+
+/* CHECKLIST — PROGRESS */
+.checklist-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  margin-bottom: 12px;
+}
+.checklist-progress-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.checklist-progress-fill {
+  height: 100%;
+  background: var(--sage);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+.checklist-progress-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--gray-mid);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  transition: color 0.3s;
+}
+
+/* CHECKLIST — ITEMS */
+.checklist-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 13px 18px;
+  background: var(--bg-visual);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
+  border-radius: 0 8px 8px 0;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  user-select: none;
+}
+.checklist-item:hover { border-color: var(--gray-mid); }
+.checklist-item input[type="checkbox"] { display: none; }
+.check-box {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  background: var(--bg-page);
+}
+.checklist-item:has(input:checked) {
+  border-left-color: var(--sage);
+  background: rgba(104,144,126,0.04);
+}
+.checklist-item:has(input:checked) .check-box {
+  background: var(--sage);
+  border-color: var(--sage);
+}
+.checklist-item:has(input:checked) .check-box::after {
+  content: '';
+  display: block;
+  width: 4px;
+  height: 8px;
+  border: 2px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg) translateY(-1px);
+}
+.check-text {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text-title);
+  transition: color 0.15s;
+}
+.checklist-item:has(input:checked) .check-text {
+  color: var(--gray-mid);
+  text-decoration: line-through;
+  text-decoration-color: var(--sage);
+}
+.checklist-item--alert .check-box { border-color: var(--attention, #D4813A); }
+.checklist-item--alert:has(input:checked) .check-box { background: var(--sage); border-color: var(--sage); }
+
+/* CHECKLIST — RESET */
+.checklist-reset {
+  margin-top: 14px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--gray-mid);
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.checklist-reset:hover { border-color: var(--gray-mid); color: var(--text-label); }
