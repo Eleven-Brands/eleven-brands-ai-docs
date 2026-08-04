@@ -5,17 +5,53 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Automações — Equipe de Dados</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
 <link rel="stylesheet" href="./automations.css">
 </head>
 <body>
-<div class="page-header">
-  <div class="page-label">Equipe de Dados · Eleven Brands</div>
-  <h1 class="page-title">Automações Ativas</h1>
-  <p class="page-sub">Visão geral dos processos automatizados, horários de execução e fluxo de dados.</p>
-</div>
 
-  <div class="section">
-    <div class="section-header">
+<!-- HEADER + NAV -->
+<header class="site-header">
+  <div class="nav-actions">
+    <a href="../../index.html" class="nav-back" title="Voltar para a Knowledge Base" aria-label="Voltar para a Knowledge Base"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-9"/><path d="M9.5 20v-6h5v6"/></svg></a>
+    <button class="nav-menu-toggle" id="nav-menu-toggle" aria-label="Abrir menu de documentos">☰</button>
+  </div>
+  <div class="nav-logo" id="nav-logo">
+    Automações Ativas
+    <span>Equipe de Dados · Eleven Brands</span>
+  </div>
+  <nav class="nav">
+    <div class="nav-links">
+      <a href="#bigquery"><span class="nav-dot"></span> BigQuery</a>
+      <a href="#power-automate"><span class="nav-dot"></span> Power Automate</a>
+      <a href="#python"><span class="nav-dot"></span> Python</a>
+      <a href="#n8n"><span class="nav-dot"></span> n8n</a>
+    </div>
+  </nav>
+</header>
+<div class="nav-menu-panel" id="nav-menu-panel"></div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- COVER -->
+  <div class="cover">
+    <div class="cover-label">Equipe de Dados · Eleven Brands</div>
+    <h1>Automações<br>Ativas</h1>
+    <p class="cover-sub">Visão geral dos processos automatizados, horários de execução e fluxo de dados.</p>
+    <div class="cover-tags">
+      <span class="cover-tag">BigQuery</span>
+      <span class="cover-tag">Power Automate</span>
+      <span class="cover-tag">Python</span>
+      <span class="cover-tag">n8n</span>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="doc-body">
+
+  <div class="section" id="bigquery">
+    <div class="group-header">
       <div class="section-dot" style="background:#185FA5;"></div>
       <span class="section-name">BigQuery</span>
       <span class="section-count">6 automaçãos</span>
@@ -114,8 +150,8 @@
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-header">
+  <div class="section" id="power-automate">
+    <div class="group-header">
       <div class="section-dot" style="background:#7A3FA0;"></div>
       <span class="section-name">MS Power Automate</span>
       <span class="section-count">5 automaçãos</span>
@@ -199,8 +235,8 @@
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-header">
+  <div class="section" id="python">
+    <div class="group-header">
       <div class="section-dot" style="background:#3B6D11;"></div>
       <span class="section-name">Python</span>
       <span class="section-count">11 automaçãos</span>
@@ -375,8 +411,8 @@
     </div>
   </div>
 
-  <div class="section">
-    <div class="section-header">
+  <div class="section" id="n8n">
+    <div class="group-header">
       <div class="section-dot" style="background:#B45C0B;"></div>
       <span class="section-name">n8n</span>
       <span class="section-count">1 automação</span>
@@ -399,9 +435,16 @@
     </div>
     </div>
   </div>
-<div class="page-footer">
-  <span class="footer-text">Eleven Brands · Equipe de Dados</span>
-  <span class="footer-text">23 automações ativas</span>
-</div>
+
+  </div><!-- /doc-body -->
+
+  <div class="footer">
+    Equipe de Dados · Eleven Brands · 23 Automações Ativas · 2026
+  </div>
+
+</div><!-- /main -->
+
+<script src="../assets/nav.js"></script>
+
 </body>
 </html>

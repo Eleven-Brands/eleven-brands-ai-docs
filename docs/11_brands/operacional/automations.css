@@ -1,27 +1,7 @@
 /* ══ AUTOMATIONS ══ */
 
-:root {
-  --sage: #68907E;
-  --gray-mid: #A1A9B3;
-  --positive: #4CAF7A;
-  --bg-page: #F4F5F3;
-  --bg-visual: #FBFAFA;
-  --border: #DADDDD;
-  --text-title: #1F2427;
-  --text-label: #47515A;
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body { font-family: 'Inter', sans-serif; background: var(--bg-page); color: var(--text-title); font-size: 13px; padding: 28px 24px; }
-
-.page-header { margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-.page-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--sage); margin-bottom: 8px; }
-.page-title { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; color: var(--text-title); margin-bottom: 4px; }
-.page-sub { font-size: 12px; color: var(--gray-mid); font-weight: 300; }
-
 .section { margin-bottom: 28px; }
-.section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.group-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .section-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .section-name { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-label); font-weight: 500; }
 .section-count { font-size: 11px; color: var(--gray-mid); }
@@ -50,6 +30,3 @@ body { font-family: 'Inter', sans-serif; background: var(--bg-page); color: var(
 
 .io-flow { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; background: var(--bg-page); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; color: var(--text-label); }
 .io-arrow { color: var(--gray-mid); }
-
-.page-footer { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; }
-.footer-text { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .08em; color: var(--gray-mid); }
