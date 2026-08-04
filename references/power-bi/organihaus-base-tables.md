@@ -381,7 +381,7 @@ O modelo usa **chaves compostas concatenadas** com separador ` | `. Ha 9 variaco
 
 ---
 
-## Medidas DAX — Measurement Table (736 medidas)
+## Medidas DAX — Measurement Table (752 medidas)
 
 
 ### 3PL Reports
@@ -888,6 +888,20 @@ RETURN
 **Depende de medidas:** `[$_net_average_price]`, `[$_net_average_price_previous_year]`  
 ```dax
 [$_net_average_price] - [$_net_average_price_previous_year]
+```
+
+#### `$_net_revenue_difference_yoy`
+
+**Depende de medidas:** `[$_net_revenue]`, `[$_net_revenue_previous_year]`  
+```dax
+[$_net_revenue] - [$_net_revenue_previous_year]
+```
+
+#### `$_revenue_difference_yoy`
+
+**Depende de medidas:** `[$_revenue]`, `[$_revenue_previous_year]`  
+```dax
+[$_revenue] - [$_revenue_previous_year]
 ```
 
 
@@ -1780,6 +1794,298 @@ RETURN
 **Depende de medidas:** `[u_last_weekly_velocity]`, `[u_weekly_velocity_moving_average_fast]`  
 ```dax
 DIVIDE([u_weekly_velocity_moving_average_fast],[u_last_weekly_velocity])
+```
+
+
+### Delete?\FBA Inventory
+
+#### `d_lead_time_reserved_fc_processing`
+
+**Depende de medidas:** `[d_last_fba_inventory]`, `[u_fba_inventory_reserved_fc_processing]`  
+**Depende de colunas:** `'Calendar'[Date]`, `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[key_inventory_region_sku]`, `'fact_fba_inventory'[reserved_fc_processing]`  
+```dax
+// VAR CurrentSKU = SELECTEDVALUE('fact_fba_inventory'[key_inventory_region_sku])
+
+// VAR AllDates = CALCULATETABLE(
+//     DISTINCT('fact_fba_inventory'[date_fba_inventory]),
+//     'fact_fba_inventory'[key_inventory_region_sku] = CurrentSKU
+// )
+
+// VAR ChangeDates = FILTER(
+//     AllDates,
+//     VAR CurrentDate = 'fact_fba_inventory'[date_fba_inventory]
+//     VAR CurrentValue = CALCULATE(
+//         MAX('fact_fba_inventory'[reserved_fc_processing]),
+//         'fact_fba_inventory'[date_fba_inventory] = CurrentDate
+//     )
+//     VAR PreviousDate = CALCULATE(
+//         MAX('fact_fba_inventory'[date_fba_inventory]),
+//         'fact_fba_inventory'[date_fba_inventory] < CurrentDate
+//     )
+//     VAR PreviousValue = CALCULATE(
+//         MAX('fact_fba_inventory'[reserved_fc_processing]),
+//         'fact_fba_inventory'[date_fba_inventory] = PreviousDate
+//     )
+//     RETURN CurrentValue <> PreviousValue
+// )
+
+// VAR LatestChangeDate = MAXX(ChangeDates, 'fact_fba_inventory'[date_fba_inventory])
+
+// VAR NewValue = CALCULATE(
+//     MAX('fact_fba_inventory'[reserved_fc_processing]),
+//     'fact_fba_inventory'[date_fba_inventory] = LatestChangeDate
+// )
+
+// RETURN IF(NewValue=0, BLANK(), DATEDIFF(LatestChangeDate, [d_last_fba_inventory], DAY))
+
+
+VAR _current_date = MAX('Calendar'[Date])
+VAR _current_sku = SELECTEDVALUE('fact_fba_inventory'[key_inventory_region_sku])
+
+-- Avalia o valor da medida 'u_last_modified...' na data do contexto
+VAR _current_qty = [u_fba_inventory_reserved_fc_processing]
+
+RETURN
+IF(
+    -- Só calculamos se houver quantidade positiva atualmente
+    NOT(ISBLANK(_current_qty)) && _current_qty > 0,
+    
+    VAR _last_zero_date = 
+        CALCULATE(
+            MAX('Calendar'[Date]),
+            FILTER(
+                ALL('Calendar'[Date]),
+                'Calendar'[Date] < _current_date &&
+                (
+                    -- Recalcula a medida para cada data passada para verificar se era 0 ou vazia
+                    -- Nota: Isso assume que 'u_last_modified...' responde corretamente ao contexto de linha de 'Calendar'[Date]
+                    ISBLANK([u_fba_inventory_reserved_fc_processing]) || [u_fba_inventory_reserved_fc_processing] = 0
+                )
+            )
+        )
+
+    -- Se nunca houve um zero na história (dentro dos dados carregados), assumimos a primeira data com dados como início
+    VAR _start_date = 
+        IF(
+            ISBLANK(_last_zero_date),
+            CALCULATE(MIN('fact_fba_inventory'[date_fba_inventory]), ALL('Calendar'), 'fact_fba_inventory'[key_inventory_region_sku] = _current_sku),
+            _last_zero_date
+        )
+        
+    RETURN
+        DATEDIFF(_start_date, _current_date, DAY),
+        
+    BLANK() -- Se a quantidade atual for 0, não há Lead Time ativo
+)
+```
+
+#### `d_lead_time_fc_transfer`
+
+**Depende de medidas:** `[d_last_fba_inventory]`, `[u_fba_inventory_fc_transfer]`  
+**Depende de colunas:** `'Calendar'[Date]`, `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[key_inventory_region_sku]`, `'fact_fba_inventory'[reserved_fc_transfer]`  
+```dax
+// VAR CurrentSKU = SELECTEDVALUE('fact_fba_inventory'[key_inventory_region_sku])
+
+// VAR AllDates = CALCULATETABLE(
+//     DISTINCT('fact_fba_inventory'[date_fba_inventory]),
+//     'fact_fba_inventory'[key_inventory_region_sku] = CurrentSKU
+// )
+
+// VAR ChangeDates = FILTER(
+//     AllDates,
+//     VAR CurrentDate = 'fact_fba_inventory'[date_fba_inventory]
+//     VAR CurrentValue = CALCULATE(
+//         MAX('fact_fba_inventory'[reserved_fc_transfer]),
+//         'fact_fba_inventory'[date_fba_inventory] = CurrentDate
+//     )
+//     VAR PreviousDate = CALCULATE(
+//         MAX('fact_fba_inventory'[date_fba_inventory]),
+//         'fact_fba_inventory'[date_fba_inventory] < CurrentDate
+//     )
+//     VAR PreviousValue = CALCULATE(
+//         MAX('fact_fba_inventory'[reserved_fc_transfer]),
+//         'fact_fba_inventory'[date_fba_inventory] = PreviousDate
+//     )
+//     RETURN CurrentValue <> PreviousValue
+// )
+
+// VAR LatestChangeDate = MAXX(ChangeDates, 'fact_fba_inventory'[date_fba_inventory])
+
+// VAR NewValue = CALCULATE(
+//     MAX('fact_fba_inventory'[reserved_fc_transfer]),
+//     'fact_fba_inventory'[date_fba_inventory] = LatestChangeDate
+// )
+
+// RETURN IF(NewValue=0, BLANK(), DATEDIFF(LatestChangeDate, [d_last_fba_inventory], DAY))
+
+VAR _current_date = MAX('Calendar'[Date])
+VAR _current_sku = SELECTEDVALUE('fact_fba_inventory'[key_inventory_region_sku])
+
+-- Avalia o valor da medida 'u_last_modified...' na data do contexto
+VAR _current_qty = [u_fba_inventory_fc_transfer]
+
+RETURN
+IF(
+    -- Só calculamos se houver quantidade positiva atualmente
+    NOT(ISBLANK(_current_qty)) && _current_qty > 0,
+    
+    VAR _last_zero_date = 
+        CALCULATE(
+            MAX('Calendar'[Date]),
+            FILTER(
+                ALL('Calendar'[Date]),
+                'Calendar'[Date] < _current_date &&
+                (
+                    -- Recalcula a medida para cada data passada para verificar se era 0 ou vazia
+                    -- Nota: Isso assume que 'u_last_modified...' responde corretamente ao contexto de linha de 'Calendar'[Date]
+                    ISBLANK([u_fba_inventory_fc_transfer]) || [u_fba_inventory_fc_transfer] = 0
+                )
+            )
+        )
+
+    -- Se nunca houve um zero na história (dentro dos dados carregados), assumimos a primeira data com dados como início
+    VAR _start_date = 
+        IF(
+            ISBLANK(_last_zero_date),
+            CALCULATE(MIN('fact_fba_inventory'[date_fba_inventory]), ALL('Calendar'), 'fact_fba_inventory'[key_inventory_region_sku] = _current_sku),
+            _last_zero_date
+        )
+        
+    RETURN
+        DATEDIFF(_start_date, _current_date, DAY),
+        
+    BLANK() -- Se a quantidade atual for 0, não há Lead Time ativo
+)
+```
+
+#### `u_last_modified_reserved_fc_processing`
+
+**Depende de colunas:** `'Calendar'[Date]`, `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[reserved_fc_processing]`  
+```dax
+VAR _max_date = MAX('Calendar'[Date])
+    VAR _last_value =
+        CALCULATE(
+            SUM('fact_fba_inventory'[reserved_fc_processing])
+            , 'fact_fba_inventory'[date_fba_inventory] = MAX('fact_fba_inventory'[date_fba_inventory])
+        )
+
+    VAR _result = IF(_last_value = 0, BLANK(), _last_value)
+
+RETURN
+    _result
+```
+
+#### `u_last_modified_reserved_fc_transfer`
+
+**Depende de colunas:** `'Calendar'[Date]`, `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[fc_transfer]`  
+```dax
+VAR _max_date = MAX('Calendar'[Date])
+    VAR _last_value =
+        CALCULATE(
+            SUM('fact_fba_inventory'[fc_transfer])
+            , 'fact_fba_inventory'[date_fba_inventory] = MAX('fact_fba_inventory'[date_fba_inventory]) 
+        )
+
+    VAR _result = IF(_last_value = 0, BLANK(), _last_value)
+
+RETURN
+    _result
+```
+
+#### `d_lead_time_reserved_fc_customer_order`
+
+**Depende de medidas:** `[d_last_fba_inventory]`, `[u_fba_inventory_reserved_customer_order]`  
+**Depende de colunas:** `'Calendar'[Date]`, `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[key_inventory_region_sku]`, `'fact_fba_inventory'[reserved_customer_order]`  
+```dax
+// VAR CurrentSKU = SELECTEDVALUE('fact_fba_inventory'[key_inventory_region_sku])
+
+// VAR AllDates = CALCULATETABLE(
+//     DISTINCT('fact_fba_inventory'[date_fba_inventory]),
+//     'fact_fba_inventory'[key_inventory_region_sku] = CurrentSKU
+// )
+
+// VAR ChangeDates = FILTER(
+//     AllDates,
+//     VAR CurrentDate = 'fact_fba_inventory'[date_fba_inventory]
+//     VAR CurrentValue = CALCULATE(
+//         MAX('fact_fba_inventory'[reserved_customer_order]),
+//         'fact_fba_inventory'[date_fba_inventory] = CurrentDate
+//     )
+//     VAR PreviousDate = CALCULATE(
+//         MAX('fact_fba_inventory'[date_fba_inventory]),
+//         'fact_fba_inventory'[date_fba_inventory] < CurrentDate
+//     )
+//     VAR PreviousValue = CALCULATE(
+//         MAX('fact_fba_inventory'[reserved_customer_order]),
+//         'fact_fba_inventory'[date_fba_inventory] = PreviousDate
+//     )
+//     RETURN CurrentValue <> PreviousValue
+// )
+
+// VAR LatestChangeDate = MAXX(ChangeDates, 'fact_fba_inventory'[date_fba_inventory])
+
+// VAR NewValue = CALCULATE(
+//     MAX('fact_fba_inventory'[reserved_customer_order]),
+//     'fact_fba_inventory'[date_fba_inventory] = LatestChangeDate
+// )
+
+// RETURN IF(NewValue=0, BLANK(), DATEDIFF(LatestChangeDate, [d_last_fba_inventory], DAY))
+
+VAR _current_date = MAX('Calendar'[Date])
+VAR _current_sku = SELECTEDVALUE('fact_fba_inventory'[key_inventory_region_sku])
+
+-- Avalia o valor da medida 'u_last_modified...' na data do contexto
+VAR _current_qty = [u_fba_inventory_reserved_customer_order]
+
+RETURN
+IF(
+    -- Só calculamos se houver quantidade positiva atualmente
+    NOT(ISBLANK(_current_qty)) && _current_qty > 0,
+    
+    VAR _last_zero_date = 
+        CALCULATE(
+            MAX('Calendar'[Date]),
+            FILTER(
+                ALL('Calendar'[Date]),
+                'Calendar'[Date] < _current_date &&
+                (
+                    -- Recalcula a medida para cada data passada para verificar se era 0 ou vazia
+                    -- Nota: Isso assume que 'u_last_modified...' responde corretamente ao contexto de linha de 'Calendar'[Date]
+                    ISBLANK([u_fba_inventory_reserved_customer_order]) || [u_fba_inventory_reserved_customer_order] = 0
+                )
+            )
+        )
+
+    -- Se nunca houve um zero na história (dentro dos dados carregados), assumimos a primeira data com dados como início
+    VAR _start_date = 
+        IF(
+            ISBLANK(_last_zero_date),
+            CALCULATE(MIN('fact_fba_inventory'[date_fba_inventory]), ALL('Calendar'), 'fact_fba_inventory'[key_inventory_region_sku] = _current_sku),
+            _last_zero_date
+        )
+        
+    RETURN
+        DATEDIFF(_start_date, _current_date, DAY),
+        
+    BLANK() -- Se a quantidade atual for 0, não há Lead Time ativo
+)
+```
+
+#### `u_last_modified_reserved_fc_customer_order`
+
+**Depende de colunas:** `'Calendar'[Date]`, `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[reserved_customer_order]`  
+```dax
+VAR _max_date = MAX('Calendar'[Date])
+    VAR _last_value =
+        CALCULATE(
+            SUM('fact_fba_inventory'[reserved_customer_order])
+            , 'fact_fba_inventory'[date_fba_inventory] = MAX('fact_fba_inventory'[date_fba_inventory])
+        )
+
+    VAR _result = IF(_last_value = 0, BLANK(), _last_value)
+
+RETURN
+    _result
 ```
 
 
@@ -2686,6 +2992,37 @@ RETURN
     )
 ```
 
+#### `u_awd_processing_fee_quantity`
+
+**Depende de colunas:** `fact_awd_monthly_processing_fee[total_units]`  
+```dax
+VAR _total_units = SUM(fact_awd_monthly_processing_fee[total_units])
+
+RETURN
+    _total_units
+```
+
+#### `u_awd_transportation_fee_quantity`
+
+**Depende de colunas:** `fact_awd_monthly_transportation_fee[total_units]`  
+```dax
+VAR _total_units = SUM(fact_awd_monthly_transportation_fee[total_units])
+
+RETURN
+    _total_units
+```
+
+#### `$_avg_awd_storage_fee`
+
+**Depende de medidas:** `[$_awd_storage_fee]`  
+**Depende de colunas:** `'Calendar'[Date]`  
+```dax
+VAR TotalFees = [$_awd_storage_fee]
+VAR TotalDays = COUNTROWS( VALUES('Calendar'[Date]) )
+RETURN
+    DIVIDE(TotalFees, TotalDays)
+```
+
 
 ### Fees\FBA Fee
 
@@ -3145,7 +3482,7 @@ DIVIDE(
 )
 ```
 
-#### `u_quantity_on_hand_storage_fee`
+#### `u_sum_quantity_on_hand_storage_fee`
 
 **Depende de colunas:** `'fact_storage_fee_measurements'[quantity_on_hand]`  
 ```dax
@@ -3533,6 +3870,24 @@ DIVIDE(
     [$_estimated_storage_fee]
     , [$_net_revenue]
 )
+```
+
+#### `u_avg_quantity_on_hand_storage_fee`
+
+**Depende de colunas:** `'fact_storage_fee_measurements'[quantity_on_hand]`  
+```dax
+AVERAGE ( 'fact_storage_fee_measurements'[quantity_on_hand] )
+```
+
+#### `$_avg_estimated_storage_fee`
+
+**Depende de medidas:** `[$_estimated_storage_fee]`  
+**Depende de colunas:** `'Calendar'[Date]`  
+```dax
+VAR TotalFees = [$_estimated_storage_fee]
+VAR TotalDays = COUNTROWS( VALUES('Calendar'[Date]) )
+RETURN
+    DIVIDE(TotalFees, TotalDays)
 ```
 
 
@@ -5556,23 +5911,6 @@ RETURN
     UnitsAvailable
 ```
 
-#### `u_available`
-
-**Depende de colunas:** `'fact_fba_inventory'[available]`, `'fact_fba_inventory'[date_fba_inventory]`  
-```dax
-VAR _maxDateInData = MAX( 'fact_fba_inventory'[date_fba_inventory] )
-VAR _lastDate = IF( _maxDateInData < TODAY(), _maxDateInData, TODAY() )
-
-VAR UnitsAvailable =
-    CALCULATE(
-        SUM('fact_fba_inventory'[available]),
-        'fact_fba_inventory'[date_fba_inventory] = _maxDateInData
-    )
-
-RETURN
-    UnitsAvailable
-```
-
 #### `$_aging_surcharged_actual_usd`
 
 **Depende de colunas:** `'fact.aged_inventory_surcharge'[qty-charged]`, `'fact.aged_inventory_surcharge'[rate-surcharge]`, `'fact.aged_inventory_surcharge'[rate_surcharge_usd]`  
@@ -5902,345 +6240,202 @@ CALCULATE(
 )
 ```
 
-#### `lead_time_reserved_fc_processing`
+#### `u_fba_inventory_available`
 
-**Depende de medidas:** `[d_last_fba_inventory]`, `[u_reserved_fc_processing]`  
-**Depende de colunas:** `'Calendar'[Date]`, `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[key_inventory_region_sku]`, `'fact_fba_inventory'[reserved_fc_processing]`  
+**Depende de colunas:** `'fact_fba_inventory'[available]`, `'fact_fba_inventory'[date_fba_inventory]`  
 ```dax
-// VAR CurrentSKU = SELECTEDVALUE('fact_fba_inventory'[key_inventory_region_sku])
+VAR _maxDateInData = MAX( 'fact_fba_inventory'[date_fba_inventory] )
+VAR _lastDate = IF( _maxDateInData < TODAY(), _maxDateInData, TODAY() )
 
-// VAR AllDates = CALCULATETABLE(
-//     DISTINCT('fact_fba_inventory'[date_fba_inventory]),
-//     'fact_fba_inventory'[key_inventory_region_sku] = CurrentSKU
-// )
-
-// VAR ChangeDates = FILTER(
-//     AllDates,
-//     VAR CurrentDate = 'fact_fba_inventory'[date_fba_inventory]
-//     VAR CurrentValue = CALCULATE(
-//         MAX('fact_fba_inventory'[reserved_fc_processing]),
-//         'fact_fba_inventory'[date_fba_inventory] = CurrentDate
-//     )
-//     VAR PreviousDate = CALCULATE(
-//         MAX('fact_fba_inventory'[date_fba_inventory]),
-//         'fact_fba_inventory'[date_fba_inventory] < CurrentDate
-//     )
-//     VAR PreviousValue = CALCULATE(
-//         MAX('fact_fba_inventory'[reserved_fc_processing]),
-//         'fact_fba_inventory'[date_fba_inventory] = PreviousDate
-//     )
-//     RETURN CurrentValue <> PreviousValue
-// )
-
-// VAR LatestChangeDate = MAXX(ChangeDates, 'fact_fba_inventory'[date_fba_inventory])
-
-// VAR NewValue = CALCULATE(
-//     MAX('fact_fba_inventory'[reserved_fc_processing]),
-//     'fact_fba_inventory'[date_fba_inventory] = LatestChangeDate
-// )
-
-// RETURN IF(NewValue=0, BLANK(), DATEDIFF(LatestChangeDate, [d_last_fba_inventory], DAY))
-
-
-VAR _current_date = MAX('Calendar'[Date])
-VAR _current_sku = SELECTEDVALUE('fact_fba_inventory'[key_inventory_region_sku])
-
--- Avalia o valor da medida 'u_last_modified...' na data do contexto
-VAR _current_qty = [u_reserved_fc_processing]
+VAR UnitsAvailable =
+    CALCULATE(
+        SUM('fact_fba_inventory'[available]),
+        'fact_fba_inventory'[date_fba_inventory] = _maxDateInData
+    )
 
 RETURN
-IF(
-    -- Só calculamos se houver quantidade positiva atualmente
-    NOT(ISBLANK(_current_qty)) && _current_qty > 0,
-    
-    VAR _last_zero_date = 
-        CALCULATE(
-            MAX('Calendar'[Date]),
-            FILTER(
-                ALL('Calendar'[Date]),
-                'Calendar'[Date] < _current_date &&
-                (
-                    -- Recalcula a medida para cada data passada para verificar se era 0 ou vazia
-                    -- Nota: Isso assume que 'u_last_modified...' responde corretamente ao contexto de linha de 'Calendar'[Date]
-                    ISBLANK([u_reserved_fc_processing]) || [u_reserved_fc_processing] = 0
-                )
-            )
-        )
-
-    -- Se nunca houve um zero na história (dentro dos dados carregados), assumimos a primeira data com dados como início
-    VAR _start_date = 
-        IF(
-            ISBLANK(_last_zero_date),
-            CALCULATE(MIN('fact_fba_inventory'[date_fba_inventory]), ALL('Calendar'), 'fact_fba_inventory'[key_inventory_region_sku] = _current_sku),
-            _last_zero_date
-        )
-        
-    RETURN
-        DATEDIFF(_start_date, _current_date, DAY),
-        
-    BLANK() -- Se a quantidade atual for 0, não há Lead Time ativo
-)
+    UnitsAvailable
 ```
 
-#### `lead_time_reserved_fc_transfer`
+#### `u_fba_inventory_reserved_customer_order`
 
-**Depende de medidas:** `[d_last_fba_inventory]`, `[u_reserved_fc_transfer]`  
-**Depende de colunas:** `'Calendar'[Date]`, `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[key_inventory_region_sku]`, `'fact_fba_inventory'[reserved_fc_transfer]`  
+**Depende de colunas:** `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[reserved_customer_order]`  
 ```dax
-// VAR CurrentSKU = SELECTEDVALUE('fact_fba_inventory'[key_inventory_region_sku])
+VAR _maxDateInData = MAX( 'fact_fba_inventory'[date_fba_inventory] )
+VAR _lastDate = IF( _maxDateInData < TODAY(), _maxDateInData, TODAY() )
 
-// VAR AllDates = CALCULATETABLE(
-//     DISTINCT('fact_fba_inventory'[date_fba_inventory]),
-//     'fact_fba_inventory'[key_inventory_region_sku] = CurrentSKU
-// )
-
-// VAR ChangeDates = FILTER(
-//     AllDates,
-//     VAR CurrentDate = 'fact_fba_inventory'[date_fba_inventory]
-//     VAR CurrentValue = CALCULATE(
-//         MAX('fact_fba_inventory'[reserved_fc_transfer]),
-//         'fact_fba_inventory'[date_fba_inventory] = CurrentDate
-//     )
-//     VAR PreviousDate = CALCULATE(
-//         MAX('fact_fba_inventory'[date_fba_inventory]),
-//         'fact_fba_inventory'[date_fba_inventory] < CurrentDate
-//     )
-//     VAR PreviousValue = CALCULATE(
-//         MAX('fact_fba_inventory'[reserved_fc_transfer]),
-//         'fact_fba_inventory'[date_fba_inventory] = PreviousDate
-//     )
-//     RETURN CurrentValue <> PreviousValue
-// )
-
-// VAR LatestChangeDate = MAXX(ChangeDates, 'fact_fba_inventory'[date_fba_inventory])
-
-// VAR NewValue = CALCULATE(
-//     MAX('fact_fba_inventory'[reserved_fc_transfer]),
-//     'fact_fba_inventory'[date_fba_inventory] = LatestChangeDate
-// )
-
-// RETURN IF(NewValue=0, BLANK(), DATEDIFF(LatestChangeDate, [d_last_fba_inventory], DAY))
-
-VAR _current_date = MAX('Calendar'[Date])
-VAR _current_sku = SELECTEDVALUE('fact_fba_inventory'[key_inventory_region_sku])
-
--- Avalia o valor da medida 'u_last_modified...' na data do contexto
-VAR _current_qty = [u_reserved_fc_transfer]
+VAR UnitsAvailable =
+    CALCULATE(
+        SUM('fact_fba_inventory'[reserved_customer_order]),
+        'fact_fba_inventory'[date_fba_inventory] = _maxDateInData
+    )
 
 RETURN
-IF(
-    -- Só calculamos se houver quantidade positiva atualmente
-    NOT(ISBLANK(_current_qty)) && _current_qty > 0,
-    
-    VAR _last_zero_date = 
-        CALCULATE(
-            MAX('Calendar'[Date]),
-            FILTER(
-                ALL('Calendar'[Date]),
-                'Calendar'[Date] < _current_date &&
-                (
-                    -- Recalcula a medida para cada data passada para verificar se era 0 ou vazia
-                    -- Nota: Isso assume que 'u_last_modified...' responde corretamente ao contexto de linha de 'Calendar'[Date]
-                    ISBLANK([u_reserved_fc_transfer]) || [u_reserved_fc_transfer] = 0
-                )
-            )
-        )
-
-    -- Se nunca houve um zero na história (dentro dos dados carregados), assumimos a primeira data com dados como início
-    VAR _start_date = 
-        IF(
-            ISBLANK(_last_zero_date),
-            CALCULATE(MIN('fact_fba_inventory'[date_fba_inventory]), ALL('Calendar'), 'fact_fba_inventory'[key_inventory_region_sku] = _current_sku),
-            _last_zero_date
-        )
-        
-    RETURN
-        DATEDIFF(_start_date, _current_date, DAY),
-        
-    BLANK() -- Se a quantidade atual for 0, não há Lead Time ativo
-)
+    UnitsAvailable
 ```
 
-#### `u_last_modified_reserved_fc_processing`
+#### `u_fba_inventory_reserved_fc_processing`
 
-**Depende de colunas:** `'Calendar'[Date]`, `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[reserved_fc_processing]`  
+**Depende de colunas:** `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[reserved_fc_processing]`  
 ```dax
-VAR _max_date = MAX('Calendar'[Date])
-    VAR _last_value =
-        CALCULATE(
-            SUM('fact_fba_inventory'[reserved_fc_processing])
-            , 'fact_fba_inventory'[date_fba_inventory] = MAX('fact_fba_inventory'[date_fba_inventory])
-        )
+VAR _maxDateInData = MAX( 'fact_fba_inventory'[date_fba_inventory] )
+VAR _lastDate = IF( _maxDateInData < TODAY(), _maxDateInData, TODAY() )
 
-    VAR _result = IF(_last_value = 0, BLANK(), _last_value)
+VAR UnitsAvailable =
+    CALCULATE(
+        SUM('fact_fba_inventory'[reserved_fc_processing]),
+        'fact_fba_inventory'[date_fba_inventory] = _maxDateInData
+    )
 
 RETURN
-    _result
+    UnitsAvailable
 ```
 
-#### `u_last_modified_reserved_fc_transfer`
+#### `u_fba_inventory_fc_transfer`
 
-**Depende de colunas:** `'Calendar'[Date]`, `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[reserved_fc_transfer]`  
+**Depende de colunas:** `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[fc_transfer]`  
 ```dax
-VAR _max_date = MAX('Calendar'[Date])
-    VAR _last_value =
-        CALCULATE(
-            SUM('fact_fba_inventory'[reserved_fc_transfer])
-            , 'fact_fba_inventory'[date_fba_inventory] = MAX('fact_fba_inventory'[date_fba_inventory]) 
-        )
+VAR _maxDateInData = MAX( 'fact_fba_inventory'[date_fba_inventory] )
+VAR _lastDate = IF( _maxDateInData < TODAY(), _maxDateInData, TODAY() )
 
-    VAR _result = IF(_last_value = 0, BLANK(), _last_value)
+VAR UnitsAvailable =
+    CALCULATE(
+        SUM('fact_fba_inventory'[fc_transfer]),
+        'fact_fba_inventory'[date_fba_inventory] = _maxDateInData
+    )
 
 RETURN
-    _result
+    UnitsAvailable
 ```
 
-#### `lead_time_reserved_fc_customer_order`
+#### `u_fba_inventory_unfulfillable_quantity`
 
-**Depende de medidas:** `[d_last_fba_inventory]`, `[u_reserved_fc_customer_order]`  
-**Depende de colunas:** `'Calendar'[Date]`, `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[key_inventory_region_sku]`, `'fact_fba_inventory'[reserved_customer_order]`  
+**Depende de colunas:** `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[unfulfillable_quantity]`  
 ```dax
-// VAR CurrentSKU = SELECTEDVALUE('fact_fba_inventory'[key_inventory_region_sku])
+VAR _maxDateInData = MAX( 'fact_fba_inventory'[date_fba_inventory] )
+VAR _lastDate = IF( _maxDateInData < TODAY(), _maxDateInData, TODAY() )
 
-// VAR AllDates = CALCULATETABLE(
-//     DISTINCT('fact_fba_inventory'[date_fba_inventory]),
-//     'fact_fba_inventory'[key_inventory_region_sku] = CurrentSKU
-// )
-
-// VAR ChangeDates = FILTER(
-//     AllDates,
-//     VAR CurrentDate = 'fact_fba_inventory'[date_fba_inventory]
-//     VAR CurrentValue = CALCULATE(
-//         MAX('fact_fba_inventory'[reserved_customer_order]),
-//         'fact_fba_inventory'[date_fba_inventory] = CurrentDate
-//     )
-//     VAR PreviousDate = CALCULATE(
-//         MAX('fact_fba_inventory'[date_fba_inventory]),
-//         'fact_fba_inventory'[date_fba_inventory] < CurrentDate
-//     )
-//     VAR PreviousValue = CALCULATE(
-//         MAX('fact_fba_inventory'[reserved_customer_order]),
-//         'fact_fba_inventory'[date_fba_inventory] = PreviousDate
-//     )
-//     RETURN CurrentValue <> PreviousValue
-// )
-
-// VAR LatestChangeDate = MAXX(ChangeDates, 'fact_fba_inventory'[date_fba_inventory])
-
-// VAR NewValue = CALCULATE(
-//     MAX('fact_fba_inventory'[reserved_customer_order]),
-//     'fact_fba_inventory'[date_fba_inventory] = LatestChangeDate
-// )
-
-// RETURN IF(NewValue=0, BLANK(), DATEDIFF(LatestChangeDate, [d_last_fba_inventory], DAY))
-
-VAR _current_date = MAX('Calendar'[Date])
-VAR _current_sku = SELECTEDVALUE('fact_fba_inventory'[key_inventory_region_sku])
-
--- Avalia o valor da medida 'u_last_modified...' na data do contexto
-VAR _current_qty = [u_reserved_fc_customer_order]
+VAR UnitsAvailable =
+    CALCULATE(
+        SUM('fact_fba_inventory'[unfulfillable_quantity]),
+        'fact_fba_inventory'[date_fba_inventory] = _maxDateInData
+    )
 
 RETURN
-IF(
-    -- Só calculamos se houver quantidade positiva atualmente
-    NOT(ISBLANK(_current_qty)) && _current_qty > 0,
-    
-    VAR _last_zero_date = 
-        CALCULATE(
-            MAX('Calendar'[Date]),
-            FILTER(
-                ALL('Calendar'[Date]),
-                'Calendar'[Date] < _current_date &&
-                (
-                    -- Recalcula a medida para cada data passada para verificar se era 0 ou vazia
-                    -- Nota: Isso assume que 'u_last_modified...' responde corretamente ao contexto de linha de 'Calendar'[Date]
-                    ISBLANK([u_reserved_fc_customer_order]) || [u_reserved_fc_customer_order] = 0
-                )
-            )
-        )
-
-    -- Se nunca houve um zero na história (dentro dos dados carregados), assumimos a primeira data com dados como início
-    VAR _start_date = 
-        IF(
-            ISBLANK(_last_zero_date),
-            CALCULATE(MIN('fact_fba_inventory'[date_fba_inventory]), ALL('Calendar'), 'fact_fba_inventory'[key_inventory_region_sku] = _current_sku),
-            _last_zero_date
-        )
-        
-    RETURN
-        DATEDIFF(_start_date, _current_date, DAY),
-        
-    BLANK() -- Se a quantidade atual for 0, não há Lead Time ativo
-)
+    UnitsAvailable
 ```
 
-#### `u_last_modified_reserved_fc_customer_order`
+#### `u_fba_inventory_inbound_receiving`
 
-**Depende de colunas:** `'Calendar'[Date]`, `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[reserved_customer_order]`  
+**Depende de colunas:** `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[inbound_received]`  
 ```dax
-VAR _max_date = MAX('Calendar'[Date])
-    VAR _last_value =
-        CALCULATE(
-            SUM('fact_fba_inventory'[reserved_customer_order])
-            , 'fact_fba_inventory'[date_fba_inventory] = MAX('fact_fba_inventory'[date_fba_inventory])
-        )
+VAR _maxDateInData = MAX( 'fact_fba_inventory'[date_fba_inventory] )
+VAR _lastDate = IF( _maxDateInData < TODAY(), _maxDateInData, TODAY() )
 
-    VAR _result = IF(_last_value = 0, BLANK(), _last_value)
+VAR UnitsAvailable =
+    CALCULATE(
+        SUM('fact_fba_inventory'[inbound_received]),
+        'fact_fba_inventory'[date_fba_inventory] = _maxDateInData
+    )
 
 RETURN
-    _result
+    UnitsAvailable
 ```
 
-#### `u_reserved_fc_customer_order`
+#### `u_fba_inventory_inbound_shipped`
 
-**Depende de colunas:** `'Calendar'[Date]`, `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[reserved_customer_order]`  
+**Depende de colunas:** `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[inbound_shipped]`  
 ```dax
-VAR _max_date = MAX('Calendar'[Date])
-    VAR _last_value =
-        CALCULATE(
-            SUM('fact_fba_inventory'[reserved_customer_order])
-            // , 'Calendar'[Date] = _max_date
-            , 'fact_fba_inventory'[date_fba_inventory] = _max_date
-        )
+VAR _maxDateInData = MAX( 'fact_fba_inventory'[date_fba_inventory] )
+VAR _lastDate = IF( _maxDateInData < TODAY(), _maxDateInData, TODAY() )
 
-    VAR _result = IF(_last_value = 0, BLANK(), _last_value)
+VAR UnitsAvailable =
+    CALCULATE(
+        SUM('fact_fba_inventory'[inbound_shipped]),
+        'fact_fba_inventory'[date_fba_inventory] = _maxDateInData
+    )
 
 RETURN
-    _result
+    UnitsAvailable
 ```
 
-#### `u_reserved_fc_processing`
+#### `u_fba_inventory_inbound_working`
 
-**Depende de colunas:** `'Calendar'[Date]`, `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[reserved_fc_processing]`  
+**Depende de colunas:** `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[inbound_working]`  
 ```dax
-VAR _max_date = MAX('Calendar'[Date])
-    VAR _last_value =
-        CALCULATE(
-            SUM('fact_fba_inventory'[reserved_fc_processing])
-            , 'fact_fba_inventory'[date_fba_inventory] = _max_date
-        )
+VAR _maxDateInData = MAX( 'fact_fba_inventory'[date_fba_inventory] )
+VAR _lastDate = IF( _maxDateInData < TODAY(), _maxDateInData, TODAY() )
 
-    VAR _result = IF(_last_value = 0, BLANK(), _last_value)
+VAR UnitsAvailable =
+    CALCULATE(
+        SUM('fact_fba_inventory'[inbound_working]),
+        'fact_fba_inventory'[date_fba_inventory] = _maxDateInData
+    )
 
 RETURN
-    _result
+    UnitsAvailable
 ```
 
-#### `u_reserved_fc_transfer`
+#### `u_fba_inventory_inbound_quantity_total`
 
-**Depende de colunas:** `'Calendar'[Date]`, `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[reserved_fc_transfer]`  
+**Depende de colunas:** `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[inbound_quantity]`  
 ```dax
-VAR _max_date = MAX('Calendar'[Date])
-    VAR _last_value =
-        CALCULATE(
-            SUM('fact_fba_inventory'[reserved_fc_transfer])
-            , 'fact_fba_inventory'[date_fba_inventory] = _max_date
-        )
+VAR _maxDateInData = MAX( 'fact_fba_inventory'[date_fba_inventory] )
+VAR _lastDate = IF( _maxDateInData < TODAY(), _maxDateInData, TODAY() )
 
-    VAR _result = IF(_last_value = 0, BLANK(), _last_value)
+VAR UnitsAvailable =
+    CALCULATE(
+        SUM('fact_fba_inventory'[inbound_quantity]),
+        'fact_fba_inventory'[date_fba_inventory] = _maxDateInData
+    )
 
 RETURN
-    _result
+    UnitsAvailable
+```
+
+#### `u_fba_inventory_reserved_staging`
+
+**Depende de colunas:** `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[reserved_staging]`  
+```dax
+VAR _maxDateInData = MAX( 'fact_fba_inventory'[date_fba_inventory] )
+VAR _lastDate = IF( _maxDateInData < TODAY(), _maxDateInData, TODAY() )
+
+VAR UnitsAvailable =
+    CALCULATE(
+        SUM('fact_fba_inventory'[reserved_staging]),
+        'fact_fba_inventory'[date_fba_inventory] = _maxDateInData
+    )
+
+RETURN
+    UnitsAvailable
+```
+
+#### `u_fba_inventory_reserved_quantity_total`
+
+**Depende de colunas:** `'fact_fba_inventory'[date_fba_inventory]`, `'fact_fba_inventory'[total_reserved_quantity]`  
+```dax
+VAR _maxDateInData = MAX( 'fact_fba_inventory'[date_fba_inventory] )
+VAR _lastDate = IF( _maxDateInData < TODAY(), _maxDateInData, TODAY() )
+
+VAR UnitsAvailable =
+    CALCULATE(
+        SUM('fact_fba_inventory'[total_reserved_quantity]),
+        'fact_fba_inventory'[date_fba_inventory] = _maxDateInData
+    )
+
+RETURN
+    UnitsAvailable
+```
+
+#### `u_fba_inventory_available_fc_transfer_receiving_processing_staging`
+
+**Depende de medidas:** `[u_fba_inventory_available]`, `[u_fba_inventory_fc_transfer]`, `[u_fba_inventory_inbound_receiving]`, `[u_fba_inventory_reserved_fc_processing]`, `[u_fba_inventory_reserved_staging]`  
+```dax
+[u_fba_inventory_available]
++ [u_fba_inventory_fc_transfer]
++ [u_fba_inventory_inbound_receiving]
++ [u_fba_inventory_reserved_fc_processing]
++ [u_fba_inventory_reserved_staging]
 ```
 
 
@@ -13485,13 +13680,13 @@ return
 [u_tio_quantity_ordered_previously_awd]
 ```
 
-#### `u_tio_overstock_with_3pl`
+#### `u_tio_overstock_total`
 
-**Depende de colunas:** `'fact_db_results_tio'[overstock_with_3pl]`, `'fact_db_results_tio'[start_of_week]`  
+**Depende de colunas:** `'fact_db_results_tio'[overstock_total]`, `'fact_db_results_tio'[start_of_week]`  
 ```dax
 VAR _result =
         CALCULATE(
-            SUM( 'fact_db_results_tio'[overstock_with_3pl] )
+            SUM( 'fact_db_results_tio'[overstock_total] )
             , FILTER(
                 'fact_db_results_tio'
                 , 'fact_db_results_tio'[start_of_week] = MAX ( 'fact_db_results_tio'[start_of_week] )
@@ -13504,11 +13699,11 @@ return
 
 #### `u_tio_overstock_coverage_days`
 
-**Depende de medidas:** `[u_tio_overstock_with_3pl]`, `[u_tio_velocity]`  
+**Depende de medidas:** `[u_tio_overstock_total]`, `[u_tio_velocity]`  
 ```dax
 VAR _coverage =
         DIVIDE(
-            [u_tio_overstock_with_3pl]
+            [u_tio_overstock_total]
             , [u_tio_velocity]
         ) 
         
@@ -13715,8 +13910,25 @@ return
     _result
 ```
 
+#### `$_tio_projected_revenue_loss`
 
-## Fontes das Tabelas (90 tabelas)
+**Depende de colunas:** `'fact_db_results_tio'[projected_revenue_loss_if_not_reordered]`, `db_results_TIO[start_of_week]`  
+```dax
+VAR _result =
+        CALCULATE(
+            SUM( 'fact_db_results_tio'[projected_revenue_loss_if_not_reordered] )
+            // , FILTER(
+            //     db_results_TIO
+            //     , db_results_TIO[start_of_week] = MAX ( db_results_TIO[start_of_week] )
+            // )
+        )
+
+return
+    _result
+```
+
+
+## Fontes das Tabelas (91 tabelas)
 
 
 ### `Calendar`
@@ -14574,13 +14786,16 @@ in
 ### `fact_awd_monthly_processing_fee`
 
 **Modo:** `import`  **Grupo:** `Amazon\AWD`  
-**Colunas:** `fee_type` string, `key_inventory_country_sku` string, `currency` string, `promotion_amount` double, `tax_amount` double, `month_of_charge` dateTime, `fee_amount` double, `box_qty` int64  
+**Colunas:** `fee_type` string, `key_inventory_country_sku` string, `currency` string, `promotion_amount` double, `tax_amount` double, `month_of_charge` dateTime, `fee_amount` double, `total_units` int64  
 ```powerquery
 let
     Source = raw_awdMonthlyProcessingFee,
-    Custom1 = Table.SelectColumns(Source,{"month_of_charge", "fee_type", "key_inventory_country_sku", "currency", "box_qty", "fee_amount", "promotion_amount", "tax_amount"})
+    merged_units_per_carton = Table.NestedJoin(Source, {"key_inventory_country_sku"}, units_per_carton, {"key_country_sku"}, "units_per_carton", JoinKind.LeftOuter),
+    expanded_units_per_carton = Table.ExpandTableColumn(merged_units_per_carton, "units_per_carton", {"units_per_carton"}, {"units_per_carton"}),
+    added_total_units = Table.AddColumn(expanded_units_per_carton, "total_units", each [box_qty] * [units_per_carton], Int64.Type),
+    selectImportantColumns = Table.SelectColumns(added_total_units,{"month_of_charge", "fee_type", "key_inventory_country_sku", "currency", "fee_amount", "promotion_amount", "tax_amount", "total_units"})
 in
-    Custom1
+    selectImportantColumns
 ```
 
 
@@ -14613,11 +14828,14 @@ in
 ### `fact_awd_monthly_transportation_fee`
 
 **Modo:** `import`  **Grupo:** `Amazon\AWD`  
-**Colunas:** `fee_type` string, `key_inventory_country_sku` string, `currency` string, `promotion_amount` double, `tax_amount` double, `month_of_charge` dateTime, `fee_amount` double  
+**Colunas:** `fee_type` string, `key_inventory_country_sku` string, `currency` string, `promotion_amount` double, `tax_amount` double, `month_of_charge` dateTime, `fee_amount` double, `total_units` int64  
 ```powerquery
 let
     Source = raw_awdMonthlyTransportationFee,
-    selectImportantColumns = Table.SelectColumns(Source,{"month_of_charge", "fee_type", "key_inventory_country_sku", "currency", "fee_amount", "promotion_amount", "tax_amount"})
+    merged_units_per_carton = Table.NestedJoin(Source, {"key_inventory_country_sku"}, units_per_carton, {"key_country_sku"}, "units_per_carton", JoinKind.LeftOuter),
+    expanded_units_per_carton = Table.ExpandTableColumn(merged_units_per_carton, "units_per_carton", {"units_per_carton"}, {"units_per_carton"}),
+    added_total_units = Table.AddColumn(expanded_units_per_carton, "total_units", each [box_qty] * [units_per_carton], Int64.Type),
+    selectImportantColumns = Table.SelectColumns(added_total_units,{"month_of_charge", "fee_type", "key_inventory_country_sku", "currency", "fee_amount", "promotion_amount", "tax_amount", "total_units"})
 in
     selectImportantColumns
 ```
@@ -14658,17 +14876,16 @@ let
 "month_of_charge", "key_inventory_country_sku", 
 "longest_side", "median_side", "shortest_side", "unit_of_dimension",
 "box_volume", "unit_of_volume"
-}),
-    #"Removed Duplicates" = Table.Distinct(selectImportantColumns)
+})
 in
-    #"Removed Duplicates"
+    selectImportantColumns
 ```
 
 
 ### `fact_db_results_tio`
 
 **Modo:** `import`  **Grupo:** `'Standalone Files'`  
-**Colunas:** `start_of_week` dateTime, `quantity_ordered_previously_3pl` double, `baseline_forecast` double, `demand_forecast` double, `ending_balance_considering_reorder_amz` double, `overstock` double, `quantity_ordered_previously_amz` double, `reorder_point` double, `target_ending_balance` double, `projected_sales_loss_if_not_reordered` double, `quantity_ordered_previously_awd` double, `ending_balance_considering_reorder_3pl` double, `mandatory_transfer_from_3pl_to_amz` double, `ending_balance` double, `storage_fee_amz` double, `overstock_with_3pl` double, `version_file` string, `key_inventory_region_sku` string  
+**Colunas:** `start_of_week` dateTime, `quantity_ordered_previously_3pl` double, `baseline_forecast` double, `demand_forecast` double, `ending_balance_considering_reorder_amz` double, `quantity_ordered_previously_amz` double, `reorder_point` double, `target_ending_balance` double, `projected_sales_loss_if_not_reordered` double, `quantity_ordered_previously_awd` double, `ending_balance_considering_reorder_3pl` double, `mandatory_transfer_from_3pl_to_amz` double, `ending_balance` double, `storage_fee_amz` double, `version_file` string, `key_inventory_region_sku` string, `projected_revenue_loss_if_not_reordered` double, `overstock_total` double  
 ```powerquery
 let
     Source = Folder.Files(rootPathLang & "OrganiHaus\5.2 - OH Inventory Management\TIO - Tool for Inventory Optimization\Logs de cálculo\Oficial_For_Orders"),
@@ -14677,25 +14894,26 @@ let
     #"Invoke Custom Function1" = Table.AddColumn(#"Filtered Hidden Files1", "Transform File (2)", each #"Transform File (2)"([Content])),
     #"Renamed Columns1" = Table.RenameColumns(#"Invoke Custom Function1", {"Name", "Source.Name"}),
     #"Removed Other Columns1" = Table.SelectColumns(#"Renamed Columns1", {"Source.Name", "Transform File (2)"}),
-    #"Expanded Table Column1" = Table.ExpandTableColumn(#"Removed Other Columns1", "Transform File (2)", {
-"Start-Week-Date", "Region", "SKU",
-"Ending Balance", "Ending Balance considering reor", "3PL Ending Balance consid repl ", "Demand Forecast", "Projected Sales Loss with rep", "Mandatory Transfer from 3PL to ", "Target Ending Balance",
-
-"Baseline Forecast", "Overstock", "Overstock with 3PL", "Quantity Ordered Previously", "Quantity Ordered Previously AWD", "3PL Quantity Ordered Previously", "Reorder Point",
-"Storage Fee AMZ"
+    #"Expanded Transform File1" = Table.ExpandTableColumn(#"Removed Other Columns1", "Transform File (2)", {"ROW", "COLUMN", "Region", "Native Family", "Amazon Family", "ASIN", "SKU", "Master Box", "Carton CBM", "Last Cost", "LifeCycle", "ABC", "Supplier", "Basket Type", "Year-Week", "Start-Week-Date", "Version", "3PL Ending Balance", "3PL Ending Balance consid Land", "3PL Ending Balance consid repl ", "3PL Ending Balance without orde", "3PL Minimun Stock", "3PL Qty transf from 3PL within ", "3PL Quantity Ordered Previously", "3PL Start Balance", "3PL Transfers", "Baseline Forecast", "CBM Ending Balance considering ", "CBM Mandatory Replenish Product", "CBM Mandatory Replenishment", "CBM Mandatory Replenishment 3PL", "CBM Mandatory Replenishment AWD", "CBM Mandatory Replenishment ETD", "Demand Forecast", "Ending Balance", "Ending Balance considering Land", "Ending Balance considering reor", "Ending Balance without orders", "Ending Balance without orders c", "Estimated Revenue", "Mandatory Reorder EW", "Mandatory Reorder Landed", "Mandatory Reorder Payment Lande", "Mandatory Reorder Pickup EW", "Mandatory Reorder Pickup Landed", "Mandatory Reorder Request", "Mandatory Reorder Request 3PL", "Mandatory Reorder Request ETD", "Mandatory Reorder Request Produ", "Mandatory Reorder to 3PL", "Mandatory Replenishment", "Mandatory Replenishment Cos 3PL", "Mandatory Transfer from 3PL to ", "Minimum Stock AMZ", "Overstock 3PL", "Overstock AMZ", "Overstock Total", "Projected Revenue Loss if Not R", "Projected Revenue Loss with rep", "Projected Low Inventory if Not", "Projected Sales Loss if not rep", "Projected Sales Loss with rep", "Promotions Forecast", "Quantity Ordered Previously", "Quantity Ordered Previously AWD", "Reorder Point", "Starting Balance", "Starting Balance without orders", "Storage Fee 3PL", "Storage Fee AMZ", "Storage Fee Overstock 3PL", "Storage Fee Overstock AMZ", "Storage Fee Overstock Total", "Storage Fee Total", "Target Coverage", "Target Ending Balance", "Week Index"}, {"ROW", "COLUMN", "Region", "Native Family", "Amazon Family", "ASIN", "SKU", "Master Box", "Carton CBM", "Last Cost", "LifeCycle", "ABC", "Supplier", "Basket Type", "Year-Week", "Start-Week-Date", "Version", "3PL Ending Balance", "3PL Ending Balance consid Land", "3PL Ending Balance consid repl ", "3PL Ending Balance without orde", "3PL Minimun Stock", "3PL Qty transf from 3PL within ", "3PL Quantity Ordered Previously", "3PL Start Balance", "3PL Transfers", "Baseline Forecast", "CBM Ending Balance considering ", "CBM Mandatory Replenish Product", "CBM Mandatory Replenishment", "CBM Mandatory Replenishment 3PL", "CBM Mandatory Replenishment AWD", "CBM Mandatory Replenishment ETD", "Demand Forecast", "Ending Balance", "Ending Balance considering Land", "Ending Balance considering reor", "Ending Balance without orders", "Ending Balance without orders c", "Estimated Revenue", "Mandatory Reorder EW", "Mandatory Reorder Landed", "Mandatory Reorder Payment Lande", "Mandatory Reorder Pickup EW", "Mandatory Reorder Pickup Landed", "Mandatory Reorder Request", "Mandatory Reorder Request 3PL", "Mandatory Reorder Request ETD", "Mandatory Reorder Request Produ", "Mandatory Reorder to 3PL", "Mandatory Replenishment", "Mandatory Replenishment Cos 3PL", "Mandatory Transfer from 3PL to ", "Minimum Stock AMZ", "Overstock 3PL", "Overstock AMZ", "Overstock Total", "Projected Revenue Loss if Not R", "Projected Revenue Loss with rep", "Projected Low Inventory if Not", "Projected Sales Loss if not rep", "Projected Sales Loss with rep", "Promotions Forecast", "Quantity Ordered Previously", "Quantity Ordered Previously AWD", "Reorder Point", "Starting Balance", "Starting Balance without orders", "Storage Fee 3PL", "Storage Fee AMZ", "Storage Fee Overstock 3PL", "Storage Fee Overstock AMZ", "Storage Fee Overstock Total", "Storage Fee Total", "Target Coverage", "Target Ending Balance", "Week Index"}),
+    #"Removed Other Columns2" = Table.SelectColumns(#"Expanded Transform File1", {
+"Source.Name", "Start-Week-Date", "Region", "SKU",
+"Ending Balance", "Ending Balance considering reor", "3PL Ending Balance consid repl ", "Demand Forecast", "Projected Sales Loss with rep", "Mandatory Transfer from 3PL to ", "Target Ending Balance", "Projected Revenue Loss if Not R", 
+"Baseline Forecast", "Overstock Total", "Quantity Ordered Previously", "Quantity Ordered Previously AWD", "3PL Quantity Ordered Previously", "Reorder Point", "Storage Fee AMZ"
 }),
-    #"Filtered Rows1" = Table.SelectRows(#"Expanded Table Column1", let earliest = List.Min(#"Expanded Table Column1"[#"Start-Week-Date"]) in each [#"Start-Week-Date"] <> earliest),
+    #"Filtered Rows1" = Table.SelectRows(#"Removed Other Columns2", let earliest = List.Min(#"Removed Other Columns2"[#"Start-Week-Date"]) in each [#"Start-Week-Date"] <> earliest),
     #"Replaced Value" = Table.ReplaceValue(#"Filtered Rows1"," | ","-",Replacer.ReplaceText,{"SKU"}),
     #"Added Custom" = Table.AddColumn(#"Replaced Value", "key_inventory_region_sku", each [Region] & " | " &[SKU]),
-    #"Renamed Columns" = Table.RenameColumns(#"Added Custom",{{"Start-Week-Date", "start_of_week"}, {"Ending Balance", "ending_balance"}, {"Ending Balance considering reor", "ending_balance_considering_reorder_amz"}, {"3PL Ending Balance consid repl ", "ending_balance_considering_reorder_3pl"}, {"Demand Forecast", "demand_forecast"}, {"Projected Sales Loss with rep", "projected_sales_loss_if_not_reordered"}, {"Mandatory Transfer from 3PL to ", "mandatory_transfer_from_3pl_to_amz"}, {"Target Ending Balance", "target_ending_balance"}, {"Baseline Forecast", "baseline_forecast"}, {"Overstock", "overstock"}, {"Quantity Ordered Previously", "quantity_ordered_previously_amz"}, {"Quantity Ordered Previously AWD", "quantity_ordered_previously_awd"}, {"3PL Quantity Ordered Previously", "quantity_ordered_previously_3pl"}, {"Reorder Point", "reorder_point"}, {"Storage Fee AMZ", "storage_fee_amz"}, {"Overstock with 3PL", "overstock_with_3pl"}, {"Source.Name", "version_file"}}),
+    #"Renamed Columns" = Table.RenameColumns(#"Added Custom",{{"Start-Week-Date", "start_of_week"}, {"Ending Balance", "ending_balance"}, {"Ending Balance considering reor", "ending_balance_considering_reorder_amz"}, {"3PL Ending Balance consid repl ", "ending_balance_considering_reorder_3pl"}, {"Demand Forecast", "demand_forecast"}, {"Projected Sales Loss with rep", "projected_sales_loss_if_not_reordered"}, {"Mandatory Transfer from 3PL to ", "mandatory_transfer_from_3pl_to_amz"}, {"Target Ending Balance", "target_ending_balance"}, {"Projected Revenue Loss if Not R", "projected_revenue_loss_if_not_reordered"}, 
+
+{"Baseline Forecast", "baseline_forecast"}, {"Quantity Ordered Previously", "quantity_ordered_previously_amz"}, {"Quantity Ordered Previously AWD", "quantity_ordered_previously_awd"}, {"3PL Quantity Ordered Previously", "quantity_ordered_previously_3pl"}, {"Reorder Point", "reorder_point"}, {"Storage Fee AMZ", "storage_fee_amz"}, {"Overstock Total", "overstock_total"}, {"Source.Name", "version_file"}}),
     #"Removed Other Columns" = Table.SelectColumns(#"Renamed Columns",{
     "version_file", "start_of_week", "key_inventory_region_sku", "ending_balance", "ending_balance_considering_reorder_amz", "ending_balance_considering_reorder_3pl", "demand_forecast", 
-    "projected_sales_loss_if_not_reordered", "mandatory_transfer_from_3pl_to_amz", "target_ending_balance", 
+    "projected_sales_loss_if_not_reordered", "mandatory_transfer_from_3pl_to_amz", "target_ending_balance", "projected_revenue_loss_if_not_reordered",
     
-    "baseline_forecast", "overstock", "overstock_with_3pl", "quantity_ordered_previously_amz", "quantity_ordered_previously_awd", 
+    "baseline_forecast", "overstock_total", "quantity_ordered_previously_amz", "quantity_ordered_previously_awd", 
     "quantity_ordered_previously_3pl", "reorder_point", "storage_fee_amz"
     }),
-    #"Changed Type" = Table.TransformColumnTypes(#"Removed Other Columns",{{"start_of_week", type date}, {"ending_balance", type number}, {"key_inventory_region_sku", type text}, {"ending_balance_considering_reorder_amz", type number}, {"ending_balance_considering_reorder_3pl", type number}, {"demand_forecast", type number}, {"projected_sales_loss_if_not_reordered", type number}, {"mandatory_transfer_from_3pl_to_amz", type number}, {"target_ending_balance", type number}, {"baseline_forecast", type number}, {"overstock", type number}, {"quantity_ordered_previously_amz", type number}, {"quantity_ordered_previously_awd", type number}, {"quantity_ordered_previously_3pl", type number}, {"reorder_point", type number}, {"storage_fee_amz", type number}, {"overstock_with_3pl", type number}})
+    #"Changed Type" = Table.TransformColumnTypes(#"Removed Other Columns",{{"start_of_week", type date}, {"ending_balance", type number}, {"key_inventory_region_sku", type text}, {"ending_balance_considering_reorder_amz", type number}, {"ending_balance_considering_reorder_3pl", type number}, {"demand_forecast", type number}, {"projected_sales_loss_if_not_reordered", type number}, {"mandatory_transfer_from_3pl_to_amz", type number}, {"target_ending_balance", type number}, {"projected_revenue_loss_if_not_reordered", type number}, {"baseline_forecast", type number}, {"quantity_ordered_previously_amz", type number}, {"quantity_ordered_previously_awd", type number}, {"quantity_ordered_previously_3pl", type number}, {"reorder_point", type number}, {"storage_fee_amz", type number}, {"overstock_total", type number}})
 in
     #"Changed Type"
 ```
@@ -14784,7 +15002,7 @@ in
 **Colunas:** `date` dateTime, `currency_from` string, `currency_to` string, `ticker` string, `exchange_rate` double  
 ```powerquery
 let
-    Source = Csv.Document(File.Contents(rootPathLang & "OrganiHaus\3.1 - OH Data & Reports\standalone_files\ref_exchange_rates.csv"),[Delimiter=",", Columns=5, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+    Source = Csv.Document(File.Contents(rootPathLang & "OrganiHaus\3.1 - OH Data & Reports\standalone_files\db_exchange_rates.csv"),[Delimiter=",", Columns=5, Encoding=65001, QuoteStyle=QuoteStyle.None]),
     #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
     #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"date", type date}, {"exchange_rate", type number}})
 in
@@ -14823,7 +15041,7 @@ in
 ### `fact_fba_inventory`
 
 **Modo:** `import`  **Grupo:** `Amazon\Fulfillment\reports_fulfillment`  
-**Colunas:** `date_fba_inventory` dateTime, `inv_age_000_to_030` int64, `inv_age_031_to_060` int64, `inv_age_061_to_090` int64, `inv_age_091_to_180` int64, `inv_age_181_to_270` int64, `inv_age_271_to_365` int64, `inv_age_365_plus` int64, `currency` string, `estimated_storage_cost_next_month` double, `estimated_quantity_ais_181_210` int64, `estimated_quantity_ais_211_240` int64, `estimated_quantity_ais_241_270` int64, `estimated_quantity_ais_271_300` int64, `estimated_quantity_ais_301_330` int64, `estimated_quantity_ais_331_365` int64, `estimated_quantity_ais_365_plus` int64, `estimated_value_ais_181_210` double, `estimated_value_ais_211_240` double, `estimated_value_ais_241_270` double, `estimated_value_ais_271_300` double, `estimated_value_ais_301_330` double, `estimated_value_ais_331_365` double, `estimated_value_ais_365_plus` double, `available` int64, `inbound_quantity` int64, `inbound_working` int64, `inbound_shipped` int64, `inbound_received` int64, `unfulfillable_quantity` int64, `key_inventory_region_sku` string, `reserved_customer_order` int64, `reserved_fc_processing` int64, `reserved_fc_transfer` int64, `total_reserved_quantity` int64  
+**Colunas:** `date_fba_inventory` dateTime, `inv_age_000_to_030` int64, `inv_age_031_to_060` int64, `inv_age_061_to_090` int64, `inv_age_091_to_180` int64, `inv_age_181_to_270` int64, `inv_age_271_to_365` int64, `inv_age_365_plus` int64, `currency` string, `estimated_storage_cost_next_month` double, `estimated_quantity_ais_181_210` int64, `estimated_quantity_ais_211_240` int64, `estimated_quantity_ais_241_270` int64, `estimated_quantity_ais_271_300` int64, `estimated_quantity_ais_301_330` int64, `estimated_quantity_ais_331_365` int64, `estimated_quantity_ais_365_plus` int64, `estimated_value_ais_181_210` double, `estimated_value_ais_211_240` double, `estimated_value_ais_241_270` double, `estimated_value_ais_271_300` double, `estimated_value_ais_301_330` double, `estimated_value_ais_331_365` double, `estimated_value_ais_365_plus` double, `available` int64, `inbound_quantity` int64, `inbound_working` int64, `inbound_shipped` int64, `inbound_received` int64, `unfulfillable_quantity` int64, `key_inventory_region_sku` string, `reserved_customer_order` int64, `reserved_fc_processing` int64, `total_reserved_quantity` int64, `fc_transfer` int64, `reserved_staging` int64  
 ```powerquery
 // let
 //     Source = Table.Combine({#"FBA Inventory (raw)"}),
@@ -14841,7 +15059,7 @@ in
 
 let
     Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Inventory.vw_full_fba_manage_inventory"),
-    #"Changed Type" = Table.TransformColumnTypes(Source,{{"reserved_fc_transfer", Int64.Type}, {"reserved_fc_processing", Int64.Type}, {"reserved_customer_order", Int64.Type}})
+    #"Changed Type" = Table.TransformColumnTypes(Source,{{"fc_transfer", Int64.Type}, {"reserved_fc_processing", Int64.Type}, {"reserved_customer_order", Int64.Type}, {"reserved_staging", Int64.Type}})
 in
     #"Changed Type"
 ```
@@ -15143,7 +15361,7 @@ in
 ### `fact_sb_attributed_purchase`
 
 **Modo:** `import`  **Grupo:** `'Amazon\Campaign Manager'`  
-**Colunas:** `sponsored_ads_type` string, `date_sb_attributed_purchase` dateTime, `currency` string, `campaign_name` string, `ad_group_name` string, `attribution_type` string, `key_marketplace_purchased_asin` string, `total_sales_14d` double, `total_orders_14d` int64, `total_units_sold_14d` int64, `new_to_brand_sales_14d` double, `new_to_brand_orders_14d` int64, `new_to_brand_units_sold_14d` int64, `new_to_brand_sales_percentage_14d` double, `new_to_brand_orders_percentage_14d` double, `new_to_brand_units_sold_percentage_14d` double  
+**Colunas:** `sponsored_ads_type` string, `date_sb_attributed_purchase` dateTime, `currency` string, `campaign_name` string, `ad_group_name` string, `attribution_type` string, `key_marketplace_purchased_asin` string, `total_sales_14d` double, `total_orders_14d` int64, `total_units_sold_14d` int64, `new_to_brand_sales_14d` double, `new_to_brand_orders_14d` int64, `new_to_brand_units_sold_14d` int64, `new_to_brand_sales_percentage_14d` double, `new_to_brand_orders_percentage_14d` double, `new_to_brand_units_sold_percentage_14d` double, `campaign_id` string, `campaign_name_last` string, `ad_group_id` string, `ad_group_name_last` string  
 ```powerquery
 let
     Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Amz_Ads.vw_full_amz_ads_sb_attributed_purchases")
@@ -15155,7 +15373,7 @@ in
 ### `fact_sb_search_terms`
 
 **Modo:** `import`  **Grupo:** `'Amazon\Campaign Manager'`  
-**Colunas:** `sponsored_ads_type` string, `date_sb_search_terms` dateTime, `marketplace` string, `currency` string, `campaign_name` string, `ad_group_name` string, `targeting` string, `match_type` string, `customer_search_term` string, `cost_type` string, `impressions` int64, `clicks` int64, `spend` double, `total_sales` double, `total_orders` int64, `total_units_sold` int64, `total_sales_clicks` double, `total_orders_clicks` int64  
+**Colunas:** `sponsored_ads_type` string, `date_sb_search_terms` dateTime, `marketplace` string, `currency` string, `campaign_name` string, `ad_group_name` string, `targeting` string, `match_type` string, `customer_search_term` string, `cost_type` string, `impressions` int64, `clicks` int64, `spend` double, `total_sales` double, `total_orders` int64, `total_units_sold` int64, `total_sales_clicks` double, `total_orders_clicks` int64, `campaign_id` string, `campaign_name_last` string, `ad_group_id` string, `ad_group_name_last` string, `targeting_id` string  
 ```powerquery
 let
     Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Amz_Ads.vw_full_amz_ads_sb_search_terms")
@@ -15232,7 +15450,7 @@ in
 ### `fact_sd_advertised_products`
 
 **Modo:** `import`  **Grupo:** `'Amazon\Campaign Manager'`  
-**Colunas:** `date_sb_advertised_products` dateTime, `key_marketplace_advertised_sku` string, `campaign_name` string, `ad_group_name` string, `currency` string, `impressions` int64, `clicks` int64, `spend` double, `advertised_sku_orders_14d` int64, `advertised_sku_sales_14d` double, `advertised_sku_units_sold_14d` int64, `other_sku_orders_14d` int64, `other_sku_sales_14d` double, `other_sku_units_sold_14d` int64, `advertised_sku_new_to_brand_orders_14d` int64, `advertised_sku_new_to_brand_sales_14d` double, `advertised_sku_new_to_brand_units_sold_14d` int64, `other_sku_new_to_brand_orders_14d_clicks` int64, `other_sku_new_to_brand_sales_14d_clicks` double, `other_sku_new_to_brand_units_sold_14d_clicks` int64, `sponsored_ads_type` string  
+**Colunas:** `date_sb_advertised_products` dateTime, `key_marketplace_advertised_sku` string, `campaign_name` string, `ad_group_name` string, `currency` string, `impressions` int64, `clicks` int64, `spend` double, `advertised_sku_orders_14d` int64, `advertised_sku_sales_14d` double, `advertised_sku_units_sold_14d` int64, `other_sku_orders_14d` int64, `other_sku_sales_14d` double, `other_sku_units_sold_14d` int64, `advertised_sku_new_to_brand_orders_14d` int64, `advertised_sku_new_to_brand_sales_14d` double, `advertised_sku_new_to_brand_units_sold_14d` int64, `other_sku_new_to_brand_orders_14d_clicks` int64, `other_sku_new_to_brand_sales_14d_clicks` double, `other_sku_new_to_brand_units_sold_14d_clicks` int64, `sponsored_ads_type` string, `campaign_id` string, `campaign_name_last` string, `ad_group_id` string, `ad_group_name_last` string  
 ```powerquery
 let
     Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Amz_Ads.vw_full_amz_ads_sd_advertised_products")
@@ -15268,7 +15486,7 @@ in
 ### `fact_sp_advertised_products`
 
 **Modo:** `import`  **Grupo:** `'Amazon\Campaign Manager'`  
-**Colunas:** `date_sp_advertised_products` dateTime, `key_marketplace_advertised_sku` string, `campaign_name` string, `ad_group_name` string, `currency` string, `impressions` int64, `clicks` int64, `spend` double, `advertised_sku_orders_7d` int64, `advertised_sku_sales_7d` double, `advertised_sku_units_sold_7d` int64, `other_sku_units_sold_7d` int64, `other_sku_sales_7d` double, `other_sku_orders_7d` int64, `sponsored_ads_type` string  
+**Colunas:** `date_sp_advertised_products` dateTime, `key_marketplace_advertised_sku` string, `campaign_name` string, `ad_group_name` string, `currency` string, `impressions` int64, `clicks` int64, `spend` double, `advertised_sku_orders_7d` int64, `advertised_sku_sales_7d` double, `advertised_sku_units_sold_7d` int64, `other_sku_units_sold_7d` int64, `other_sku_sales_7d` double, `other_sku_orders_7d` int64, `sponsored_ads_type` string, `campaign_id` string, `campaign_name_last` string, `ad_group_id` string, `ad_group_name_last` string  
 ```powerquery
 let
     Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Amz_Ads.vw_full_amz_ads_sp_advertised_products")
@@ -15280,7 +15498,7 @@ in
 ### `fact_sp_purchased_products`
 
 **Modo:** `import`  **Grupo:** `'Amazon\Campaign Manager'`  
-**Colunas:** `date_sp_purchased_products` dateTime, `campaign_name` string, `ad_group_name` string, `match_type` string, `currency` string, `key_marketplace_advertised_sku` string, `key_marketplace_purchased_asin` string, `units_sold_other_sku` int64, `orders_other_sku` int64, `sales_other_sku` double, `sponsored_ads_type` string, `targeting` string  
+**Colunas:** `date_sp_purchased_products` dateTime, `campaign_name` string, `ad_group_name` string, `match_type` string, `currency` string, `key_marketplace_advertised_sku` string, `key_marketplace_purchased_asin` string, `units_sold_other_sku` int64, `orders_other_sku` int64, `sales_other_sku` double, `sponsored_ads_type` string, `targeting` string, `campaign_id` string, `campaign_name_last` string, `ad_group_id` string, `ad_group_name_last` string, `targeting_id` string  
 ```powerquery
 let
     Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Amz_Ads.vw_full_amz_ads_sp_purchased_products"),
@@ -15300,7 +15518,7 @@ in
 ### `fact_sp_search_terms`
 
 **Modo:** `import`  **Grupo:** `'Amazon\Campaign Manager'`  
-**Colunas:** `sponsored_ads_type` string, `date_sp_search_terms` dateTime, `marketplace` string, `currency` string, `campaign_name` string, `ad_group_name` string, `targeting` string, `match_type` string, `customer_search_term` string, `impressions` int64, `clicks` int64, `spend` double, `total_units_sold_7d` int64, `total_sales_7d` double, `total_orders_7d` int64, `advertised_sku_units_sold_7d` int64, `advertised_sku_sales_7d` double, `advertised_sku_orders_7d` int64, `other_sku_units_sold_7d` int64, `other_sku_sales_7d` double, `other_sku_orders_7d` int64  
+**Colunas:** `sponsored_ads_type` string, `date_sp_search_terms` dateTime, `marketplace` string, `currency` string, `campaign_name` string, `ad_group_name` string, `targeting` string, `match_type` string, `customer_search_term` string, `impressions` int64, `clicks` int64, `spend` double, `total_units_sold_7d` int64, `total_sales_7d` double, `total_orders_7d` int64, `advertised_sku_units_sold_7d` int64, `advertised_sku_sales_7d` double, `advertised_sku_orders_7d` int64, `other_sku_units_sold_7d` int64, `other_sku_sales_7d` double, `other_sku_orders_7d` int64, `campaign_id` string, `campaign_name_last` string, `ad_group_id` string, `adgroup_name_last` string, `targeting_id` string  
 ```powerquery
 let
     Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Amz_Ads.vw_full_amz_ads_sp_search_terms")
@@ -15656,7 +15874,7 @@ GENERATESERIES(0, 1, 0.01)
     // Dynamic Parameter Selector of Amazon Fees Absolute Metrics ($ or u)
     ("Units Sold", NAMEOF('Measurement Table'[u_units_sold]), 0),
     ("Storage Fee ($)", NAMEOF('Measurement Table'[$_estimated_storage_fee]), 1),
-    ("Quantity on Hand", NAMEOF('Measurement Table'[u_quantity_on_hand_storage_fee]), 2),
+    ("Quantity on Hand", NAMEOF('Measurement Table'[u_sum_quantity_on_hand_storage_fee]), 2),
     ("Inventory: Ending + Transit", NAMEOF('Measurement Table'[u_inventory_ending_plus_transit]), 3),
     ("None", NAMEOF([aux_blank_measure_slicer_filter]), 4)
 }
@@ -15819,6 +16037,24 @@ GENERATESERIES(0, 1, 0.01)
     ("Amazon Family", NAMEOF('SKUs'[Amazon Family]), 0),
     ("Native Family", NAMEOF('SKUs'[Native Family]), 1),
     ("SKU", NAMEOF('SKUs'[SKU]), 2)
+}
+```
+
+
+### `z.dynamic_parameter_difference_year_over_year`
+
+**Modo:** `import`  
+**Colunas:** `z.dynamic_parameter_difference_year_over_year`, `z.dynamic_parameter_difference_year_over_year Fields`, `z.dynamic_parameter_difference_year_over_year Order`, `Theme`  
+```powerquery
+{
+    ("Units Diff", NAMEOF('Measurement Table'[u_units_sold_difference_yoy]), 0, "Units Sold"),
+        ("Units %", NAMEOF('Measurement Table'[%_units_sold_year_over_year_yoy]), 1, "Units Sold"),
+    ("Revenue Diff", NAMEOF('Measurement Table'[$_revenue_difference_yoy]), 2, "Revenue"),
+        ("Revenue %", NAMEOF('Measurement Table'[%_revenue_year_over_year_yoy]), 3, "Revenue"),
+    ("Net Revenue Diff", NAMEOF('Measurement Table'[$_net_revenue_difference_yoy]), 4, "Net Revenue"),
+        ("Net Revenue %", NAMEOF('Measurement Table'[%_net_revenue_year_over_year_yoy]), 5, "Net Revenue"),
+    ("Net Price Diff", NAMEOF('Measurement Table'[$_net_average_price_difference_yoy]), 6, "Net Price"),
+        ("Net Price %", NAMEOF('Measurement Table'[%_net_average_price_year_over_year_yoy]), 7, "Net Price")
 }
 ```
 
