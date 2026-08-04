@@ -103,6 +103,85 @@ body {
 .nav a.active .nav-dot { opacity: 1; }
 .main { margin-top: 52px; }
 
+/* ── NAV ACTIONS (BACK + MENU) ── */
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-right: 16px;
+  padding-right: 16px;
+  border-right: 1px solid rgba(255,255,255,0.1);
+}
+.nav-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  color: rgba(255,255,255,0.55);
+  text-decoration: none;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+.nav-back:hover { color: #fff; background: rgba(255,255,255,0.08); }
+.nav-menu-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(255,255,255,0.55);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.nav-menu-toggle:hover, .nav-menu-toggle.active { color: #fff; background: rgba(255,255,255,0.08); }
+
+/* ── NAV MENU PANEL ── */
+.nav-menu-panel {
+  position: fixed;
+  top: 52px;
+  left: 40px;
+  width: 300px;
+  max-height: calc(100vh - 72px);
+  overflow-y: auto;
+  background: var(--graphite);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.28);
+  padding: 16px;
+  z-index: 100;
+  display: none;
+  flex-direction: column;
+  gap: 18px;
+}
+.nav-menu-panel.open { display: flex; }
+.nav-menu-group-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.3);
+  margin-bottom: 8px;
+}
+.nav-menu-links { display: flex; flex-direction: column; gap: 2px; }
+.nav-menu-links a {
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.65);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+.nav-menu-links a:hover { background: rgba(255,255,255,0.07); color: #fff; }
+.nav-menu-links a.current { color: var(--sage); background: rgba(104,144,126,0.15); }
+
 /* ── COVER ── */
 .cover {
   background: var(--graphite);

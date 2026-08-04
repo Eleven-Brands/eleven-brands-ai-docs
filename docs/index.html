@@ -53,17 +53,18 @@
     border-bottom: 1px solid rgba(255,255,255,0.08);
     margin-bottom: 24px;
   }
-  .sidebar-logo-name {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--sage);
+  .sidebar-logo-img {
+    width: 100%;
+    max-width: 150px;
+    height: auto;
+    display: block;
   }
   .sidebar-logo-sub {
+    font-family: var(--font-mono);
     font-size: 11px;
+    letter-spacing: 0.06em;
     color: rgba(255,255,255,0.3);
-    margin-top: 3px;
+    margin-top: 10px;
   }
   .sidebar-nav { padding: 0 16px; display: flex; flex-direction: column; gap: 2px; }
   .sidebar-section-label {
@@ -263,7 +264,7 @@
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-logo">
-    <div class="sidebar-logo-name">11 Brands</div>
+    <img class="sidebar-logo-img" src="./11_brands/assets/eleven-brands-logo.png" alt="Eleven Brands">
     <div class="sidebar-logo-sub">Knowledge Base</div>
   </div>
   <nav class="sidebar-nav">
@@ -326,7 +327,7 @@
     <section class="group" id="dados">
       <div class="group-header">
         <h2 class="group-title">Dados & Analytics</h2>
-        <span class="group-count">4 documentos</span>
+        <span class="group-count">5 documentos</span>
       </div>
       <div class="doc-grid">
 
@@ -363,6 +364,15 @@
             <span class="doc-card-tag terra">SP-API</span>
           </div>
           <p class="doc-card-desc">Documentação técnica para remoção de duplicatas em pedidos Amazon multi-marketplace via SP-API — lógica, regras e casos de borda.</p>
+          <span class="doc-card-action">Abrir documento →</span>
+        </a>
+
+        <a class="doc-card" href="./11_brands/dados-analytics/organihaus_base_tables_prd.html">
+          <div class="doc-card-top">
+            <h3 class="doc-card-title">OrganiHaus Base Tables — PRD</h3>
+            <span class="doc-card-tag blue">Power BI</span>
+          </div>
+          <p class="doc-card-desc">PRD do modelo semântico Power BI — tabelas, relacionamentos, measures, fontes de dados e tratamentos M.</p>
           <span class="doc-card-action">Abrir documento →</span>
         </a>
 
