@@ -101,6 +101,13 @@ body {
   transition: opacity 0.15s;
 }
 .nav a.active .nav-dot { opacity: 1; }
+.nav-brand-logo {
+  height: 16px;
+  width: auto;
+  flex-shrink: 0;
+  margin-left: 20px;
+  opacity: 0.9;
+}
 .main { margin-top: 52px; }
 
 /* ── NAV ACTIONS (BACK + MENU) ── */
