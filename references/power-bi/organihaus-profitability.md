@@ -747,17 +747,7 @@ Modelo Import puro, independente do Base Tables. Usa suas proprias tabelas `Cale
 
 ---
 
-## Medidas DAX — medidas (189 medidas)
-
-
-### (sem pasta)
-
-#### `teste vat`
-
-**Depende de medidas:** `[$_gst_ca_provision]`, `[$_vat_gb_eu]`  
-```dax
-[$_gst_ca_provision] + [$_vat_gb_eu]
-```
+## Medidas DAX — medidas (194 medidas)
 
 
 ### DELETE?\CRUCIAL - CANNOT DELETE
@@ -1244,11 +1234,11 @@ RETURN
 -DIVIDE( ([$_fulfillment_fee_plus_giftwrap_credits] ), [u_units_sold] )
 ```
 
-#### `$_cogs_per_unit_sold`
+#### `$_cogs_net_of_refunds_per_unit_sold`
 
-**Depende de medidas:** `[$_cogs]`, `[u_units_sold]`  
+**Depende de medidas:** `[$_cogs_net_of_refunds]`, `[u_units_sold]`  
 ```dax
-VAR cogs = [$_cogs]
+VAR cogs = [$_cogs_net_of_refunds]
 
 RETURN
     DIVIDE(-cogs,[u_units_sold])
@@ -1363,112 +1353,112 @@ RETURN
 
 **Depende de colunas:** `'Calendar'[Date]`, `'dim_selector_currency'[Currency]`, `'dim_selector_date'[selector_date_name]`, `'fact_payments_date_range'[Product Sales]`, `'fact_payments_date_range'[date_all_orders]`, `'fact_payments_date_range'[exchange_rate_to_eur]`, `'fact_payments_date_range'[exchange_rate_to_usd]`, `'fact_payments_date_range'[type_mapping]`  
 ```dax
-VAR _currency =SELECTEDVALUE ( 'dim_selector_currency'[Currency], "Local" )
-    VAR _date_mode = SELECTEDVALUE ( 'dim_selector_date'[selector_date_name], "Date - Payments" )
+//     VAR _currency =SELECTEDVALUE ( 'dim_selector_currency'[Currency], "Local" )
+//     VAR _date_mode = SELECTEDVALUE ( 'dim_selector_date'[selector_date_name], "Date - Payments" )
 
-    VAR _payments_value =
-        CALCULATE (
-            IF (
-                _currency = "Local",
-                SUM ( 'fact_payments_date_range'[Product Sales] ),
-                SUMX (
-                    'fact_payments_date_range',
-                    'fact_payments_date_range'[Product Sales]
-                        * SWITCH (
-                            _currency,
-                            "USD", 'fact_payments_date_range'[exchange_rate_to_usd],
-                            "EUR", 'fact_payments_date_range'[exchange_rate_to_eur],
-                            1
-                        )
-                )
-            ),
-            'fact_payments_date_range'[type_mapping] = "Order"
-        )
-
-    VAR _all_orders_value =
-        CALCULATE (
-            IF (
-                _currency = "Local",
-                SUM ( 'fact_payments_date_range'[Product Sales] ),
-                SUMX (
-                    'fact_payments_date_range',
-                    'fact_payments_date_range'[Product Sales]
-                        * SWITCH (
-                            _currency,
-                            "USD", 'fact_payments_date_range'[exchange_rate_to_usd],
-                            "EUR", 'fact_payments_date_range'[exchange_rate_to_eur],
-                            1
-                        )
-                )
-            ),
-            'fact_payments_date_range'[type_mapping] = "Order",
-            USERELATIONSHIP ( 'Calendar'[Date], 'fact_payments_date_range'[date_all_orders] )
-        )
-
-    VAR _result =     
-        SWITCH (
-            _date_mode,
-            "Date - All Orders", _all_orders_value,
-            "Date - Payments", _payments_value
-        )
-
-RETURN
-    _result
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// // Define tables
-//     VAR _td_payments =   CALCULATETABLE( 'fact_payments_date_range', 'fact_payments_date_range'[type_mapping] = "Order" )
-//     VAR _td_all_orders = CALCULATETABLE( 'fact_payments_date_range', 'fact_payments_date_range'[type_mapping] = "Order", USERELATIONSHIP('Calendar'[Date], 'fact_payments_date_range'[date_all_orders]) )
-
-// // Get Payments Values
-//     VAR _loc_payments = SUMX( _td_payments, 'fact_payments_date_range'[Product Sales] )
-//     VAR _usd_payments = SUMX( _td_payments, 'fact_payments_date_range'[Product Sales] * 'fact_payments_date_range'[exchange_rate_to_usd] )
-//     VAR _eur_payments = SUMX( _td_payments, 'fact_payments_date_range'[Product Sales] * 'fact_payments_date_range'[exchange_rate_to_eur] )
-
-// // Get All Orders Values
-//     VAR _loc_all_orders = SUMX( _td_all_orders, 'fact_payments_date_range'[Product Sales] )
-//     VAR _usd_all_orders = SUMX( _td_all_orders, 'fact_payments_date_range'[Product Sales] * 'fact_payments_date_range'[exchange_rate_to_usd] )
-//     VAR _eur_all_orders = SUMX( _td_all_orders, 'fact_payments_date_range'[Product Sales] * 'fact_payments_date_range'[exchange_rate_to_eur] )
-    
-// // Switches
-//     VAR _payments =
-//         SWITCH(
-//             SELECTEDVALUE('dim_selector_currency'[Currency]),
-//             "Local", _loc_payments,
-//             "USD",   _usd_payments,
-//             "EUR",   _eur_payments
+//     VAR _payments_value =
+//         CALCULATE (
+//             IF (
+//                 _currency = "Local",
+//                 SUM ( 'fact_payments_date_range'[Product Sales] ),
+//                 SUMX (
+//                     'fact_payments_date_range',
+//                     'fact_payments_date_range'[Product Sales]
+//                         * SWITCH (
+//                             _currency,
+//                             "USD", 'fact_payments_date_range'[exchange_rate_to_usd],
+//                             "EUR", 'fact_payments_date_range'[exchange_rate_to_eur],
+//                             1
+//                         )
+//                 )
+//             ),
+//             'fact_payments_date_range'[type_mapping] = "Order"
 //         )
 
-//     VAR _all_orders =
-//         SWITCH(
-//             SELECTEDVALUE('dim_selector_currency'[Currency]),
-//             "Local", _loc_all_orders,
-//             "USD",   _usd_all_orders,
-//             "EUR",   _eur_all_orders
+//     VAR _all_orders_value =
+//         CALCULATE (
+//             IF (
+//                 _currency = "Local",
+//                 SUM ( 'fact_payments_date_range'[Product Sales] ),
+//                 SUMX (
+//                     'fact_payments_date_range',
+//                     'fact_payments_date_range'[Product Sales]
+//                         * SWITCH (
+//                             _currency,
+//                             "USD", 'fact_payments_date_range'[exchange_rate_to_usd],
+//                             "EUR", 'fact_payments_date_range'[exchange_rate_to_eur],
+//                             1
+//                         )
+//                 )
+//             ),
+//             'fact_payments_date_range'[type_mapping] = "Order",
+//             USERELATIONSHIP ( 'Calendar'[Date], 'fact_payments_date_range'[date_all_orders] )
 //         )
 
-//      VAR _result =    
-//         SWITCH(
-//             SELECTEDVALUE( 'dim_selector_date'[selector_date_name] ),
-//             "Date - All Orders", _all_orders,
-//             "Date - Payments",  _payments
+//     VAR _result =     
+//         SWITCH (
+//             _date_mode,
+//             "Date - All Orders", _all_orders_value,
+//             "Date - Payments", _payments_value
 //         )
 
 // RETURN
 //     _result
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Define tables
+    VAR _td_payments =   CALCULATETABLE( 'fact_payments_date_range', 'fact_payments_date_range'[type_mapping] = "Order" )
+    VAR _td_all_orders = CALCULATETABLE( 'fact_payments_date_range', 'fact_payments_date_range'[type_mapping] = "Order", USERELATIONSHIP('Calendar'[Date], 'fact_payments_date_range'[date_all_orders]) )
+
+// Get Payments Values
+    VAR _loc_payments = SUMX( _td_payments, 'fact_payments_date_range'[Product Sales] )
+    VAR _usd_payments = SUMX( _td_payments, 'fact_payments_date_range'[Product Sales] * 'fact_payments_date_range'[exchange_rate_to_usd] )
+    VAR _eur_payments = SUMX( _td_payments, 'fact_payments_date_range'[Product Sales] * 'fact_payments_date_range'[exchange_rate_to_eur] )
+
+// Get All Orders Values
+    VAR _loc_all_orders = SUMX( _td_all_orders, 'fact_payments_date_range'[Product Sales] )
+    VAR _usd_all_orders = SUMX( _td_all_orders, 'fact_payments_date_range'[Product Sales] * 'fact_payments_date_range'[exchange_rate_to_usd] )
+    VAR _eur_all_orders = SUMX( _td_all_orders, 'fact_payments_date_range'[Product Sales] * 'fact_payments_date_range'[exchange_rate_to_eur] )
+    
+// Switches
+    VAR _payments =
+        SWITCH(
+            SELECTEDVALUE('dim_selector_currency'[Currency]),
+            "Local", _loc_payments,
+            "USD",   _usd_payments,
+            "EUR",   _eur_payments
+        )
+
+    VAR _all_orders =
+        SWITCH(
+            SELECTEDVALUE('dim_selector_currency'[Currency]),
+            "Local", _loc_all_orders,
+            "USD",   _usd_all_orders,
+            "EUR",   _eur_all_orders
+        )
+
+     VAR _result =    
+        SWITCH(
+            SELECTEDVALUE( 'dim_selector_date'[selector_date_name] ),
+            "Date - All Orders", _all_orders,
+            "Date - Payments",  _payments
+        )
+
+RETURN
+    _result
 ```
 
 #### `$_taxes_collected`
@@ -1863,11 +1853,13 @@ RETURN
 
 #### `$_selling_fees`
 
-**Depende de colunas:** `'Calendar'[Date]`, `'dim_selector_currency'[Currency]`, `'dim_selector_date'[selector_date_name]`, `fact_payments_date_range[date_all_orders]`, `fact_payments_date_range[exchange_rate_to_eur]`, `fact_payments_date_range[exchange_rate_to_usd]`, `fact_payments_date_range[selling_fees]`  
+**Depende de colunas:** `'Calendar'[Date]`, `'dim_selector_currency'[Currency]`, `'dim_selector_date'[selector_date_name]`, `NOT fact_payments_date_range[description_mapping]`, `fact_payments_date_range[date_all_orders]`, `fact_payments_date_range[exchange_rate_to_eur]`, `fact_payments_date_range[exchange_rate_to_usd]`, `fact_payments_date_range[selling_fees]`  
 ```dax
 // Define tables
-    VAR _td_payments =   CALCULATETABLE( fact_payments_date_range )
-    VAR _td_all_orders = CALCULATETABLE( fact_payments_date_range, USERELATIONSHIP('Calendar'[Date], fact_payments_date_range[date_all_orders]) )
+    VAR _excluded_descriptions = { "Deal Fee", "Save", "Subscription Fee", "EPR Fee" }
+
+    VAR _td_payments =   CALCULATETABLE( fact_payments_date_range, NOT fact_payments_date_range[description_mapping] IN _excluded_descriptions )
+    VAR _td_all_orders = CALCULATETABLE( fact_payments_date_range, NOT fact_payments_date_range[description_mapping] IN _excluded_descriptions, USERELATIONSHIP('Calendar'[Date], fact_payments_date_range[date_all_orders]) )
 
 // Get Payments Values
     VAR _loc_payments = SUMX( _td_payments, fact_payments_date_range[selling_fees] )
@@ -2689,21 +2681,21 @@ RETURN
 
 #### `$_deal_fee`
 
-**Depende de colunas:** `'Calendar'[Date]`, `'dim_selector_currency'[Currency]`, `'dim_selector_date'[selector_date_name]`, `'fact_payments_date_range'[Other Transaction Fees]`, `'fact_payments_date_range'[date_all_orders]`, `'fact_payments_date_range'[exchange_rate_to_eur]`, `'fact_payments_date_range'[exchange_rate_to_usd]`, `'fact_payments_date_range'[type_mapping]`  
+**Depende de colunas:** `'Calendar'[Date]`, `'dim_selector_currency'[Currency]`, `'dim_selector_date'[selector_date_name]`, `'fact_payments_date_range'[Other Transaction Fees]`, `'fact_payments_date_range'[date_all_orders]`, `'fact_payments_date_range'[description_mapping]`, `'fact_payments_date_range'[exchange_rate_to_eur]`, `'fact_payments_date_range'[exchange_rate_to_usd]`, `'fact_payments_date_range'[type_mapping]`, `fact_payments_date_range[selling_fees]`  
 ```dax
 // Define tables
-    VAR _td_payments =   CALCULATETABLE( 'fact_payments_date_range', 'fact_payments_date_range'[type_mapping] = "Deal Fee" )
-    VAR _td_all_orders = CALCULATETABLE( 'fact_payments_date_range', 'fact_payments_date_range'[type_mapping] = "Deal Fee", USERELATIONSHIP('Calendar'[Date], 'fact_payments_date_range'[date_all_orders]) )
+    VAR _td_payments =   CALCULATETABLE( 'fact_payments_date_range', FILTER( 'fact_payments_date_range', 'fact_payments_date_range'[type_mapping] = "Deal Fee" || 'fact_payments_date_range'[description_mapping] = "Deal Fee" ) )
+    VAR _td_all_orders = CALCULATETABLE( 'fact_payments_date_range', FILTER ( 'fact_payments_date_range', 'fact_payments_date_range'[type_mapping] = "Deal Fee" || 'fact_payments_date_range'[description_mapping] = "Deal Fee" ), USERELATIONSHIP('Calendar'[Date], 'fact_payments_date_range'[date_all_orders]) )
 
 // Get Payments Values
-    VAR _loc_payments = SUMX( _td_payments, 'fact_payments_date_range'[Other Transaction Fees] )
-    VAR _usd_payments = SUMX( _td_payments, 'fact_payments_date_range'[Other Transaction Fees] * 'fact_payments_date_range'[exchange_rate_to_usd] )   
-    VAR _eur_payments = SUMX( _td_payments, 'fact_payments_date_range'[Other Transaction Fees] * 'fact_payments_date_range'[exchange_rate_to_eur] )
+    VAR _loc_payments = SUMX( _td_payments, ('fact_payments_date_range'[Other Transaction Fees] + fact_payments_date_range[selling_fees]) )
+    VAR _usd_payments = SUMX( _td_payments, ('fact_payments_date_range'[Other Transaction Fees] + fact_payments_date_range[selling_fees]) * 'fact_payments_date_range'[exchange_rate_to_usd] )   
+    VAR _eur_payments = SUMX( _td_payments, ('fact_payments_date_range'[Other Transaction Fees] + fact_payments_date_range[selling_fees]) * 'fact_payments_date_range'[exchange_rate_to_eur] )
 
 // Get All Orders Values
-    VAR _loc_all_orders = SUMX( _td_all_orders, 'fact_payments_date_range'[Other Transaction Fees] )
-    VAR _usd_all_orders = SUMX( _td_all_orders, 'fact_payments_date_range'[Other Transaction Fees] * 'fact_payments_date_range'[exchange_rate_to_usd] )
-    VAR _eur_all_orders = SUMX( _td_all_orders, 'fact_payments_date_range'[Other Transaction Fees] * 'fact_payments_date_range'[exchange_rate_to_eur] )
+    VAR _loc_all_orders = SUMX( _td_all_orders, ('fact_payments_date_range'[Other Transaction Fees] + fact_payments_date_range[selling_fees]) )
+    VAR _usd_all_orders = SUMX( _td_all_orders, ('fact_payments_date_range'[Other Transaction Fees] + fact_payments_date_range[selling_fees]) * 'fact_payments_date_range'[exchange_rate_to_usd] )
+    VAR _eur_all_orders = SUMX( _td_all_orders, ('fact_payments_date_range'[Other Transaction Fees] + fact_payments_date_range[selling_fees]) * 'fact_payments_date_range'[exchange_rate_to_eur] )
     
 // Switches
     VAR _payments =
@@ -2873,10 +2865,10 @@ RETURN
 
 #### `$_contribution_margin_4_1`
 
-**Depende de medidas:** `[$_contribution_margin_4]`, `[$_coupon_fee]`, `[$_deal_fee]`, `[$_fee_adjustment]`, `[$_grade_and_resell_fee]`, `[$_subscription_fee]`, `[$_vat_gb_eu]`  
+**Depende de medidas:** `[$_contribution_margin_4]`, `[$_coupon_fee]`, `[$_deal_fee]`, `[$_epr_fee]`, `[$_fee_adjustment]`, `[$_grade_and_resell_fee]`, `[$_selling_fees_non_apportioned]`, `[$_subscription_fee]`, `[$_vat_gb_eu]`  
 ```dax
 VAR _non_apportioned_costs = // Already negatives, thus the + signs  
-        [$_vat_gb_eu] + [$_subscription_fee] + [$_coupon_fee] + [$_deal_fee] + [$_grade_and_resell_fee] + [$_fee_adjustment]
+        [$_vat_gb_eu] + [$_subscription_fee] + [$_coupon_fee] + [$_deal_fee] + [$_grade_and_resell_fee] + [$_fee_adjustment] + [$_epr_fee] + [$_selling_fees_non_apportioned]
     VAR _cm5 = [$_contribution_margin_4] + _non_apportioned_costs // Most likely already negative, thus the + sign  
 
 RETURN
@@ -2985,6 +2977,100 @@ VAR _sponsoredAds = [$_total_sponsored_ads_spend]
 
 RETURN
     _sponsoredAds + _storage_fees + _returns
+```
+
+#### `$_epr_fee`
+
+**Depende de colunas:** `'Calendar'[Date]`, `'dim_selector_currency'[Currency]`, `'dim_selector_date'[selector_date_name]`, `'fact_payments_date_range'[date_all_orders]`, `'fact_payments_date_range'[description_mapping]`, `'fact_payments_date_range'[exchange_rate_to_eur]`, `'fact_payments_date_range'[exchange_rate_to_usd]`, `fact_payments_date_range[selling_fees]`  
+```dax
+// Define tables
+    VAR _td_payments =   CALCULATETABLE( 'fact_payments_date_range', FILTER( 'fact_payments_date_range', 'fact_payments_date_range'[description_mapping] = "EPR Fee" ) )
+    VAR _td_all_orders = CALCULATETABLE( 'fact_payments_date_range', FILTER( 'fact_payments_date_range', 'fact_payments_date_range'[description_mapping] = "EPR Fee"), USERELATIONSHIP('Calendar'[Date], 'fact_payments_date_range'[date_all_orders]) )
+
+// Get Payments Values
+    VAR _loc_payments = SUMX( _td_payments, (fact_payments_date_range[selling_fees]) )
+    VAR _usd_payments = SUMX( _td_payments, (fact_payments_date_range[selling_fees]) * 'fact_payments_date_range'[exchange_rate_to_usd] )   
+    VAR _eur_payments = SUMX( _td_payments, (fact_payments_date_range[selling_fees]) * 'fact_payments_date_range'[exchange_rate_to_eur] )
+
+// Get All Orders Values
+    VAR _loc_all_orders = SUMX( _td_all_orders, (fact_payments_date_range[selling_fees]) )
+    VAR _usd_all_orders = SUMX( _td_all_orders, (fact_payments_date_range[selling_fees]) * 'fact_payments_date_range'[exchange_rate_to_usd] )
+    VAR _eur_all_orders = SUMX( _td_all_orders, (fact_payments_date_range[selling_fees]) * 'fact_payments_date_range'[exchange_rate_to_eur] )
+    
+// Switches
+    VAR _payments =
+        SWITCH(
+            SELECTEDVALUE('dim_selector_currency'[Currency]),
+            "Local", _loc_payments,
+            "USD",   _usd_payments,
+            "EUR",   _eur_payments
+        )
+
+    VAR _all_orders =
+        SWITCH(
+            SELECTEDVALUE('dim_selector_currency'[Currency]),
+            "Local", _loc_all_orders,
+            "USD",   _usd_all_orders,
+            "EUR",   _eur_all_orders
+        )
+
+     VAR _result =    
+        SWITCH(
+            SELECTEDVALUE( 'dim_selector_date'[selector_date_name] ),
+            "Date - All Orders", _all_orders,
+            "Date - Payments",  _payments
+        )
+
+RETURN
+    _result
+```
+
+#### `$_selling_fees_non_apportioned`
+
+**Depende de colunas:** `'Calendar'[Date]`, `'dim_selector_currency'[Currency]`, `'dim_selector_date'[selector_date_name]`, `fact_payments_date_range[date_all_orders]`, `fact_payments_date_range[description_mapping]`, `fact_payments_date_range[exchange_rate_to_eur]`, `fact_payments_date_range[exchange_rate_to_usd]`, `fact_payments_date_range[selling_fees]`  
+```dax
+// Define tables
+    VAR _included_descriptions = { "Deal Fee", "Save", "Subscription Fee", "EPR Fee" }
+
+    VAR _td_payments =   CALCULATETABLE( fact_payments_date_range, fact_payments_date_range[description_mapping] IN _included_descriptions )
+    VAR _td_all_orders = CALCULATETABLE( fact_payments_date_range, fact_payments_date_range[description_mapping] IN _included_descriptions, USERELATIONSHIP('Calendar'[Date], fact_payments_date_range[date_all_orders]) )
+
+// Get Payments Values
+    VAR _loc_payments = SUMX( _td_payments, fact_payments_date_range[selling_fees] )
+    VAR _usd_payments = SUMX( _td_payments, fact_payments_date_range[selling_fees] * fact_payments_date_range[exchange_rate_to_usd] )   
+    VAR _eur_payments = SUMX( _td_payments, fact_payments_date_range[selling_fees] * fact_payments_date_range[exchange_rate_to_eur] )
+
+// Get All Orders Values
+    VAR _loc_all_orders = SUMX( _td_all_orders, fact_payments_date_range[selling_fees] )
+    VAR _usd_all_orders = SUMX( _td_all_orders, fact_payments_date_range[selling_fees] * fact_payments_date_range[exchange_rate_to_usd] )
+    VAR _eur_all_orders = SUMX( _td_all_orders, fact_payments_date_range[selling_fees] * fact_payments_date_range[exchange_rate_to_eur] )
+    
+// Switches
+    VAR _payments =
+        SWITCH(
+            SELECTEDVALUE('dim_selector_currency'[Currency]),
+            "Local", _loc_payments,
+            "USD",   _usd_payments,
+            "EUR",   _eur_payments
+        )
+
+    VAR _all_orders =
+        SWITCH(
+            SELECTEDVALUE('dim_selector_currency'[Currency]),
+            "Local", _loc_all_orders,
+            "USD",   _usd_all_orders,
+            "EUR",   _eur_all_orders
+        )
+
+     VAR _result =    
+        SWITCH(
+            SELECTEDVALUE( 'dim_selector_date'[selector_date_name] ),
+            "Date - All Orders", _all_orders,
+            "Date - Payments",  _payments
+        )
+
+RETURN
+    _result
 ```
 
 
@@ -3286,7 +3372,7 @@ RETURN
 
 #### `$_statement_financial`
 
-**Depende de medidas:** `[$_adjustments]`, `[$_adjustments_credit_card]`, `[$_amz_long_term_storage_fee_actual]`, `[$_amz_storage_fee]`, `[$_awd_processing_transportation_fees]`, `[$_awd_storage_fee_actual]`, `[$_bank_fee]`, `[$_cogs_net_of_refunds]`, `[$_cogs_per_unit_sold]`, `[$_contribution_margin_1]`, `[$_contribution_margin_2]`, `[$_contribution_margin_3]`, `[$_contribution_margin_4]`, `[$_contribution_margin_4_1]`, `[$_contribution_margin_5]`, `[$_coupon_fee]`, `[$_deal_fee]`, `[$_fee_adjustment]`, `[$_fixed_cost]`, `[$_fulfillment_fee_per_unit_sold]`, `[$_fulfillment_fee_plus_giftwrap_credits]`, `[$_grade_and_resell_fee]`, `[$_gross_sales]`, `[$_gst_ca_provision]`, `[$_landed_cost_on_adjustment]`, `[$_local_cost]`, `[$_logistic_storage_3pl_cost]`, `[$_marketing_services]`, `[$_net_average_price]`, `[$_net_income]`, `[$_net_sales]`, `[$_office_cost]`, `[$_photograph_cost]`, `[$_product_refunds]`, `[$_product_sales]`, `[$_professional_service_fee]`, `[$_promotional_rebates_plus_shipping_credits]`, `[$_removal_order_fee]`, `[$_returns_processing_fee]`, `[$_selling_fees]`, `[$_sponsored_brands_spend]`, `[$_sponsored_display_spend]`, `[$_sponsored_product_spend]`, `[$_subscription_fee]`, `[$_taxes_collected]`, `[$_taxes_refunded]`, `[$_taxes_withheld]`, `[$_total_general_and_administrative_costs]`, `[$_training_education]`, `[$_vat_gb_eu]`, `[$_wages_cost]`, `[%_contribution_margin_1_over_net_sales]`, `[%_contribution_margin_2_over_net_sales]`, `[%_contribution_margin_3_over_net_sales]`, `[%_contribution_margin_4_1_over_net_sales]`, `[%_contribution_margin_4_over_net_sales]`, `[%_contribution_margin_5_over_net_sales]`, `[%_net_income_over_net_sales]`, `[u_units_sold]`  
+**Depende de medidas:** `[$_adjustments]`, `[$_adjustments_credit_card]`, `[$_amz_long_term_storage_fee_actual]`, `[$_amz_storage_fee]`, `[$_awd_processing_transportation_fees]`, `[$_awd_storage_fee_actual]`, `[$_bank_fee]`, `[$_cogs_net_of_refunds]`, `[$_cogs_net_of_refunds_per_unit_sold]`, `[$_contribution_margin_1]`, `[$_contribution_margin_2]`, `[$_contribution_margin_3]`, `[$_contribution_margin_4]`, `[$_contribution_margin_4_1]`, `[$_contribution_margin_5]`, `[$_coupon_fee]`, `[$_deal_fee]`, `[$_epr_fee]`, `[$_fee_adjustment]`, `[$_fixed_cost]`, `[$_fulfillment_fee_per_unit_sold]`, `[$_fulfillment_fee_plus_giftwrap_credits]`, `[$_grade_and_resell_fee]`, `[$_gross_sales]`, `[$_gst_ca_provision]`, `[$_landed_cost_on_adjustment]`, `[$_local_cost]`, `[$_logistic_storage_3pl_cost]`, `[$_marketing_services]`, `[$_net_average_price]`, `[$_net_income]`, `[$_net_sales]`, `[$_office_cost]`, `[$_photograph_cost]`, `[$_product_refunds]`, `[$_product_sales]`, `[$_professional_service_fee]`, `[$_promotional_rebates_plus_shipping_credits]`, `[$_removal_order_fee]`, `[$_returns_processing_fee]`, `[$_selling_fees]`, `[$_selling_fees_non_apportioned]`, `[$_sponsored_brands_spend]`, `[$_sponsored_display_spend]`, `[$_sponsored_product_spend]`, `[$_subscription_fee]`, `[$_taxes_collected]`, `[$_taxes_refunded]`, `[$_taxes_withheld]`, `[$_total_general_and_administrative_costs]`, `[$_training_education]`, `[$_vat_gb_eu]`, `[$_wages_cost]`, `[%_contribution_margin_1_over_net_sales]`, `[%_contribution_margin_2_over_net_sales]`, `[%_contribution_margin_3_over_net_sales]`, `[%_contribution_margin_4_1_over_net_sales]`, `[%_contribution_margin_4_over_net_sales]`, `[%_contribution_margin_5_over_net_sales]`, `[%_net_income_over_net_sales]`, `[u_units_sold]`  
 **Depende de colunas:** `'dim_statement_financial'[account_id]`  
 ```dax
 VAR Account = SELECTEDVALUE ( 'dim_statement_financial'[account_id] )
@@ -3297,72 +3383,74 @@ VAR Raw =
         "units_sold",                [u_units_sold],
         "net_average_price",         [$_net_average_price],
         "fulfillment_fees_per_unit", [$_fulfillment_fee_per_unit_sold],
-        "cogs_per_unit",             [$_cogs_per_unit_sold],
+        "cogs_per_unit",             [$_cogs_net_of_refunds_per_unit_sold],
 
-        "product_sales",                          [$_product_sales],
-        "promo_rebates_plus_shipping_credits",    [$_promotional_rebates_plus_shipping_credits],
-        "taxes_collected",                        [$_taxes_collected],
-        "gross_sales",                            [$_gross_sales],
+        "product_sales",                             [$_product_sales],
+        "promo_rebates_plus_shipping_credits",       [$_promotional_rebates_plus_shipping_credits],
+        "taxes_collected",                           [$_taxes_collected],
+        "gross_sales",                               [$_gross_sales],
 
-        "product_refunds",                        [$_product_refunds],
-        "taxes_refunded",                         [$_taxes_refunded],
-        "taxes_withheld",                         [$_taxes_withheld],
-        "gst_provision",                          [$_gst_ca_provision],
-        "net_sales",                              [$_net_sales],
+        "product_refunds",                           [$_product_refunds],
+        "taxes_refunded",                            [$_taxes_refunded],
+        "taxes_withheld",                            [$_taxes_withheld],
+        "gst_provision",                             [$_gst_ca_provision],
+        "net_sales",                                 [$_net_sales],
 
-        "cogs_net_of_refunds",                    [$_cogs_net_of_refunds],
-        // "cm_1",                                   [$_contribution_margin_1],
-        // "margin_1",                               [%_contribution_margin_1_over_net_sales],
+        "cogs_net_of_refunds",                       [$_cogs_net_of_refunds],
+        // "cm_1",                                      [$_contribution_margin_1],
+        // "margin_1",                                  [%_contribution_margin_1_over_net_sales],
 
-        "selling_fees",                           [$_selling_fees],
-        "fulfillment_fees_plus_giftwrap_credits", [$_fulfillment_fee_plus_giftwrap_credits],
-        // "cm_2",                                   [$_contribution_margin_2],
-        // "margin_2",                               [%_contribution_margin_2_over_net_sales],
+        "selling_fees",                              [$_selling_fees],
+        "fulfillment_fees_plus_giftwrap_credits",    [$_fulfillment_fee_plus_giftwrap_credits],
+        // "cm_2",                                      [$_contribution_margin_2],
+        // "margin_2",                                  [%_contribution_margin_2_over_net_sales],
 
-        "Sponsored_products",        [$_sponsored_product_spend],
-        "Sponsored_display",         [$_sponsored_display_spend],
-        // "cm_3",                      [$_contribution_margin_3],
-        // "margin_3",                  [%_contribution_margin_3_over_net_sales],
+        "Sponsored_products",           [$_sponsored_product_spend],
+        "Sponsored_display",            [$_sponsored_display_spend],
+        // "cm_3",                         [$_contribution_margin_3],
+        // "margin_3",                     [%_contribution_margin_3_over_net_sales],
 
-        "amz_storage_fee",           [$_amz_storage_fee],
-        "amz_long_term_storage_fee", [$_amz_long_term_storage_fee_actual],
-        "awd_storage_fee",           [$_awd_storage_fee_actual],
-        "awd_proces_and_transp_fees",[$_awd_processing_transportation_fees],
-        "returns_processing_fees",   [$_returns_processing_fee],
-        "adjustments",               [$_adjustments],
-        "landed_cost_on_adjustments",[$_landed_cost_on_adjustment],
-        "removal_orders",            [$_removal_order_fee],
+        "amz_storage_fee",              [$_amz_storage_fee],
+        "amz_long_term_storage_fee",    [$_amz_long_term_storage_fee_actual],
+        "awd_storage_fee",              [$_awd_storage_fee_actual],
+        "awd_proces_and_transp_fees",   [$_awd_processing_transportation_fees],
+        "returns_processing_fees",      [$_returns_processing_fee],
+        "adjustments",                  [$_adjustments],
+        "landed_cost_on_adjustments",   [$_landed_cost_on_adjustment],
+        "removal_orders",               [$_removal_order_fee],
         // "cm_4",                      [$_contribution_margin_4],
         // "margin_4",                  [%_contribution_margin_4_over_net_sales],
 
-        "Sponsored_brands",          [$_sponsored_brands_spend],
-        "vat_gb_eu",                 [$_vat_gb_eu],
-        "subscription_fee",          [$_subscription_fee],
-        "coupon_fee",                [$_coupon_fee],
-        "deal_fee",                  [$_deal_fee],
-        "grade_and_resell",          [$_grade_and_resell_fee],
-        "fee_adjustment",            [$_fee_adjustment],
-        "cm_4_1",                    [$_contribution_margin_4_1],
-        // "margin_4_1",                [%_contribution_margin_4_1_over_net_sales],
+        "Sponsored_brands",             [$_sponsored_brands_spend],
+        "vat_gb_eu",                    [$_vat_gb_eu],
+        "subscription_fee",             [$_subscription_fee],
+        "coupon_fee",                   [$_coupon_fee],
+        "deal_fee",                     [$_deal_fee],
+        "grade_and_resell",             [$_grade_and_resell_fee],
+        "fee_adjustment",               [$_fee_adjustment],
+        "epr_fee_eu",                   [$_epr_fee],
+        "selling_fees_non_apportioned", [$_selling_fees_non_apportioned],
+        "cm_4_1",                       [$_contribution_margin_4_1],
+        // "margin_4_1",                   [%_contribution_margin_4_1_over_net_sales],
 
-        "photographer",              [$_photograph_cost],
-        "logistic_storage_3pl",      [$_logistic_storage_3pl_cost],
-        "professional_service_fee",  [$_professional_service_fee],
-        "bank_fee",                  [$_bank_fee],
-        "training_and_education",    [$_training_education],
-        "marketing_services",        [$_marketing_services],
-        "total_local_costs",         [$_local_cost],
-        // "cm_5",                      [$_contribution_margin_5],
-        // "margin_5",                  [%_contribution_margin_5_over_net_sales],
+        "photographer",                 [$_photograph_cost],
+        "logistic_storage_3pl",         [$_logistic_storage_3pl_cost],
+        "professional_service_fee",     [$_professional_service_fee],
+        "bank_fee",                     [$_bank_fee],
+        "training_and_education",       [$_training_education],
+        "marketing_services",           [$_marketing_services],
+        "total_local_costs",            [$_local_cost],
+        // "cm_5",                         [$_contribution_margin_5],
+        // "margin_5",                     [%_contribution_margin_5_over_net_sales],
 
-        "wages",                     [$_wages_cost],
-        "fixed_costs_credit_card",   [$_fixed_cost],
-        "office_fixed_costs_roi",    [$_office_cost],
-        "adjustments_credit_card)",  [$_adjustments_credit_card],
-        // "total_general_and_adm",     [$_total_general_and_administrative_costs],
+        "wages",                        [$_wages_cost],
+        "fixed_costs_credit_card",      [$_fixed_cost],
+        "office_fixed_costs_roi",       [$_office_cost],
+        "adjustments_credit_card)",     [$_adjustments_credit_card],
+        // "total_general_and_adm",        [$_total_general_and_administrative_costs],
 
-        "net_income",                [$_net_income],
-        "net_margin",                [%_net_income_over_net_sales],
+        "net_income",                   [$_net_income],
+        // "net_margin",                   [%_net_income_over_net_sales],
 
         BLANK()
     )
@@ -3388,7 +3476,7 @@ Raw
 
 #### `$_statement_commercial`
 
-**Depende de medidas:** `[$_amz_long_term_storage_fee_actual]`, `[$_amz_storage_fee]`, `[$_awd_processing_transportation_fees]`, `[$_awd_storage_fee_actual]`, `[$_cogs]`, `[$_cogs_per_unit_sold]`, `[$_cogs_refund]`, `[$_commercial_profit]`, `[$_fulfillment_fee]`, `[$_fulfillment_fee_per_unit_sold]`, `[$_giftwrap_credits]`, `[$_net_average_price_commercial]`, `[$_net_income_commercial]`, `[$_net_sales_commercial]`, `[$_product_refunds]`, `[$_product_sales]`, `[$_promotional_rebates]`, `[$_returns_processing_fee]`, `[$_selling_fees]`, `[$_shipping_credits]`, `[$_total_expenses_commercial]`, `[$_total_other_expenses_commercial]`, `[$_total_sponsored_ads_spend]`, `[%_amz_storage_fee_over_net_sales]`, `[%_awd_processing_transportation_fees_over_net_sales]`, `[%_awd_storage_fee_over_net_sales]`, `[%_cogs_plus_cogs_refund_over_product_sales]`, `[%_commercial_profit_over_product_sales]`, `[%_fulfillment_fee_over_net_sales]`, `[%_net_margin_commercial]`, `[%_product_refunds_over_net_sales]`, `[%_promotional_rebates_plus_shipping_credits_over_product_sales]`, `[%_selling_fees_over_net_sales]`, `[%_tacos]`, `[u_units_sold]`  
+**Depende de medidas:** `[$_amz_long_term_storage_fee_actual]`, `[$_amz_storage_fee]`, `[$_awd_processing_transportation_fees]`, `[$_awd_storage_fee_actual]`, `[$_cogs]`, `[$_cogs_net_of_refunds_per_unit_sold]`, `[$_cogs_refund]`, `[$_commercial_profit]`, `[$_fulfillment_fee]`, `[$_fulfillment_fee_per_unit_sold]`, `[$_giftwrap_credits]`, `[$_net_average_price_commercial]`, `[$_net_income_commercial]`, `[$_net_sales_commercial]`, `[$_product_refunds]`, `[$_product_sales]`, `[$_promotional_rebates]`, `[$_returns_processing_fee]`, `[$_selling_fees]`, `[$_shipping_credits]`, `[$_total_expenses_commercial]`, `[$_total_other_expenses_commercial]`, `[$_total_sponsored_ads_spend]`, `[%_amz_storage_fee_over_net_sales]`, `[%_awd_processing_transportation_fees_over_net_sales]`, `[%_awd_storage_fee_over_net_sales]`, `[%_cogs_plus_cogs_refund_over_product_sales]`, `[%_commercial_profit_over_product_sales]`, `[%_fulfillment_fee_over_net_sales]`, `[%_net_margin_commercial]`, `[%_product_refunds_over_net_sales]`, `[%_promotional_rebates_plus_shipping_credits_over_product_sales]`, `[%_selling_fees_over_net_sales]`, `[%_tacos]`, `[u_units_sold]`  
 **Depende de colunas:** `'Calendar'[Date]`, `'dim_statement_commercial'[account_id]`  
 ```dax
 VAR SelectedMonth = SELECTEDVALUE('Calendar'[Date])
@@ -3441,7 +3529,7 @@ VAR Amount =
         // OTHER METRICS
         "units_sold",                   FORMAT( [u_units_sold],                    "#,##0"),
         "net_average_price_commercial", FORMAT( [$_net_average_price_commercial],  "#,##0.00"), // Commercial Only
-        "cogs_per_unit",                FORMAT( [$_cogs_per_unit_sold],            "#,##0.00"), // Commercial Only
+        "cogs_per_unit",                FORMAT( [$_cogs_net_of_refunds_per_unit_sold],            "#,##0.00"), // Commercial Only
         "fulfillment_fee_per_unit",     FORMAT( [$_fulfillment_fee_per_unit_sold], "#,##0.00"),
         BLANK())
 
@@ -3954,7 +4042,7 @@ RETURN
 
 #### `%_statement_financial`
 
-**Depende de medidas:** `[$_cogs_per_unit_sold]`, `[$_contribution_margin_1]`, `[$_contribution_margin_2]`, `[$_contribution_margin_3]`, `[$_contribution_margin_4]`, `[$_fulfillment_fee_per_unit_sold]`, `[$_gross_sales]`, `[$_gst_canada_installment_credits]`, `[$_net_average_price]`, `[$_net_income]`, `[$_net_sales]`, `[$_operational_profit]`, `[$_product_refunds]`, `[$_product_sales]`, `[$_promotional_rebates]`, `[$_taxes_collected]`, `[$_taxes_refunded]`, `[$_taxes_withheld]`, `[%_adjustments_credit_card_over_net_sales]`, `[%_adjustments_over_net_sales]`, `[%_amz_long_term_storage_fee_over_net_sales]`, `[%_amz_storage_fee_over_net_sales]`, `[%_awd_processing_transportation_fees_over_net_sales]`, `[%_awd_storage_fee_over_net_sales]`, `[%_bank_fee_over_net_sales]`, `[%_cogs_net_of_refunds_over_net_sales]`, `[%_coupon_fee_over_net_sales]`, `[%_deal_fee_over_net_sales]`, `[%_fee_adjustment_over_net_sales]`, `[%_fixed_cost_over_net_sales]`, `[%_fulfillment_fee_over_net_sales]`, `[%_giftwrap_credits_over_net_sales]`, `[%_grade_and_resell_fee_over_net_sales]`, `[%_landed_cost_on_adjustment_over_net_sales]`, `[%_local_cost_over_net_sales]`, `[%_logistic_storage_3PL_cost_over_net_sales]`, `[%_marketing_services_over_net_sales]`, `[%_net_margin]`, `[%_office_cost_over_net_sales]`, `[%_operational_margin]`, `[%_photograph_cost_over_net_sales]`, `[%_professional_service_fee_over_net_sales]`, `[%_removal_order_fee_over_net_sales]`, `[%_returns_processing_fee_over_net_sales]`, `[%_selling_fees_over_net_sales]`, `[%_shipping_credits_over_net_sales]`, `[%_sponsored_brands_spend_over_net_sales]`, `[%_sponsored_display_spend_over_net_sales]`, `[%_sponsored_product_spend_over_net_sales]`, `[%_subscription_fee_over_net_sales]`, `[%_total_general_and_administrative_costs_over_net_sales]`, `[%_training_education_over_net_sales]`, `[%_vat_gb_eu_over_net_sales]`, `[%_wages_cost_over_net_sales]`, `[u_units_sold]`  
+**Depende de medidas:** `[$_cogs_net_of_refunds_per_unit_sold]`, `[$_contribution_margin_1]`, `[$_contribution_margin_2]`, `[$_contribution_margin_3]`, `[$_contribution_margin_4]`, `[$_fulfillment_fee_per_unit_sold]`, `[$_gross_sales]`, `[$_gst_canada_installment_credits]`, `[$_net_average_price]`, `[$_net_income]`, `[$_net_sales]`, `[$_operational_profit]`, `[$_product_refunds]`, `[$_product_sales]`, `[$_promotional_rebates]`, `[$_taxes_collected]`, `[$_taxes_refunded]`, `[$_taxes_withheld]`, `[%_adjustments_credit_card_over_net_sales]`, `[%_adjustments_over_net_sales]`, `[%_amz_long_term_storage_fee_over_net_sales]`, `[%_amz_storage_fee_over_net_sales]`, `[%_awd_processing_transportation_fees_over_net_sales]`, `[%_awd_storage_fee_over_net_sales]`, `[%_bank_fee_over_net_sales]`, `[%_cogs_net_of_refunds_over_net_sales]`, `[%_coupon_fee_over_net_sales]`, `[%_deal_fee_over_net_sales]`, `[%_fee_adjustment_over_net_sales]`, `[%_fixed_cost_over_net_sales]`, `[%_fulfillment_fee_over_net_sales]`, `[%_giftwrap_credits_over_net_sales]`, `[%_grade_and_resell_fee_over_net_sales]`, `[%_landed_cost_on_adjustment_over_net_sales]`, `[%_local_cost_over_net_sales]`, `[%_logistic_storage_3PL_cost_over_net_sales]`, `[%_marketing_services_over_net_sales]`, `[%_net_margin]`, `[%_office_cost_over_net_sales]`, `[%_operational_margin]`, `[%_photograph_cost_over_net_sales]`, `[%_professional_service_fee_over_net_sales]`, `[%_removal_order_fee_over_net_sales]`, `[%_returns_processing_fee_over_net_sales]`, `[%_selling_fees_over_net_sales]`, `[%_shipping_credits_over_net_sales]`, `[%_sponsored_brands_spend_over_net_sales]`, `[%_sponsored_display_spend_over_net_sales]`, `[%_sponsored_product_spend_over_net_sales]`, `[%_subscription_fee_over_net_sales]`, `[%_total_general_and_administrative_costs_over_net_sales]`, `[%_training_education_over_net_sales]`, `[%_vat_gb_eu_over_net_sales]`, `[%_wages_cost_over_net_sales]`, `[u_units_sold]`  
 **Depende de colunas:** `'dim_statement_financial'[account_id]`  
 ```dax
 VAR CurrentAccount = SELECTEDVALUE('dim_statement_financial'[account_id])
@@ -3964,7 +4052,7 @@ VAR Amount =
         "units_sold",                  FORMAT( [u_units_sold],                              "#,##0" ),
         "net_average_price",           FORMAT( [$_net_average_price],                       "#,##0.00 ; (#,##0.00)" ),     
         "fulfillment_fees_per_unit",   FORMAT( [$_fulfillment_fee_per_unit_sold],           "#,##0.00 ; (#,##0.00)" ),
-        "cogs_per_unit",               FORMAT( [$_cogs_per_unit_sold],                      "#,##0.00 ; (#,##0.00)" ),
+        "cogs_per_unit",               FORMAT( [$_cogs_net_of_refunds_per_unit_sold],                      "#,##0.00 ; (#,##0.00)" ),
 
 
     // // SALES
@@ -4125,6 +4213,103 @@ RETURN
         , _min_date = _max_date, "📅 The Amazon Storage Fee was estimated for the date " & _min_date 
         , "📅 The Amazon Storage Fee was estimated for the period from " & _min_date & " to " & _max_date
     )
+```
+
+#### `ui_payments_completeness`
+
+**Depende de medidas:** `[%_payments_completeness_current_month]`, `[%_payments_completeness_last_month]`  
+```dax
+VAR _last = [%_payments_completeness_last_month]
+VAR _curr = [%_payments_completeness_current_month]
+
+VAR _last_pct = FORMAT(_last, "0.00%")
+VAR _curr_pct = FORMAT(_curr, "0.00%")
+
+VAR _last_color = IF(_last >= 0.98, "#085041", IF(_last >= 0.90, "#633806", "#501313"))
+VAR _curr_color = IF(_curr >= 0.98, "#085041", IF(_curr >= 0.90, "#633806", "#501313"))
+
+VAR _last_bg = IF(_last >= 0.98, "#E1F5EE", IF(_last >= 0.90, "#FAEEDA", "#FCEBEB"))
+VAR _curr_bg = IF(_curr >= 0.98, "#E1F5EE", IF(_curr >= 0.90, "#FAEEDA", "#FCEBEB"))
+
+VAR _last_label = IF(_last >= 0.98, "healthy", IF(_last >= 0.95, "ok", "attention"))
+VAR _curr_label = IF(_curr >= 0.98, "healthy", IF(_curr >= 0.95, "ok", "attention"))
+
+RETURN
+"<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background: transparent;
+            font-family: Arial, sans-serif;
+        }
+        .card {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 12px 16px;
+        }
+        .title {
+            font-size: 10px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .divider {
+            height: 1px;
+            background: #e0e0e0;
+        }
+        .row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .label {
+            font-size: 11px;
+            color: #666;
+        }
+        .pill {
+            font-size: 10px;
+            font-weight: bold;
+            padding: 1px 7px;
+            border-radius: 99px;
+        }
+        .value {
+            font-size: 13px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class='card'>
+        <div class='title'>Payments completeness</div>
+        <div class='divider'></div>
+        <div class='row'>
+            <span class='label'>Last month</span>
+            <div style='display:flex; align-items:center; gap:6px;'>
+                <span class='value' style='color:" & _last_color & ";'>" & _last_pct & "</span>
+                <span class='pill' style='background:" & _last_bg & "; color:" & _last_color & ";'>" & _last_label & "</span>
+            </div>
+        </div>
+        <div class='divider'></div>
+        <div class='row'>
+            <span class='label'>Current month</span>
+            <div style='display:flex; align-items:center; gap:6px;'>
+                <span class='value' style='color:" & _curr_color & ";'>" & _curr_pct & "</span>
+                <span class='pill' style='background:" & _curr_bg & "; color:" & _curr_color & ";'>" & _curr_label & "</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"
 ```
 
 
@@ -4403,6 +4588,38 @@ RETURN
 MAX(zz_Refresh_Control[LastRefresh])
 ```
 
+#### `%_payments_completeness`
+
+**Depende de colunas:** `fact_payments_completeness[matched_in_payments]`, `fact_payments_completeness[total_orders]`  
+```dax
+DIVIDE(
+    SUM(fact_payments_completeness[matched_in_payments]),
+    SUM(fact_payments_completeness[total_orders])
+)
+```
+
+#### `%_payments_completeness_last_month`
+
+**Depende de medidas:** `[%_payments_completeness]`  
+**Depende de colunas:** `dim_payments_completeness[period_key]`  
+```dax
+VAR _completeness = CALCULATE([%_payments_completeness], dim_payments_completeness[period_key] = "last_month")
+
+RETURN
+    _completeness
+```
+
+#### `%_payments_completeness_current_month`
+
+**Depende de medidas:** `[%_payments_completeness]`  
+**Depende de colunas:** `dim_payments_completeness[period_key]`  
+```dax
+VAR _completeness = CALCULATE([%_payments_completeness], dim_payments_completeness[period_key] = "current_month")
+
+RETURN
+    _completeness
+```
+
 
 ### over_product_sales
 
@@ -4429,13 +4646,13 @@ RETURN
 #### `%_tacos_amazon_family`
 
 **Depende de medidas:** `[$_product_sales]`, `[%_tacos]`  
-**Depende de colunas:** `SKUs[Native Family]`, `SKUs[SKU]`  
+**Depende de colunas:** `SKUs[Native Family]`, `SKUs[SKU Consertado]`, `SKUs[SKU]`  
 ```dax
 VAR _sales =  [$_product_sales]
     VAR _tacos_amazon_family =
         IF(
             _sales > 0
-            , CALCULATE( [%_tacos], ALL( SKUs[SKU], SKUs[Native Family]) )
+            , CALCULATE( [%_tacos], ALL( SKUs[SKU Consertado], SKUs[SKU], SKUs[Native Family]) )
             , BLANK()
         )
 
@@ -4605,7 +4822,7 @@ RETURN
 ```
 
 
-## Fontes das Tabelas (34 tabelas)
+## Fontes das Tabelas (36 tabelas)
 
 
 ### `Average Freight Cost`
@@ -4862,6 +5079,23 @@ let
     #"Changed Type" = Table.TransformColumnTypes(#"Removed Other Columns",{{"Account Order", Int64.Type}, {"Account", type text}})
 in
     #"Changed Type"
+```
+
+
+### `dim_payments_completeness`
+
+**Modo:** `import`  
+**Colunas:** `period`, `period_key`, `period_order`  
+```powerquery
+DATATABLE(
+    "period_order", INTEGER,
+    "period_key", STRING,
+    "period", STRING,
+    {
+        { "1", "last_month", "Last Month" },
+        { "2", "current_month", "Current Month" }
+    }
+)
 ```
 
 
@@ -5171,6 +5405,118 @@ in
 ```
 
 
+### `fact_payments_completeness`
+
+**Modo:** `import`  
+**Colunas:** `marketplace`, `period`, `total_orders`, `matched_in_payments`, `%_match`  
+```powerquery
+VAR _today = TODAY()
+
+VAR _last_start = EOMONTH(_today, -2) + 1
+VAR _last_end = EOMONTH(_last_start, 0)
+
+VAR _curr_start = EOMONTH(_today, -1) + 1
+VAR _curr_end = _today
+
+VAR _last_month =
+    ADDCOLUMNS(
+        SUMMARIZE(
+            FILTER(
+                fact_raw_allOrders,
+                fact_raw_allOrders[date_all_orders] >= _last_start &&
+                fact_raw_allOrders[date_all_orders] <= _last_end &&
+                fact_raw_allOrders[order_status] <> "Cancelled" &&
+                fact_raw_allOrders[order_status] <> "Canceled"
+            ),
+            fact_raw_allOrders[marketplace]
+        ),
+        "period", "last_month",
+        "total_orders", CALCULATE(
+            DISTINCTCOUNT(fact_raw_allOrders[amazon_order_id]),
+            fact_raw_allOrders[date_all_orders] >= _last_start,
+            fact_raw_allOrders[date_all_orders] <= _last_end,
+            fact_raw_allOrders[order_status] <> "Cancelled",
+            fact_raw_allOrders[order_status] <> "Canceled"
+        ),
+        "matched_in_payments", CALCULATE(
+            DISTINCTCOUNT(fact_raw_allOrders[amazon_order_id]),
+            fact_raw_allOrders[date_all_orders] >= _last_start,
+            fact_raw_allOrders[date_all_orders] <= _last_end,
+            fact_raw_allOrders[order_status] <> "Cancelled",
+            fact_raw_allOrders[order_status] <> "Canceled",
+            fact_raw_allOrders[is_in_payments] = TRUE()
+        ),
+        "%_match", ROUND(DIVIDE(
+            CALCULATE(
+                DISTINCTCOUNT(fact_raw_allOrders[amazon_order_id]),
+                fact_raw_allOrders[date_all_orders] >= _last_start,
+                fact_raw_allOrders[date_all_orders] <= _last_end,
+                fact_raw_allOrders[order_status] <> "Cancelled",
+                fact_raw_allOrders[order_status] <> "Canceled",
+                fact_raw_allOrders[is_in_payments] = TRUE()
+            ),
+            CALCULATE(
+                DISTINCTCOUNT(fact_raw_allOrders[amazon_order_id]),
+                fact_raw_allOrders[date_all_orders] >= _last_start,
+                fact_raw_allOrders[date_all_orders] <= _last_end,
+                fact_raw_allOrders[order_status] <> "Cancelled",
+                fact_raw_allOrders[order_status] <> "Canceled"
+            )
+        ) * 100, 2)
+    )
+
+VAR _curr_month =
+    ADDCOLUMNS(
+        SUMMARIZE(
+            FILTER(
+                fact_raw_allOrders,
+                fact_raw_allOrders[date_all_orders] >= _curr_start &&
+                fact_raw_allOrders[date_all_orders] <= _curr_end &&
+                fact_raw_allOrders[order_status] <> "Cancelled" &&
+                fact_raw_allOrders[order_status] <> "Canceled"
+            ),
+            fact_raw_allOrders[marketplace]
+        ),
+        "period", "current_month",
+        "total_orders", CALCULATE(
+            DISTINCTCOUNT(fact_raw_allOrders[amazon_order_id]),
+            fact_raw_allOrders[date_all_orders] >= _curr_start,
+            fact_raw_allOrders[date_all_orders] <= _curr_end,
+            fact_raw_allOrders[order_status] <> "Cancelled",
+            fact_raw_allOrders[order_status] <> "Canceled"
+        ),
+        "matched in payments", CALCULATE(
+            DISTINCTCOUNT(fact_raw_allOrders[amazon_order_id]),
+            fact_raw_allOrders[date_all_orders] >= _curr_start,
+            fact_raw_allOrders[date_all_orders] <= _curr_end,
+            fact_raw_allOrders[order_status] <> "Cancelled",
+            fact_raw_allOrders[order_status] <> "Canceled",
+            fact_raw_allOrders[is_in_payments] = TRUE()
+        ),
+        "%_match", ROUND(DIVIDE(
+            CALCULATE(
+                DISTINCTCOUNT(fact_raw_allOrders[amazon_order_id]),
+                fact_raw_allOrders[date_all_orders] >= _curr_start,
+                fact_raw_allOrders[date_all_orders] <= _curr_end,
+                fact_raw_allOrders[order_status] <> "Cancelled",
+                fact_raw_allOrders[order_status] <> "Canceled",
+                fact_raw_allOrders[is_in_payments] = TRUE()
+            ),
+            CALCULATE(
+                DISTINCTCOUNT(fact_raw_allOrders[amazon_order_id]),
+                fact_raw_allOrders[date_all_orders] >= _curr_start,
+                fact_raw_allOrders[date_all_orders] <= _curr_end,
+                fact_raw_allOrders[order_status] <> "Cancelled",
+                fact_raw_allOrders[order_status] <> "Canceled"
+            )
+        ) * 100, 2)
+    )
+
+RETURN
+    UNION(_last_month, _curr_month)
+```
+
+
 ### `fact_payments_date_range`
 
 **Modo:** `import`  **Grupo:** `Amazon\Payments`  
@@ -5232,12 +5578,14 @@ in
 ### `fact_raw_allOrders`
 
 **Modo:** `import`  **Grupo:** `Amazon\Fulfillment\fulfillment_gold`  
-**Colunas:** `date_all_orders` dateTime, `amazon_order_id` string, `sales_channel_temporary` string, `is_in_payments =`  
+**Colunas:** `date_all_orders` dateTime, `amazon_order_id` string, `sales_channel_temporary` string, `is_in_payments =`, `marketplace` string, `order_status` string  
 ```powerquery
 let
     Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Sales_Returns.vw_full_all_orders"),
-    #"Removed Other Columns" = Table.SelectColumns(Source,{"date_all_orders", "amazon_order_id", "sales_channel_temporary"}),
-    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
+    #"Removed Other Columns" = Table.SelectColumns(Source,{"amazon_order_id", "order_status", "sales_channel_temporary", "date_all_orders", "key_marketplace_sku"}),
+    #"Extracted First Characters" = Table.TransformColumns(#"Removed Other Columns", {{"key_marketplace_sku", each Text.Start(_, 2), type text}}),
+    #"Renamed Columns" = Table.RenameColumns(#"Extracted First Characters",{{"key_marketplace_sku", "marketplace"}}),
+    #"Removed Duplicates" = Table.Distinct(#"Renamed Columns"),
     #"Filtered Rows" = Table.SelectRows(#"Removed Duplicates", each [date_all_orders] >= Date.From(Date.AddYears(payments_first_date, -1)))
 in
     #"Filtered Rows"
