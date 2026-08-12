@@ -63,20 +63,20 @@ Activated when the user has a specific question about a dashboard's structure, t
 
 ## Behavior Rules (Execution Mode)
 
-### Execution Confirmation
+### Answering Directly
 
-Before answering a detailed question from the reference files, present a brief summary:
+This skill only reads and explains documentation — it never writes, queries, or modifies anything. For a clear, unambiguous question, answer directly from the relevant reference file(s); no confirmation step is needed for a read-only answer.
+
+Confirm first only when there's real ambiguity to resolve — e.g. the question could be answered from more than one model and it's not clear which the user means, or the question is broad enough that you'd otherwise have to guess scope:
 
 ```
-📋 Dashboard Guide — Confirmation Summary
+📋 Dashboard Guide — Scope Check
 ─────────────────────────────────────────────────
-Reference(s): [file name(s)]
+Reference(s) that could apply: [file name(s)]
 Question: [the user's question rephrased]
 ─────────────────────────────────────────────────
-Shall I proceed?
+Which one should I look at, or should I cover both?
 ```
-
-Wait for explicit confirmation before answering.
 
 ### Scope
 

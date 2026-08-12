@@ -124,6 +124,8 @@ Shall I proceed?
 
 Reads `~/.claude/settings.json`, compares current values to the recommended defaults, and applies only those that differ.
 
+> ⚠️ **Verify before relying on this table.** Model names, tiers, and their relative cost trade off differently across Claude generations. Confirm with the user which models are currently available to them (e.g. via `/model`) before proposing a default — do not assume the table below still reflects the current model lineup.
+
 **Recommended defaults:**
 
 | Setting | Recommended Value | Effect |
@@ -254,7 +256,8 @@ Audit the user's active MCP servers and flag high-token-cost configurations.
 2. List each server found, its estimated token cost (reference table below), and whether it is likely relevant to the current project based on context
 3. Flag any server whose token cost is high and whose use is unclear — ask the user to confirm before recommending removal
 4. To disable a server, remove its entry from `mcpServers` in the relevant file — show the before/after diff and require confirmation before writing
-5. Always flag the `memory` MCP server — it is loaded by default in Ruflo-initialized projects but unused by built-in skills; recommend disabling unless the user actively uses AgentDB
+
+> ⚠️ **Verify before relying on this table.** These are point-in-time estimates — actual token cost depends on the server's current tool count and schema size, which changes as servers are updated. Treat the numbers below as relative ordering (which servers are heavier than others), not exact figures, and re-check a server's real footprint if the recommendation materially affects the user's decision.
 
 **Reference token costs for common MCP servers:**
 
