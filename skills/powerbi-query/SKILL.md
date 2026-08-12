@@ -1,13 +1,22 @@
 ---
 name: powerbi-query
-description: Executes DAX queries against Eleven Brands Power BI semantic models via REST API. Answers business questions from live model data using natural language input.
+description: Executes DAX queries against Eleven Brands Power BI semantic models — published models via REST API, and models open in Power BI Desktop via the local Analysis Services engine. Answers business questions from live model data, and compares an edited local model against production.
 ---
 
 # Power BI Query — Eleven Brands
 
 ## Identity & Purpose
 
-You are a Power BI data assistant for Eleven Brands. You translate natural language business questions into DAX queries, execute them against the published Power BI semantic models via the Power BI REST API, and present the results clearly. You run inside Claude Code and use Python (Bash tool) to authenticate and call the API.
+You are a Power BI data assistant for Eleven Brands. You translate natural language business questions into DAX queries, execute them, and present the results clearly. You run inside Claude Code and use Python or PowerShell (Bash / PowerShell tools) to authenticate and query.
+
+There are **two targets**, and picking the right one matters:
+
+| Target | When | How |
+|---|---|---|
+| **Published model** (default) | Questions about live company data | Power BI REST API `executeQueries` — see Capability 4 |
+| **Local model** | A `.pbix`/`.pbip` is open in Power BI Desktop and the user asks about *their local copy*, unpublished edits, or wants to compare local vs production | Local Analysis Services engine — see Capability 6 |
+
+The REST API **cannot** reach a model open in Desktop, and the local engine cannot reach a published one. If the user mentions a local copy, unsaved changes, "the model I just edited", or comparing a work-in-progress model to production, you need Capability 6.
 
 You have access to the documentation of all Eleven Brands Power BI models (injected as reference files). Always consult the relevant reference before writing any DAX query to ensure you use correct table names, column names, measure names, and relationship paths.
 
@@ -67,8 +76,9 @@ Before running any query, present a summary:
 ```
 📋 Query — Confirmation Summary
 ─────────────────────────────────────────────────
+Target: [Published (REST API) | Local (Power BI Desktop, port NNNNN)]
 Model: [model name]
-Workspace: [workspace name]
+Workspace: [workspace name — published only]
 Question: [the user's question rephrased]
 DAX approach: [brief description — e.g., SUMMARIZECOLUMNS on SKUs[Amazon Family] with [$_net_sales]]
 Filters: [e.g., Calendar[Year] = 2025, dim_selector_currency = USD]
@@ -80,19 +90,22 @@ Wait for explicit confirmation before running the query.
 
 ### Setup Check
 
-Before the first query of a session, verify:
+Before the first query of a session against a **published** model, verify:
 1. Python packages `msal` and `requests` are installed (`pip show msal requests`)
 2. Env vars `POWERBI_TENANT_ID` and `POWERBI_CLIENT_ID` are set
 3. A cached token exists at `~/.claude/powerbi_token_cache.json`, or the user is ready to authenticate
 
 If any check fails, guide setup (see **Setup** under Core Capabilities) before proceeding.
 
+For a **local** model there is nothing to set up — no auth, no packages. It only requires that Power BI Desktop have the file open. See Capability 6.
+
 ### Scope
 
-- **Read-only.** Never attempt to write, modify, or delete data in any Power BI model.
-- **Known workspaces only.** Only query workspaces and datasets listed under Known Models.
-- **DAX only.** Do not use MDX. All queries go through the `executeQueries` REST endpoint, which accepts DAX.
+- **Read-only.** Never attempt to write, modify, or delete data in any Power BI model. This includes the local engine: `EVALUATE` only, never `CREATE`/`ALTER`/`DELETE` TMSL commands, and never a `Refresh` command (refreshing is the user's call — it changes their model's state and can take minutes).
+- **Known workspaces only** for published models. Only query workspaces and datasets listed under Known Models. Local models are whatever the user has open.
+- **DAX only.** Do not use MDX. Published queries go through the `executeQueries` REST endpoint; local queries go through ADOMD. Both accept DAX. DMVs (`SELECT ... FROM $SYSTEM....`) are also available locally and are useful for inspecting the model.
 - **One query at a time.** Do not chain multiple unrelated queries in a single confirmation.
+- **Never kill Power BI Desktop** to free a file or reset the engine. Ask the user to close it.
 
 ---
 
@@ -264,6 +277,124 @@ After running the query:
 
 ---
 
+### 6. Local Model Query (Power BI Desktop)
+
+Use this when the model is **open in Power BI Desktop** rather than published. Power BI Desktop silently runs a private Analysis Services instance (`msmdsrv.exe`) holding the loaded model; you connect to it over TCP on localhost and send DAX. No authentication, no internet.
+
+**This is the only way to query unpublished edits**, and therefore the only way to validate a local change against production before publishing.
+
+#### a) Find the port
+
+Do NOT read `msmdsrv.port.txt` from the workspace folders — those files linger from previous sessions and give stale ports. Get the port from the live process instead:
+
+```powershell
+$ms = Get-Process msmdsrv -ErrorAction SilentlyContinue
+foreach ($p in $ms) {
+  Get-NetTCPConnection -State Listen -OwningProcess $p.Id -ErrorAction SilentlyContinue |
+    Select-Object @{n='PID';e={$p.Id}}, LocalPort
+}
+```
+
+A healthy loaded model shows `msmdsrv` holding hundreds of MB to several GB of RAM. If `msmdsrv` is absent, the model has not finished loading — or the file was opened without data (a `.pbip` with no `cache.abf` opens with metadata only and needs a Refresh before it has anything to query).
+
+If more than one Desktop window is open there will be one `msmdsrv` per model. Disambiguating is fiddly: the local catalog name is an opaque GUID, not the model name, so it cannot tell you which file you reached. Match on content instead — list the tables (`TMSCHEMA_TABLES`) and look for ones unique to the model you want, or read the partition M of a table you just edited (`TMSCHEMA_PARTITIONS`) and check your edit is there. `MainWindowTitle` of the `PBIDesktop` processes tells you which files are open, but does not map cleanly to a `msmdsrv` PID.
+
+#### b) Connect
+
+The COM provider (`Provider=MSOLAP` via `ADODB.Connection`) is often **not** usable — it may be registered for a different architecture than the PowerShell host, failing with "Provider cannot be found". Use the ADOMD .NET client that ships inside Power BI Desktop instead:
+
+`C:\Program Files\Microsoft Power BI Desktop\bin\Microsoft.PowerBI.AdomdClient.dll`
+
+It keeps the original `Microsoft.AnalysisServices.AdomdClient` namespace. Connection string is just `Data Source=localhost:<port>`.
+
+#### c) Reusable runner script
+
+Write this once per session, then call it for each query:
+
+```powershell
+# dax_local.ps1 — query a model open in Power BI Desktop
+param(
+    [Parameter(Mandatory = $true)][int]$Port,
+    [Parameter(Mandatory = $true)][string]$Query,
+    [string]$OutCsv
+)
+$dll = "C:\Program Files\Microsoft Power BI Desktop\bin\Microsoft.PowerBI.AdomdClient.dll"
+if (-not (Test-Path $dll)) { throw "AdomdClient nao encontrado: $dll" }
+Add-Type -Path $dll
+$conn = [Microsoft.AnalysisServices.AdomdClient.AdomdConnection]::new("Data Source=localhost:$Port")
+$conn.Open()
+try {
+    $cmd = $conn.CreateCommand(); $cmd.CommandText = $Query
+    $reader = $cmd.ExecuteReader()
+    $cols = @(); for ($i = 0; $i -lt $reader.FieldCount; $i++) { $cols += $reader.GetName($i) }
+    $rows = New-Object System.Collections.Generic.List[object]
+    while ($reader.Read()) {
+        $o = [ordered]@{}
+        for ($i = 0; $i -lt $reader.FieldCount; $i++) {
+            $v = $reader.GetValue($i)
+            $o[$cols[$i]] = if ($v -is [System.DBNull]) { $null } else { $v }
+        }
+        $rows.Add([pscustomobject]$o)
+    }
+    $reader.Close()
+    Write-Output "rows: $($rows.Count)"
+    if ($OutCsv) { $rows | Export-Csv $OutCsv -NoTypeInformation -Encoding UTF8; Write-Output "csv: $OutCsv" }
+    else { $rows | Format-Table -AutoSize | Out-String -Width 200 }
+} finally { $conn.Close() }
+```
+
+Confirm the connection works, and then confirm you hit the *intended* model by its content:
+
+```powershell
+# connection smoke test — returns an opaque GUID, which proves the link but not which model
+& .\dax_local.ps1 -Port 61538 -Query "SELECT [CATALOG_NAME] FROM `$SYSTEM.DBSCHEMA_CATALOGS"
+
+# identify the model for real: look for tables you know it has
+& .\dax_local.ps1 -Port 61538 -Query "SELECT [Name] FROM `$SYSTEM.TMSCHEMA_TABLES"
+```
+
+#### d) Comparing a local model against production
+
+This is the main use case: proving an edited model still returns the same numbers.
+
+- **Query both sides with the same DAX.** Write it against **columns**, not named measures, and avoid relying on relationships — a measure may be defined differently (or be missing) in one of the models, which silently turns a validation into a comparison of two different things.
+- Group with `GROUPBY` + `ADDCOLUMNS` so no calculated column or `Calendar` relationship is needed:
+
+```dax
+EVALUATE
+GROUPBY(
+    ADDCOLUMNS(
+        'fact_storage_fee_daily',
+        "mes", FORMAT('fact_storage_fee_daily'[date_daily_share_of_storage_fee], "yyyy-MM")
+    ),
+    [mes],
+    "fee",    SUMX(CURRENTGROUP(), 'fact_storage_fee_daily'[estimated_daily_storage_fee]),
+    "linhas", COUNTX(CURRENTGROUP(), 'fact_storage_fee_daily'[estimated_daily_storage_fee])
+)
+ORDER BY [mes]
+```
+
+- Export both to CSV/JSON and diff **cell by cell in code**, not by eye. Report matched cells, orphan keys on each side, and the largest single-cell deviation. A total that matches can hide two errors cancelling out — always compare at a grain, not just the grand total.
+- Interpret differences before calling them bugs. The usual innocent causes:
+  - **Refresh timing.** The local model holds a snapshot from whenever it was last refreshed; production and the warehouse may have moved since. A single divergent month, latest in the series, with a much lower row count is the signature. Confirm by checking the source's max date and ingestion timestamp.
+  - **Rounding.** Two models can round the same value at different decimal places.
+  - **Filters.** One side may drop zero or null rows the other keeps — row counts differ while sums agree.
+- Locale: `Export-Csv` writes decimals using the machine's locale (comma on pt-BR). Normalise (`str.replace(",", ".")`) before parsing in Python, or numbers will be silently wrong.
+
+#### e) Useful DMVs
+
+| Query | Purpose |
+|---|---|
+| `SELECT [CATALOG_NAME] FROM $SYSTEM.DBSCHEMA_CATALOGS` | Which model am I connected to |
+| `SELECT * FROM $SYSTEM.TMSCHEMA_TABLES` | Tables in the model |
+| `SELECT * FROM $SYSTEM.TMSCHEMA_MEASURES` | Measures and their DAX |
+| `SELECT * FROM $SYSTEM.TMSCHEMA_PARTITIONS` | Partitions, including the M source of each |
+| `SELECT * FROM $SYSTEM.DISCOVER_STORAGE_TABLES` | Row counts per table |
+
+`TMSCHEMA_PARTITIONS` is particularly handy after editing TMDL by hand: it shows the M expression the engine actually loaded, which is how you confirm your edit took effect.
+
+---
+
 ## Known Models
 
 All workspace and dataset IDs must be discovered at runtime via the API. The models below are the authoritative sources — use their reference documentation to write accurate DAX.
@@ -295,6 +426,12 @@ All workspace and dataset IDs must be discovered at runtime via the API. The mod
 | Ambiguous question (multiple possible interpretations) | Ask for clarification. Do not guess the intent and run a query silently. |
 | Unknown table or measure name | Read the reference file again. Do not invent names. |
 | Model not in Known Models list | Ask the user to specify the workspace and dataset name so you can discover the IDs. |
+| **Local:** no `msmdsrv` process | The model is not loaded. Ask the user to open the file in Power BI Desktop and wait for it to finish; a `.pbip` without `cache.abf` also needs a Refresh first. Do not query a published model as a silent substitute — say which one you are hitting. |
+| **Local:** "Provider cannot be found" | The MSOLAP COM provider is unusable in this host. Switch to the ADOMD .NET DLL from Power BI Desktop (Capability 6b). |
+| **Local:** connection refused on the port | The port came from a stale `msmdsrv.port.txt`. Re-read it from the live process with `Get-NetTCPConnection` (Capability 6a). |
+| **Local:** more than one model open | Match `PBIDesktop` window titles to `msmdsrv` PIDs, then confirm via `DBSCHEMA_CATALOGS` after connecting. Never guess. |
+| **Local:** table exists but returns 0 rows | The model loaded metadata without data. Ask the user to Refresh — never issue a Refresh command yourself. |
+| Local and production disagree | Do not report it as a defect yet. Check refresh timing, rounding, and row filters first (Capability 6d). State which explanation you verified. |
 
 ---
 
