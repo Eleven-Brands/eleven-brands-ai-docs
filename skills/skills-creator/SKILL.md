@@ -73,7 +73,9 @@ Before writing any new skill file, the following must be clearly understood. If 
 If the requester provides a brief that partially covers these, fill the gaps through targeted questions before proceeding. If no brief is provided at all, interview the requester systematically before writing.
 
 ### Mandatory Confirmation
-Before producing any output (new file or review), always present a confirmation summary and wait for explicit approval. Never generate output without a clear "yes", "go ahead", "do it", or equivalent.
+Before writing or overwriting any file — a new `SKILL.md`, an improved version of an existing one, a build script, or a `build-all.ps1` update — always present a confirmation summary and wait for explicit approval. Never write a file without a clear "yes", "go ahead", "do it", or equivalent.
+
+A review's **diagnosis** (Part 1 in Review Methodology — what's good, what could be better) is read-only output and does not require this confirmation; present it directly. Confirmation is required before Part 2, producing the improved file itself.
 
 ### Confirmation Summary Template — New Skill File
 
@@ -86,6 +88,7 @@ Files to be created:
   1. skills/[skill-name]/SKILL.md
   2. scripts/build-[skill-name].ps1
   3. Update to scripts/build-all.ps1
+  4. references/[skill-name]/... — [only if extracting content per Size & Reference Depth; omit otherwise]
 Purpose: [one sentence]
 Audience: [who uses this skill]
 Operating context: [tools/platforms involved]
@@ -122,7 +125,7 @@ Produce only what was explicitly requested. If you notice something adjacent tha
 If a request is unclear or lacks enough context to produce a reliable skill file, ask before proceeding. Do not fill gaps with assumptions.
 
 ### Current Scope
-Exclusive focus on creating and improving skills following the Eleven Brands standard. Every new skill produces three artifacts: `SKILL.md`, `scripts/build-[skill-name].ps1`, and an update to `scripts/build-all.ps1`. Does not produce other types of documentation, technical specs, or any artifact outside skill authoring.
+Exclusive focus on creating and improving skills following the Eleven Brands standard. Every new skill produces three core artifacts: `SKILL.md`, `scripts/build-[skill-name].ps1`, and an update to `scripts/build-all.ps1` — plus a repo-level `references/[skill-name]/...` source file when `SKILL.md` needs to extract content per the Size & Reference Depth rule above. Does not produce other types of documentation, technical specs, or any artifact outside skill authoring.
 
 ---
 
@@ -148,7 +151,8 @@ skills/
 - Supporting files live in `references/` inside the skill folder — they are injected at build time by the packaging scripts, not committed manually
 
 ### SKILL.md Size & Reference Depth
-- Keep `SKILL.md` under **~500 lines**. If a skill's instructions grow beyond that, move domain-specific detail into `references/` files and link to them — the main file should stay a lean entry point that Claude reads in full every time the skill triggers.
+- Keep `SKILL.md` under **~500 lines**. If a skill's instructions grow beyond that, move domain-specific detail into a reference file and link to it — the main file should stay a lean entry point that Claude reads in full every time the skill triggers.
+- The source of a new reference file lives at the **repo root, under `references/`** (e.g. `references/[skill-name]/...`) — the same place shared references already live — never committed directly inside `skills/[skill-name]/references/`, since that folder only exists transiently at build time and is deleted after zipping (see Build Script Standard). Wire the new file into that skill's build script's copy step, the same way `build-dashboard-guide.ps1` injects `references/power-bi/*`.
 - Reference files must sit **one level deep** from `SKILL.md` — never nest a reference inside another reference (`SKILL.md → references/a.md → references/b.md`). Claude may only partially read a long linked file; a second-level reference risks never being reached.
 - Any `references/` file over ~100 lines should open with a short table of contents so a partial read still orients correctly.
 
@@ -260,7 +264,7 @@ When writing or reviewing skill files, flag and fix any of the following:
 
 - **Invalid frontmatter** — name not matching folder, description over 200 chars or not in third person, uppercase or spaces in name
 - **Hardcoded values that should be dynamic** — e.g., hardcoded status lists, user IDs, or filenames that should be fetched or inferred at runtime
-- **Hardcoded machine- or platform-specific paths** — e.g. a Windows path like `C:\Users\<name>\...` baked into a skill. Any path, credential, or environment detail must be resolved dynamically (env var, `%APPDATA%`, `$HOME`) or asked for — never hardcoded to the machine that authored the skill
+- **Hardcoded machine-specific paths** — e.g. a personal Windows path like `C:\Users\<name>\...` baked into a skill because it happened to work on the author's own machine. Any path, credential, or environment detail specific to one person's setup must be resolved dynamically (env var, `%APPDATA%`, `$HOME`) or asked for. This does **not** apply to fixed paths that are part of a documented, shared runtime contract the skill depends on — e.g. `presentation-creator`'s `/mnt/skills/public/pptx/...` and `/mnt/user-data/outputs/`, which are claude.ai's own container mounts, not the author's machine. Flag the former, exempt the latter
 - **Time-sensitive facts stated as permanent truth** — pricing, token-cost estimates, model names/tiers, or "current" defaults that will silently go stale. Either date-stamp this content ("as of [date], verify before relying on this") or isolate it in a clearly-labeled section instead of stating it as fact in the main body
 - **Deeply nested reference chains** — see SKILL.md Size & Reference Depth above
 - **Missing confirmation before a write or irreversible action** — any skill that creates, edits, deletes, or posts something without presenting a summary first. This does not extend to read-only or informational responses — see Confirmation Standard for the distinction

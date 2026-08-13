@@ -4,6 +4,12 @@ dist/
 # Local Claude Code settings (entire folder is local-only)
 .claude/
 
+# Local runtime data left behind by third-party MCP tools (e.g. Ruflo/claude-flow)
+# that a clone may have previously initialized — not committed even though the
+# ruflo-setup skill itself was removed, so this data doesn't get committed by accident
+.claude-flow/
+agentdb.rvf
+
 # MCP config — local only
 .mcp.json
 
