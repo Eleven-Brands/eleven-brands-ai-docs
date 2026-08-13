@@ -15532,13 +15532,18 @@ in
 **Modo:** `import`  **Grupo:** `Amazon\Fulfillment\reports_fulfillment`  
 **Colunas:** `currency` string, `estimated_daily_storage_fee` double, `date_daily_share_of_storage_fee` dateTime, `key_marketplace_sku` string  
 ```powerquery
+// 2026-08-11 - origem trocada para a cadeia BigQuery (task 86ajj9759).
+// Antes: NestedJoin(aux_dailyShareOfStorageFee, silver_fStorageFeeMonthly) montado aqui no
+// Power Query, onde silver_fStorageFeeMonthly lia o folder local
+// amazon_seller_central / fulfillment / payments_monthly_storage_fee.
+// Agora: 1_Gold_Fees.vw_full_storage_fee_daily faz o mesmo join dentro do BigQuery, a partir
+// do pipeline Bronze. Validada celula a celula contra o modelo publicado
+// (493/493 mes x pais e 1906/1906 pais x SKU, desvio max. 5e-13).
+// Number.Round(_, 6) mantido: a view arredonda em 10 casas e este modelo sempre usou 6.
 let
-    Source = Table.NestedJoin(aux_dailyShareOfStorageFee, {"start_of_month_daily_share_of_storage_fee", "key_region_fnsku"}, silver_fStorageFeeMonthly, {"month_of_charge", "key_inventory_region_fnsku"}, "Staging - fStorageFeeMonthly", JoinKind.LeftOuter),
-    #"Expanded Staging - fStorageFeeMonthly" = Table.ExpandTableColumn(Source, "Staging - fStorageFeeMonthly", {"currency", "estimated_monthly_storage_fee"}, {"currency", "estimated_monthly_storage_fee"}),
-    #"Added Custom" = Table.AddColumn(#"Expanded Staging - fStorageFeeMonthly", "estimated_daily_storage_fee", each [daily_share_of_storage_fee] *[estimated_monthly_storage_fee], type number),
-    #"Removed Other Columns" = Table.SelectColumns(#"Added Custom",{"date_daily_share_of_storage_fee", "key_marketplace_sku", "currency", "estimated_daily_storage_fee"}),
-    #"Removed Blank Rows" = Table.SelectRows(#"Removed Other Columns", each not List.IsEmpty(List.RemoveMatchingItems(Record.FieldValues(_), {"", null}))),
-    #"Rounded Off" = Table.TransformColumns(#"Removed Blank Rows",{{"estimated_daily_storage_fee", each Number.Round(_, 6), type number}}),
+    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Fees.vw_full_storage_fee_daily"),
+    #"Removed Other Columns" = Table.SelectColumns(Source,{"date_daily_share_of_storage_fee", "key_marketplace_sku", "currency", "estimated_daily_storage_fee"}),
+    #"Rounded Off" = Table.TransformColumns(#"Removed Other Columns",{{"estimated_daily_storage_fee", each Number.Round(_, 6), type number}}),
     #"Filtered Rows" = Table.SelectRows(#"Rounded Off", each [currency] <> null and [currency] <> "")
 in
     #"Filtered Rows"
