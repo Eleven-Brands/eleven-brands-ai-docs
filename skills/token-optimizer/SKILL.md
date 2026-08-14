@@ -78,15 +78,17 @@ Target file: ~/.claude/settings.json
 Action: Apply recommended token-saving settings
 
 Setting                       Current          → Recommended
-model                         [current/"unset"] → "sonnet"
+model                         [current/"unset"] → [available-model]
 MAX_THINKING_TOKENS           [current/"unset"] → "10000"
-CLAUDE_CODE_SUBAGENT_MODEL    [current/"unset"] → "haiku"
+CLAUDE_CODE_SUBAGENT_MODEL    [current/"unset"] → [available-subagent-model]
 
 Note: settings already matching the recommended value will be left untouched.
 Existing keys preserved: [list any other keys found in the file]
 ─────────────────────────────────────────────────
 Shall I proceed?
 ```
+
+`[available-model]` and `[available-subagent-model]` are the recommended tier (`sonnet` / `haiku`) unless that tier is unavailable to the user — see the availability note under Apply Recommended Settings for what to substitute instead.
 
 ### Confirmation Summary Template — Targeted Fix
 
@@ -124,6 +126,10 @@ Shall I proceed?
 
 Reads `~/.claude/settings.json`, compares current values to the recommended defaults, and applies only those that differ.
 
+> ⚠️ **Verify before relying on this table.** Model names, tiers, and their relative cost trade off differently across Claude generations. Confirm with the user which models are currently available to them (e.g. via `/model`) before proposing a default — do not assume the table below still reflects the current model lineup.
+>
+> **If the recommended tier (`sonnet` for `model`, `haiku` for `CLAUDE_CODE_SUBAGENT_MODEL`) is not available:** do not write it anyway. Ask the user which available model to use in its place, and substitute that value everywhere below — the confirmation summary, the Python block, and the PowerShell fallback. If no suitable replacement exists for a given key, omit that key from the write entirely rather than applying an unusable value.
+
 **Recommended defaults:**
 
 | Setting | Recommended Value | Effect |
@@ -144,8 +150,14 @@ python3 --version 2>/dev/null && PYTHON=python3 || PYTHON=python
 On Windows with no Python installed, use the PowerShell fallback below instead.
 
 ```bash
+# MODEL / SUBAGENT_MODEL: the recommended tier ("sonnet" / "haiku"), or the
+# user-confirmed replacement if that tier isn't available — never write a value
+# that wasn't confirmed as available. Leave a variable empty to omit that key.
+MODEL="sonnet"
+SUBAGENT_MODEL="haiku"
+
 # Read → compare → apply recommended values → validate → write
-$PYTHON - <<'EOF'
+$PYTHON - <<EOF
 import json, os, sys
 
 path = os.path.expanduser("~/.claude/settings.json")
@@ -156,10 +168,10 @@ if os.path.exists(path):
 
 recommended_env = {
     "MAX_THINKING_TOKENS": "10000",
-    "CLAUDE_CODE_SUBAGENT_MODEL": "haiku"
+    "CLAUDE_CODE_SUBAGENT_MODEL": "$SUBAGENT_MODEL"
 }
 
-existing["model"] = "sonnet"
+existing["model"] = "$MODEL"
 
 # Safely merge — preserve all existing env keys, only set missing/changed ones
 existing_env = existing.get("env", {})
@@ -172,16 +184,18 @@ print(output)  # preview — write only after user confirms
 EOF
 ```
 
-**PowerShell fallback (Windows, no Python):**
+**PowerShell fallback (Windows, no Python):** substitute `$Model` / `$SubagentModel` with the confirmed available values before running.
 
 ```powershell
+$Model = "sonnet"            # or the user-confirmed replacement
+$SubagentModel = "haiku"     # or the user-confirmed replacement
 $path = "$env:USERPROFILE\.claude\settings.json"
 $existing = if (Test-Path $path) { Get-Content $path -Raw | ConvertFrom-Json } else { [PSCustomObject]@{} }
-if (-not $existing.PSObject.Properties['model']) { $existing | Add-Member -NotePropertyName model -NotePropertyValue "sonnet" }
-else { $existing.model = "sonnet" }
+if (-not $existing.PSObject.Properties['model']) { $existing | Add-Member -NotePropertyName model -NotePropertyValue $Model }
+else { $existing.model = $Model }
 if (-not $existing.PSObject.Properties['env']) { $existing | Add-Member -NotePropertyName env -NotePropertyValue ([PSCustomObject]@{}) }
 $existing.env | Add-Member -NotePropertyName MAX_THINKING_TOKENS -NotePropertyValue "10000" -Force
-$existing.env | Add-Member -NotePropertyName CLAUDE_CODE_SUBAGENT_MODEL -NotePropertyValue "haiku" -Force
+$existing.env | Add-Member -NotePropertyName CLAUDE_CODE_SUBAGENT_MODEL -NotePropertyValue $SubagentModel -Force
 $existing | ConvertTo-Json -Depth 10  # preview — write only after user confirms
 ```
 
@@ -254,7 +268,8 @@ Audit the user's active MCP servers and flag high-token-cost configurations.
 2. List each server found, its estimated token cost (reference table below), and whether it is likely relevant to the current project based on context
 3. Flag any server whose token cost is high and whose use is unclear — ask the user to confirm before recommending removal
 4. To disable a server, remove its entry from `mcpServers` in the relevant file — show the before/after diff and require confirmation before writing
-5. Always flag the `memory` MCP server — it is loaded by default in Ruflo-initialized projects but unused by built-in skills; recommend disabling unless the user actively uses AgentDB
+
+> ⚠️ **Verify before relying on this table.** These are point-in-time estimates — actual token cost depends on the server's current tool count and schema size, which changes as servers are updated. Treat the numbers below as relative ordering (which servers are heavier than others), not exact figures, and re-check a server's real footprint if the recommendation materially affects the user's decision.
 
 **Reference token costs for common MCP servers:**
 
