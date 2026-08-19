@@ -5,7 +5,7 @@ This guide walks you through cloning a repository, configuring Git remotes, and 
 ## 1. Clone the Repository
 
 ```bash
-# Replace <repo-name> with the target repo, e.g. eleven-brands-bigquery-ingestion
+# Replace <repo-name> with the target repo, e.g. bq-ingestion
 git clone https://github.com/Eleven-Brands/<repo-name>.git
 cd <repo-name>
 ```
