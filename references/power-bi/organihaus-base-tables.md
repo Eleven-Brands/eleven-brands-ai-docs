@@ -381,7 +381,7 @@ O modelo usa **chaves compostas concatenadas** com separador ` | `. Ha 9 variaco
 
 ---
 
-## Medidas DAX — Measurement Table (752 medidas)
+## Medidas DAX — Measurement Table (771 medidas)
 
 
 ### 3PL Reports
@@ -1177,6 +1177,58 @@ VAR _value = [%_low_stock_month_over_month_mom]
         )
 
     VAR _ui_ux = _arrowUpDown & " " & _valueFormated
+
+RETURN
+    _ui_ux
+```
+
+#### `ux_ui_%_ppc_tacos_over_net_revenue_promotion_tax_year_over_year_yoy`
+
+**Depende de medidas:** `[%_ppc_tacos_over_net_revenue_promotion_tax_year_over_year_yoy]`  
+```dax
+VAR _value = [%_ppc_tacos_over_net_revenue_promotion_tax_year_over_year_yoy]
+    VAR _valueFormated = FORMAT(_value, "0.00 p.p") 
+    VAR _arrowUpDown =     
+        IF (
+            _value >= 0
+            , UNICHAR ( 9650 )
+            , UNICHAR ( 9660 )
+        )
+
+    VAR _ui_ux = _arrowUpDown & " " & _valueFormated
+
+RETURN
+    _ui_ux
+```
+
+#### `ux_ui_%_ppc_tacos_over_net_revenue_promotion_tax_month_over_month_mom`
+
+**Depende de medidas:** `[%_ppc_tacos_over_net_revenue_promotion_tax_month_over_month_mom]`  
+```dax
+VAR _value = [%_ppc_tacos_over_net_revenue_promotion_tax_month_over_month_mom]
+    VAR _valueFormated = FORMAT(_value, "0.00 p.p") 
+    VAR _arrowUpDown =     
+        IF (
+            _value >= 0
+            , UNICHAR ( 9650 )
+            , UNICHAR ( 9660 )
+        )
+
+    VAR _ui_ux = _arrowUpDown & " " & _valueFormated
+
+RETURN
+    _ui_ux
+```
+
+#### `ux_ui_%_ppc_tacos_over_net_revenue_promotion_tax`
+
+**Depende de medidas:** `[%_ppc_tacos_over_net_revenue_promotion_tax]`  
+```dax
+VAR _value = [%_ppc_tacos_over_net_revenue_promotion_tax]
+    VAR _valueFormated = FORMAT(_value, "0.0%") 
+
+
+    VAR _ui_ux ="TACOS (Net of VAT): " & _valueFormated
 
 RETURN
     _ui_ux
@@ -3351,6 +3403,21 @@ RETURN
     _div
 ```
 
+#### `%_total_fba_fee_fee_preview_over_net_revenue_promotion_tax`
+
+**Depende de medidas:** `[$_net_revenue_promotion_tax]`, `[$_total_fba_fee_fee_preview]`  
+**Depende de colunas:** `AllOrders[tax_within_price]`, `Mirrors[%_total_fba_fee_fee_preview_over_net_revenue]`  
+```dax
+// VAT-exclusive denominator so EU/UK is comparable to US/CA/MX.
+    // Mirrors [%_total_fba_fee_fee_preview_over_net_revenue] but divides by
+    // [$_net_revenue_promotion_tax], which strips f.AllOrders[tax_within_price].
+
+    VAR _div = DIVIDE( [$_total_fba_fee_fee_preview], [$_net_revenue_promotion_tax] )
+
+RETURN
+    _div
+```
+
 
 ### Fees\Measures Comparisson
 
@@ -3890,6 +3957,51 @@ RETURN
     DIVIDE(TotalFees, TotalDays)
 ```
 
+#### `%_amz_storage_fee_over_net_revenue_promotion_tax`
+
+**Depende de medidas:** `[$_estimated_storage_fee]`, `[$_net_revenue_promotion_tax]`  
+**Depende de colunas:** `AllOrders[tax_within_price]`, `Mirrors[%_amz_storage_fee_over_net_revenue]`  
+```dax
+// VAT-exclusive denominator so EU/UK is comparable to US/CA/MX.
+    // Mirrors [%_amz_storage_fee_over_net_revenue] but divides by
+    // [$_net_revenue_promotion_tax], which strips f.AllOrders[tax_within_price].
+
+    VAR _div = DIVIDE( [$_estimated_storage_fee], [$_net_revenue_promotion_tax] )
+
+RETURN
+    _div
+```
+
+#### `%_awd_storage_fee_over_net_revenue_promotion_tax`
+
+**Depende de medidas:** `[$_awd_storage_fee]`, `[$_net_revenue_promotion_tax]`  
+**Depende de colunas:** `AllOrders[tax_within_price]`, `Mirrors[%_awd_storage_fee_over_net_revenue]`  
+```dax
+// VAT-exclusive denominator so EU/UK is comparable to US/CA/MX.
+    // Mirrors [%_awd_storage_fee_over_net_revenue] but divides by
+    // [$_net_revenue_promotion_tax], which strips f.AllOrders[tax_within_price].
+
+    VAR _div = DIVIDE( [$_awd_storage_fee], [$_net_revenue_promotion_tax] )
+
+RETURN
+    _div
+```
+
+#### `%_estimated_storage_fee_over_net_revenue_promotion_tax`
+
+**Depende de medidas:** `[$_estimated_storage_fee]`, `[$_net_revenue_promotion_tax]`  
+**Depende de colunas:** `AllOrders[tax_within_price]`, `Mirrors[%_estimated_storage_fee_over_net_revenue]`  
+```dax
+// VAT-exclusive denominator so EU/UK is comparable to US/CA/MX.
+    // Mirrors [%_estimated_storage_fee_over_net_revenue] but divides by
+    // [$_net_revenue_promotion_tax], which strips f.AllOrders[tax_within_price].
+
+    VAR _div = DIVIDE( [$_estimated_storage_fee], [$_net_revenue_promotion_tax] )
+
+RETURN
+    _div
+```
+
 
 ### Fees\Storage Fee\Storage Fee Rate
 
@@ -4139,6 +4251,35 @@ RETURN
 **Depende de medidas:** `[%_ppc_acos]`, `[%_ppc_acos_inactive_calendar]`  
 ```dax
 VAR _result = ( [%_ppc_acos] - [%_ppc_acos_inactive_calendar] ) * 100
+
+RETURN
+    _result
+```
+
+#### `%_ppc_tacos_over_net_revenue_promotion_tax_inactive_calendar`
+
+**Depende de medidas:** `[%_ppc_tacos_over_net_revenue_promotion_tax]`  
+**Depende de colunas:** `'Calendar'[Date]`, `'dim_calendar_aux'[Date aux]`  
+```dax
+VAR _result = 
+        CALCULATE(
+            [%_ppc_tacos_over_net_revenue_promotion_tax]
+            , ALL ( 'Calendar' )
+            , USERELATIONSHIP(
+                'Calendar'[Date]
+                , 'dim_calendar_aux'[Date aux]
+            )
+        )
+
+RETURN
+    _result
+```
+
+#### `pp_ppc_tacos_over_net_revenue_promotion_tax_difference_between_periods_inactive_calendar`
+
+**Depende de medidas:** `[%_ppc_tacos_over_net_revenue_promotion_tax]`, `[%_ppc_tacos_over_net_revenue_promotion_tax_inactive_calendar]`  
+```dax
+VAR _result = ( [%_ppc_tacos_over_net_revenue_promotion_tax] - [%_ppc_tacos_over_net_revenue_promotion_tax_inactive_calendar] ) * 100
 
 RETURN
     _result
@@ -8195,6 +8336,21 @@ RETURN
     _cogs - _cogs_refunded
 ```
 
+#### `%_cogs_over_net_revenue_promotion_tax`
+
+**Depende de medidas:** `[$_cogs]`, `[$_net_revenue_promotion_tax]`  
+**Depende de colunas:** `AllOrders[tax_within_price]`, `Mirrors[%_cogs_over_net_revenue]`  
+```dax
+// VAT-exclusive denominator so EU/UK is comparable to US/CA/MX.
+    // Mirrors [%_cogs_over_net_revenue] but divides by
+    // [$_net_revenue_promotion_tax], which strips f.AllOrders[tax_within_price].
+
+    VAR _div = DIVIDE( [$_cogs], [$_net_revenue_promotion_tax] )
+
+RETURN
+    _div
+```
+
 
 ### Logistics\Inbound Shipments - gsheets
 
@@ -9466,6 +9622,41 @@ RETURN
     _tacos_amazon_family
 ```
 
+#### `%_ppc_tacos_over_net_revenue_promotion_tax`
+
+**Depende de medidas:** `[$_net_revenue_promotion_tax]`, `[$_ppc_spend]`  
+**Depende de colunas:** `use[%_ppc_tacos]`, `which makes the standard[%_ppc_tacos]`  
+```dax
+// TACoS using a VAT-exclusive denominator, so North America and Europe are comparable.
+// f.AllOrders reports item_price VAT-INCLUSIVE for EU/UK marketplaces and VAT-EXCLUSIVE
+// for US/CA/MX, which makes the standard [%_ppc_tacos] understate EU/UK TACoS by ~15-17%.
+// [$_net_revenue_promotion_tax] strips tax_within_price, which is populated only where
+// tax sits inside item_price. Use this measure for cross-region TACoS comparison;
+// use [%_ppc_tacos] to match historical/marketplace-native reporting.
+
+ROUND(DIVIDE(
+    [$_ppc_spend]
+    , [$_net_revenue_promotion_tax]
+),4)
+```
+
+#### `%_ppc_tacos_over_net_revenue_promotion_tax_amazon_family`
+
+**Depende de medidas:** `[$_revenue]`, `[%_ppc_tacos_over_net_revenue_promotion_tax]`  
+**Depende de colunas:** `SKUs[Native Family]`, `SKUs[SKU]`  
+```dax
+VAR _sales =  [$_revenue]
+    VAR _tacos_amazon_family =
+        IF(
+            _sales > 0
+            , CALCULATE( [%_ppc_tacos_over_net_revenue_promotion_tax], ALL( SKUs[SKU], SKUs[Native Family]) )
+            , BLANK()
+        )
+
+RETURN
+    _tacos_amazon_family
+```
+
 
 ### PPC\PPC - Period Comparisson\PPC - MOM
 
@@ -9534,6 +9725,22 @@ return
 ```dax
 VAR _date = MAXX ( 'Calendar', DATEADD ( 'Calendar'[Date], -1, MONTH ) )
     VAR _division = [%_ppc_acos] - [%_ppc_acos_previous_month]
+
+return
+    IF (
+        [d_first_date_of_sku_by_inventory] <= _date
+        , ROUND(_division*100,3)
+        , 0
+    )
+```
+
+#### `%_ppc_tacos_over_net_revenue_promotion_tax_month_over_month_mom`
+
+**Depende de medidas:** `[%_ppc_tacos_over_net_revenue_promotion_tax]`, `[%_ppc_tacos_over_net_revenue_promotion_tax_previous_month]`, `[d_first_date_of_sku_by_inventory]`  
+**Depende de colunas:** `'Calendar'[Date]`  
+```dax
+VAR _date = MAXX ( 'Calendar', DATEADD ( 'Calendar'[Date], -1, MONTH ) )
+    VAR _division = [%_ppc_tacos_over_net_revenue_promotion_tax] - [%_ppc_tacos_over_net_revenue_promotion_tax_previous_month]
 
 return
     IF (
@@ -9620,6 +9827,22 @@ return
     )
 ```
 
+#### `%_ppc_tacos_over_net_revenue_promotion_tax_year_over_year_yoy`
+
+**Depende de medidas:** `[%_ppc_tacos_over_net_revenue_promotion_tax]`, `[%_ppc_tacos_over_net_revenue_promotion_tax_previous_year]`, `[d_first_date_of_sku_by_inventory]`  
+**Depende de colunas:** `'Calendar'[Date]`  
+```dax
+VAR _date = MAXX ( 'Calendar', DATEADD ( 'Calendar'[Date], -1, YEAR ) )
+    VAR _division = [%_ppc_tacos_over_net_revenue_promotion_tax] - [%_ppc_tacos_over_net_revenue_promotion_tax_previous_year]
+
+return
+    IF (
+        [d_first_date_of_sku_by_inventory] <= _date
+        , ROUND(_division*100,3)
+        , 0
+    )
+```
+
 
 ### PPC\PPC - Previous Periods\PPC - Previous Month
 
@@ -9671,6 +9894,18 @@ CALCULATE(
 )
 ```
 
+#### `%_ppc_tacos_over_net_revenue_promotion_tax_previous_month`
+
+**Depende de medidas:** `[%_ppc_tacos_over_net_revenue_promotion_tax]`  
+**Depende de colunas:** `'Calendar'[Date]`, `'z.dynamic_time_frame_switch'[Start Date]`  
+```dax
+CALCULATE(
+    [%_ppc_tacos_over_net_revenue_promotion_tax]
+    , DATEADD ( 'Calendar'[Date], -1, MONTH)
+    , CROSSFILTER ( 'z.dynamic_time_frame_switch'[Start Date], 'Calendar'[Date], OneWay_RightFiltersLeft)
+)
+```
+
 
 ### PPC\PPC - Previous Periods\PPC - Previous Year
 
@@ -9717,6 +9952,18 @@ CALCULATE(
 ```dax
 CALCULATE(
     [%_ppc_acos]
+    , DATEADD ( 'Calendar'[Date], -1, YEAR)
+    , CROSSFILTER ( 'z.dynamic_time_frame_switch'[Start Date], 'Calendar'[Date], OneWay_RightFiltersLeft)
+)
+```
+
+#### `%_ppc_tacos_over_net_revenue_promotion_tax_previous_year`
+
+**Depende de medidas:** `[%_ppc_tacos_over_net_revenue_promotion_tax]`  
+**Depende de colunas:** `'Calendar'[Date]`, `'z.dynamic_time_frame_switch'[Start Date]`  
+```dax
+CALCULATE(
+    [%_ppc_tacos_over_net_revenue_promotion_tax]
     , DATEADD ( 'Calendar'[Date], -1, YEAR)
     , CROSSFILTER ( 'z.dynamic_time_frame_switch'[Start Date], 'Calendar'[Date], OneWay_RightFiltersLeft)
 )
@@ -9886,6 +10133,16 @@ SWITCH(
 )
 ```
 
+#### `%_ppc_sb_att_pur_tacos_over_net_revenue_promotion_tax`
+
+**Depende de medidas:** `[$_net_revenue_promotion_tax]`, `[$_ppc_sb_att_pur_spend_by_sku]`  
+```dax
+ROUND(DIVIDE(
+    [$_ppc_sb_att_pur_spend_by_sku]
+    , [$_net_revenue_promotion_tax]
+),4)
+```
+
 
 ### PPC\PPC - Reports Data\SD - Adv. Prod.
 
@@ -10017,6 +10274,16 @@ SUM ( 'fact_sd_advertised_products'[other_sku_units_sold_14d])
 ```dax
 [u_ppc_sd_adv_prod_units_sold_advertised_sku] +
 [u_ppc_sd_adv_prod_units_sold_other_sku]
+```
+
+#### `%_ppc_sd_adv_prod_tacos_over_net_revenue_promotion_tax`
+
+**Depende de medidas:** `[$_net_revenue_promotion_tax]`, `[$_ppc_sd_adv_prod_spend]`  
+```dax
+ROUND(DIVIDE(
+    [$_ppc_sd_adv_prod_spend]
+    , [$_net_revenue_promotion_tax]
+),4)
 ```
 
 
@@ -10219,6 +10486,16 @@ RETURN
             && fact_sp_advertised_products[date_sp_advertised_products] = last_date_
     )
 )
+```
+
+#### `%_ppc_sp_adv_prod_tacos_over_net_revenue_promotion_tax`
+
+**Depende de medidas:** `[$_net_revenue_promotion_tax]`, `[$_ppc_sp_adv_prod_spend]`  
+```dax
+ROUND(DIVIDE(
+    [$_ppc_sp_adv_prod_spend]
+    , [$_net_revenue_promotion_tax]
+),4)
 ```
 
 
@@ -14288,7 +14565,7 @@ in
 
 
 let
-    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Sales_Returns.vw_full_all_orders"),
+    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_gold_commercial.amazon_all_orders_view"),
     #"Removed Other Columns" = Table.SelectColumns(Source,{"order_id_SK", "currency", "date_all_orders", "time_all_orders", "item_status", "key_marketplace_sku", "promotion_ids", "quantity", "item_price", "item_promotion_discount", "ship_promotion_discount", "tax_after_price", "tax_within_price"})
 in
     #"Removed Other Columns"
@@ -14332,7 +14609,7 @@ in
 
 
 let
-    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Sales_Returns.vw_full_fba_customer_returns"),
+    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_gold_commercial.amazon_fba_customer_returns_view"),
     #"Removed Other Columns1" = Table.SelectColumns(Source,{"order_id_SK", "date_fba_customer_return", "purchase_date", "key_marketplace_sku", "quantity", "fulfillment_center_id", "detailed_disposition", "reason", "status", "license_plate_number", "customer_comments"}),
     #"Added Custom" = Table.AddColumn(#"Removed Other Columns1", "is_sellable", each if [#"detailed_disposition"] = "SELLABLE" then "Sellable" else "Non-Sellable", type text)
 in
@@ -15041,7 +15318,7 @@ in
 ### `fact_fba_inventory`
 
 **Modo:** `import`  **Grupo:** `Amazon\Fulfillment\reports_fulfillment`  
-**Colunas:** `date_fba_inventory` dateTime, `inv_age_000_to_030` int64, `inv_age_031_to_060` int64, `inv_age_061_to_090` int64, `inv_age_091_to_180` int64, `inv_age_181_to_270` int64, `inv_age_271_to_365` int64, `inv_age_365_plus` int64, `currency` string, `estimated_storage_cost_next_month` double, `estimated_quantity_ais_181_210` int64, `estimated_quantity_ais_211_240` int64, `estimated_quantity_ais_241_270` int64, `estimated_quantity_ais_271_300` int64, `estimated_quantity_ais_301_330` int64, `estimated_quantity_ais_331_365` int64, `estimated_quantity_ais_365_plus` int64, `estimated_value_ais_181_210` double, `estimated_value_ais_211_240` double, `estimated_value_ais_241_270` double, `estimated_value_ais_271_300` double, `estimated_value_ais_301_330` double, `estimated_value_ais_331_365` double, `estimated_value_ais_365_plus` double, `available` int64, `inbound_quantity` int64, `inbound_working` int64, `inbound_shipped` int64, `inbound_received` int64, `unfulfillable_quantity` int64, `key_inventory_region_sku` string, `reserved_customer_order` int64, `reserved_fc_processing` int64, `total_reserved_quantity` int64, `fc_transfer` int64, `reserved_staging` int64  
+**Colunas:** `date_fba_inventory` string, `inv_age_000_to_030` int64, `inv_age_031_to_060` int64, `inv_age_061_to_090` int64, `inv_age_091_to_180` int64, `inv_age_181_to_270` int64, `inv_age_271_to_365` int64, `inv_age_365_plus` int64, `currency` string, `estimated_storage_cost_next_month` double, `estimated_quantity_ais_181_210` int64, `estimated_quantity_ais_211_240` int64, `estimated_quantity_ais_241_270` int64, `estimated_quantity_ais_271_300` int64, `estimated_quantity_ais_301_330` int64, `estimated_quantity_ais_331_365` int64, `estimated_quantity_ais_365_plus` int64, `estimated_value_ais_181_210` double, `estimated_value_ais_211_240` double, `estimated_value_ais_241_270` double, `estimated_value_ais_271_300` double, `estimated_value_ais_301_330` double, `estimated_value_ais_331_365` double, `estimated_value_ais_365_plus` double, `available` int64, `inbound_quantity` int64, `inbound_working` int64, `inbound_shipped` int64, `inbound_received` int64, `unfulfillable_quantity` int64, `key_inventory_region_sku` string, `reserved_customer_order` int64, `reserved_fc_processing` int64, `total_reserved_quantity` int64, `fc_transfer` int64, `reserved_staging` int64  
 ```powerquery
 // let
 //     Source = Table.Combine({#"FBA Inventory (raw)"}),
@@ -15058,7 +15335,7 @@ in
 
 
 let
-    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Inventory.vw_full_fba_manage_inventory"),
+    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_gold_inventory.amazon_fba_inventory_view"),
     #"Changed Type" = Table.TransformColumnTypes(Source,{{"fc_transfer", Int64.Type}, {"reserved_fc_processing", Int64.Type}, {"reserved_customer_order", Int64.Type}, {"reserved_staging", Int64.Type}})
 in
     #"Changed Type"
@@ -15071,7 +15348,7 @@ in
 **Colunas:** `key_inventory_region_sku` string, `asin` string, `condition` string, `available_quantity` int64, `reserved_quantity` int64, `researching_quantity` int64, `unsellable_quantity` int64, `warehouse_quantity` int64, `receiving_quantity` int64, `shipped_quantity` int64, `working_quantity` int64, `date_fba_manage_inventory_real_time` dateTime, `total_quantity` int64  
 ```powerquery
 let
-    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Inventory.vw_full_fba_manage_inventory_real_time")
+    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_gold_inventory.amazon_manage_fba_inventory_latest_view")
 in
     Source
 ```
@@ -15127,7 +15404,7 @@ in
 
 
 let
-    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Fees.vw_full_fee_preview")
+    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_gold_fees.amazon_fee_preview_view")
 in
     Source
 ```
@@ -15183,7 +15460,7 @@ in
 
 
 let
-    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Inventory.vw_full_inventory_ledger_summary_by_fulfillment_center")
+    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_gold_inventory.amazon_inventory_ledger_summary_by_fc_view")
 in
     Source
 ```
@@ -15364,7 +15641,7 @@ in
 **Colunas:** `sponsored_ads_type` string, `date_sb_attributed_purchase` dateTime, `currency` string, `campaign_name` string, `ad_group_name` string, `attribution_type` string, `key_marketplace_purchased_asin` string, `total_sales_14d` double, `total_orders_14d` int64, `total_units_sold_14d` int64, `new_to_brand_sales_14d` double, `new_to_brand_orders_14d` int64, `new_to_brand_units_sold_14d` int64, `new_to_brand_sales_percentage_14d` double, `new_to_brand_orders_percentage_14d` double, `new_to_brand_units_sold_percentage_14d` double, `campaign_id` string, `campaign_name_last` string, `ad_group_id` string, `ad_group_name_last` string  
 ```powerquery
 let
-    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Amz_Ads.vw_full_amz_ads_sb_attributed_purchases")
+    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_gold_ads.amazon_sb_attributed_purchases_view")
 in
     Source
 ```
@@ -15376,7 +15653,7 @@ in
 **Colunas:** `sponsored_ads_type` string, `date_sb_search_terms` dateTime, `marketplace` string, `currency` string, `campaign_name` string, `ad_group_name` string, `targeting` string, `match_type` string, `customer_search_term` string, `cost_type` string, `impressions` int64, `clicks` int64, `spend` double, `total_sales` double, `total_orders` int64, `total_units_sold` int64, `total_sales_clicks` double, `total_orders_clicks` int64, `campaign_id` string, `campaign_name_last` string, `ad_group_id` string, `ad_group_name_last` string, `targeting_id` string  
 ```powerquery
 let
-    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Amz_Ads.vw_full_amz_ads_sb_search_terms")
+    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_gold_ads.amazon_sb_search_terms_view")
 in
     Source
 ```
@@ -15388,7 +15665,7 @@ in
 **Colunas:** `date_sb` dateTime, `key_marketplace_asin` string, `currency_sb` string, `sb_orders` int64, `sb_sales` double, `sb_spend` double, `sponsored_ads_type` string  
 ```powerquery
 let
-    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Amz_Ads.vw_full_amz_ads_consolidated_sb_attributed_orders_sales_spend")
+    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_gold_ads.amazon_consolidated_sb_attributed_orders_sales_spend_view")
 in
     Source
 ```
@@ -15453,7 +15730,7 @@ in
 **Colunas:** `date_sb_advertised_products` dateTime, `key_marketplace_advertised_sku` string, `campaign_name` string, `ad_group_name` string, `currency` string, `impressions` int64, `clicks` int64, `spend` double, `advertised_sku_orders_14d` int64, `advertised_sku_sales_14d` double, `advertised_sku_units_sold_14d` int64, `other_sku_orders_14d` int64, `other_sku_sales_14d` double, `other_sku_units_sold_14d` int64, `advertised_sku_new_to_brand_orders_14d` int64, `advertised_sku_new_to_brand_sales_14d` double, `advertised_sku_new_to_brand_units_sold_14d` int64, `other_sku_new_to_brand_orders_14d_clicks` int64, `other_sku_new_to_brand_sales_14d_clicks` double, `other_sku_new_to_brand_units_sold_14d_clicks` int64, `sponsored_ads_type` string, `campaign_id` string, `campaign_name_last` string, `ad_group_id` string, `ad_group_name_last` string  
 ```powerquery
 let
-    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Amz_Ads.vw_full_amz_ads_sd_advertised_products")
+    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_gold_ads.amazon_sd_advertised_products_view")
 in
     Source
 ```
@@ -15489,7 +15766,7 @@ in
 **Colunas:** `date_sp_advertised_products` dateTime, `key_marketplace_advertised_sku` string, `campaign_name` string, `ad_group_name` string, `currency` string, `impressions` int64, `clicks` int64, `spend` double, `advertised_sku_orders_7d` int64, `advertised_sku_sales_7d` double, `advertised_sku_units_sold_7d` int64, `other_sku_units_sold_7d` int64, `other_sku_sales_7d` double, `other_sku_orders_7d` int64, `sponsored_ads_type` string, `campaign_id` string, `campaign_name_last` string, `ad_group_id` string, `ad_group_name_last` string  
 ```powerquery
 let
-    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Amz_Ads.vw_full_amz_ads_sp_advertised_products")
+    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_gold_ads.amazon_sp_advertised_products_view")
 in
     Source
 ```
@@ -15501,7 +15778,7 @@ in
 **Colunas:** `date_sp_purchased_products` dateTime, `campaign_name` string, `ad_group_name` string, `match_type` string, `currency` string, `key_marketplace_advertised_sku` string, `key_marketplace_purchased_asin` string, `units_sold_other_sku` int64, `orders_other_sku` int64, `sales_other_sku` double, `sponsored_ads_type` string, `targeting` string, `campaign_id` string, `campaign_name_last` string, `ad_group_id` string, `ad_group_name_last` string, `targeting_id` string  
 ```powerquery
 let
-    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Amz_Ads.vw_full_amz_ads_sp_purchased_products"),
+    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_gold_ads.amazon_sp_purchased_products_view"),
     added_boolean_filter = Table.AddColumn(Source, "boolean_filter", each if 
 ([date_sp_purchased_products] >= Date.AddDays(Date.From(DateTime.LocalNow()), -10)) 
 and Text.Start([key_marketplace_advertised_sku], 2) = "US"
@@ -15521,7 +15798,7 @@ in
 **Colunas:** `sponsored_ads_type` string, `date_sp_search_terms` dateTime, `marketplace` string, `currency` string, `campaign_name` string, `ad_group_name` string, `targeting` string, `match_type` string, `customer_search_term` string, `impressions` int64, `clicks` int64, `spend` double, `total_units_sold_7d` int64, `total_sales_7d` double, `total_orders_7d` int64, `advertised_sku_units_sold_7d` int64, `advertised_sku_sales_7d` double, `advertised_sku_orders_7d` int64, `other_sku_units_sold_7d` int64, `other_sku_sales_7d` double, `other_sku_orders_7d` int64, `campaign_id` string, `campaign_name_last` string, `ad_group_id` string, `adgroup_name_last` string, `targeting_id` string  
 ```powerquery
 let
-    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Amz_Ads.vw_full_amz_ads_sp_search_terms")
+    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_gold_ads.amazon_sp_search_terms_view")
 in
     Source
 ```
@@ -15541,7 +15818,7 @@ in
 // (493/493 mes x pais e 1906/1906 pais x SKU, desvio max. 5e-13).
 // Number.Round(_, 6) mantido: a view arredonda em 10 casas e este modelo sempre usou 6.
 let
-    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Fees.vw_full_storage_fee_daily"),
+    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_gold_fees.amazon_daily_storage_fee_view"),
     #"Removed Other Columns" = Table.SelectColumns(Source,{"date_daily_share_of_storage_fee", "key_marketplace_sku", "currency", "estimated_daily_storage_fee"}),
     #"Rounded Off" = Table.TransformColumns(#"Removed Other Columns",{{"estimated_daily_storage_fee", each Number.Round(_, 6), type number}}),
     #"Filtered Rows" = Table.SelectRows(#"Rounded Off", each [currency] <> null and [currency] <> "")
@@ -15817,7 +16094,7 @@ in
 **Colunas:** `amazon_order_id` string, `date_all_orders` dateTime, `order_status` string, `item_status` string, `quantity_sku_analysis` int64, `item_status_cross_sales` string, `quantity_sku_cross_sales` int64, `is_same_sku` boolean, `key_sales_marketplace_sku_analysis` string, `key_sales_marketplace_sku_cross_sales` string  
 ```powerquery
 let
-    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Sales_Returns.vw_full_cross_sales"),
+    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_gold_commercial.amazon_all_orders_cross_sales_view"),
     added_keySalesMarketplaceSkuAnalysis = Table.AddColumn(Source, "key_sales_marketplace_sku_analysis", each [sales_marketplace] & " | " & [sku_analysis], type text),
     added_keySalesMarketplaceSkuCrossSales = Table.AddColumn(added_keySalesMarketplaceSkuAnalysis, "key_sales_marketplace_sku_cross_sales", each [sales_marketplace] & " | " & [sku_cross_sales], type text),
     #"Filter: Date - Local - 1" = Table.SelectRows(added_keySalesMarketplaceSkuCrossSales, each [#"date_all_orders"] <= Date.From(DateTime.LocalNow()) - #duration(1, 0, 0, 0)),
@@ -15980,7 +16257,11 @@ GENERATESERIES(0, 1, 0.01)
     ("TACOS", NAMEOF('Measurement Table'[%_ppc_tacos]), 25, "Country View"),
     ("Δpp TACOS", NAMEOF('Measurement Table'[pp_ppc_tacos_difference_between_periods_inactive_calendar]), 26, "Country View"),
     ("ACOS", NAMEOF('Measurement Table'[%_ppc_acos]), 27, "Country View"),
-    ("Δpp ACOS", NAMEOF('Measurement Table'[pp_ppc_acos_difference_between_periods_inactive_calendar]), 28, "Country View")
+    ("Δpp ACOS", NAMEOF('Measurement Table'[pp_ppc_acos_difference_between_periods_inactive_calendar]), 28, "Country View"),
+    ("TACOS (net of VAT)", NAMEOF('Measurement Table'[%_ppc_tacos_over_net_revenue_promotion_tax]), 21, "SKU View"),
+    ("Δpp TACOS (net of VAT)", NAMEOF('Measurement Table'[pp_ppc_tacos_over_net_revenue_promotion_tax_difference_between_periods_inactive_calendar]), 22, "SKU View"),
+    ("TACOS (net of VAT)", NAMEOF('Measurement Table'[%_ppc_tacos_over_net_revenue_promotion_tax]), 29, "Country View"),
+    ("Δpp TACOS (net of VAT)", NAMEOF('Measurement Table'[pp_ppc_tacos_over_net_revenue_promotion_tax_difference_between_periods_inactive_calendar]), 30, "Country View")
 }
 ```
 
@@ -16075,7 +16356,8 @@ GENERATESERIES(0, 1, 0.01)
     ("TACOS", NAMEOF('Measurement Table'[%_ppc_tacos]), 2, "PPC"),
     ("ACOS", NAMEOF('Measurement Table'[%_ppc_sp_adv_prod_acos]), 3, "PCC"),
     ("Revenue Loss", NAMEOF('Measurement Table'[%_revenue_loss]), 4, "Revenue Loss"),
-    ("Revenue Loss - Prev. Year", NAMEOF('Measurement Table'[%_revenue_loss_previous_year]), 5, "Revenue Loss")
+    ("Revenue Loss - Prev. Year", NAMEOF('Measurement Table'[%_revenue_loss_previous_year]), 5, "Revenue Loss"),
+    ("TACOS (net of VAT)", NAMEOF('Measurement Table'[%_ppc_tacos_over_net_revenue_promotion_tax]), 6, "PPC")
 }
 ```
 
@@ -16217,7 +16499,8 @@ GENERATESERIES(0, 1, 0.01)
     ("SP CVR",               NAMEOF([%_ppc_sp_adv_prod_cvr]),              33),
     ("SP ROAS",              NAMEOF([%_ppc_sp_adv_prod_roas]),             34),
     ("Low Stock",            NAMEOF([%_low_stock]),                        35),
-    ("None",                 NAMEOF([aux_blank_measure_slicer_filter]),   36)
+    ("None",                 NAMEOF([aux_blank_measure_slicer_filter]),   36),
+    ("Ads TACOS (net of VAT)", NAMEOF([%_ppc_tacos_over_net_revenue_promotion_tax]), 37)
 }
 ```
 
@@ -16246,7 +16529,8 @@ GENERATESERIES(0, 1, 0.01)
     ("SP CVR",           NAMEOF ( [%_ppc_sp_adv_prod_cvr]),            11),
     ("SP ROAS",          NAMEOF ( [%_ppc_sp_adv_prod_roas]),           12),
     ("Low Stock",        NAMEOF ( [%_low_stock]),                      13),
-    ("None",             NAMEOF ( [aux_blank_measure_slicer_filter]),  14)
+    ("None",             NAMEOF ( [aux_blank_measure_slicer_filter]),  14),
+    ("Ads TACOS (net of VAT)", NAMEOF ( [%_ppc_tacos_over_net_revenue_promotion_tax]), 15)
 }
 ```
 
