@@ -7,7 +7,7 @@ Centralized AI knowledge base for Eleven Brands. This repo holds Claude skill pa
 | Directory | Purpose |
 |---|---|
 | `skills/` | Claude skill packages — one folder per skill, each with a `SKILL.md` |
-| `references/` | Shared knowledge injected into skills at build time — includes `power-bi/` (dashboard/model docs) and `product-catalog/` (product families, SKUs, color codes, migrated from Notion) |
+| `references/` | Shared knowledge injected into skills at build time — includes `power-bi/` (dashboard/model docs) and `organihaus/product-catalog/` (product families, SKUs, color codes, migrated from Notion) |
 | `scripts/` | PowerShell build scripts that package skills into ZIPs |
 | `docs/` | HTML documentation site for internal company knowledge |
 | `dist/` | Generated ZIPs (gitignored) — output of build scripts |

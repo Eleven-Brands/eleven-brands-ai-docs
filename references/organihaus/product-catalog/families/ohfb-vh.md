@@ -37,11 +37,12 @@
 
 ## SKU pattern
 
-`OHFB-{QTY}VH-{DIM}-{COLOR}`
+Confirmado por Antonio Bindi (27/08/2026) e validado contra SKU real do Jarvio (`amzn.gr.US-OHFB-3VH-1208M-BGOW-...`):
 
-Exemplo: `OHFB-3VH-1511-GYOW`
+- Base SKU: `OHFB-{QTY}VH-{DIM}{SIZECODE}-{COLOR}` — ex: `OHFB-3VH-1208M-BGOW`
+- SKU físico (com país): `{COUNTRY}-OHFB-{QTY}VH-{DIM}{SIZECODE}-{COLOR}` — ex: `US-OHFB-3VH-1208M-BGOW`
 
-> ⚠️ **Conflito de fonte não resolvido:** a página Notion `OHFB - Fabric Baskets` (overview da linha, versão 1.0) descreve um formato diferente para esta mesma família: `US-OHFB-{QTY}VH-{DIM}{SIZE}-{COLOR}` (ex: `US-OHFB-3VH-1511L-GYOW`, com prefixo de mercado `US-` e sufixo de tamanho como `M`/`L`/`XL`). Essa mesma página lista uma lista de descontinuados mais ampla (inclui todo o 1VH, e um `6-pack Small 0907S` que não aparece aqui). Não foi possível confirmar qual formato é o real hoje — **verificar um SKU ativo no Seller Central antes de usar este padrão em campanha, listing ou análise.**
+> ⚠️ **O mapeamento de `{SIZECODE}` (a letra — M, L, S, XL...) mudou ao longo do tempo.** A letra que aparece no SKU **não corresponde de forma confiável** ao nome de tamanho atual (`Product Size - Name`). Não inferir o tamanho real a partir da letra no SKU — sempre cruzar o Base SKU contra a aba `Hierarchy` da planilha `Product Information and Pricing Database.xlsx` (coluna `Product Size - Name`) para saber o tamanho real.
 
 ## Mercados
 
