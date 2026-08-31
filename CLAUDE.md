@@ -7,8 +7,8 @@ This repository is the centralized AI knowledge base for Eleven Brands. It conta
 ```
 eleven-brands-ai-docs/
 ├── references/          # Shared knowledge consumed by skills at build time
-│   ├── power-bi/        # Power BI semantic model docs (tables, DAX, dashboards)
-│   └── product-catalog/ # Product families, SKUs, color codes — per brand
+│   ├── power-bi/                       # Power BI semantic model docs (tables, DAX, dashboards)
+│   └── organihaus/product-catalog/     # Product families, SKUs, color codes (per-brand: references/{brand}/product-catalog/)
 ├── skills/              # Skill packages — one folder per skill
 │   └── skill-name/
 │       └── SKILL.md     # Main skill instructions and YAML frontmatter
@@ -58,7 +58,7 @@ Do not place shared assets directly inside section folders or alongside individu
 
 Files in `references/` are shared knowledge used across multiple skills. They are never committed inside skill folders — they are injected at build time by the packaging scripts and cleaned up afterward.
 
-`references/product-catalog/` was migrated from the Eleven Brands Notion workspace (Produto sections). It documents stable facts — SKU naming conventions, color codes, active packs/sizes per family — not live project state (audits, competitive research, dated analyses stay in Notion). Some files carry `⚠️ Conflito de fonte` notes where the Notion source itself had contradictory data at migration time (2026-08); resolve those against Seller Central before relying on them for listings or campaigns.
+`references/organihaus/product-catalog/` was migrated from the Eleven Brands Notion workspace (Produto sections) and cross-checked against `Product Information and Pricing Database.xlsx` (BigQuery/Jarvio for live verification). It documents stable facts — SKU naming conventions, color codes, active/discontinued packs/sizes per family — not live project state (audits, competitive research, dated analyses stay in Notion). Some files carry `⚠️ Conflito de fonte` notes where sources disagreed at migration time (2026-08); resolve those against Seller Central before relying on them for listings or campaigns. Product status terminology is standardized on "Discontinued" (never "Deprecated").
 
 ## Build Scripts
 
