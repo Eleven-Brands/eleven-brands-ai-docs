@@ -26,6 +26,9 @@
 .chip { font-size: 11px; color: var(--text-label); background: var(--bg-page); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; display: inline-flex; align-items: center; gap: 4px; }
 .chip-status { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 500; color: #2a7a52; background: #eaf6ef; border: 1px solid #b6e3ca; border-radius: 4px; padding: 3px 8px; }
 .chip-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--positive); flex-shrink: 0; }
+.chip-status-off { color: var(--gray-mid); background: #f2f2f2; border-color: var(--border); }
+.chip-status-off::before { background: var(--gray-mid); }
+.card-off { opacity: .55; }
 .chip-dep { font-size: 11px; background: #fff8ed; border: 1px solid #f0d08a; border-radius: 4px; padding: 3px 8px; color: #8a5c00; display: inline-flex; align-items: center; gap: 4px; }
 
 .io-flow { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; background: var(--bg-page); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; color: var(--text-label); }
