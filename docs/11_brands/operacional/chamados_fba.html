@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chamados FBA — Operacional</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="./chamados_fba.css">
+</head>
+<body>
+
+<!-- HEADER + NAV -->
+<header class="site-header">
+  <div class="nav-actions">
+    <a href="../../index.html" class="nav-back" title="Voltar para a Knowledge Base" aria-label="Voltar para a Knowledge Base"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-9"/><path d="M9.5 20v-6h5v6"/></svg></a>
+    <button class="nav-menu-toggle" id="nav-menu-toggle" aria-label="Abrir menu de documentos">☰</button>
+  </div>
+  <div class="nav-logo" id="nav-logo">
+    Chamados FBA
+    <span>Operacional · Eleven Brands</span>
+  </div>
+  <nav class="nav">
+    <div class="nav-links">
+      <a href="#resumo"><span class="nav-dot"></span> Visão geral</a>
+      <a href="#tipos"><span class="nav-dot"></span> Os 2 tipos</a>
+      <a href="#quando"><span class="nav-dot"></span> Quando e onde</a>
+      <a href="#refund"><span class="nav-dot"></span> Reembolso</a>
+      <a href="#remeas"><span class="nav-dot"></span> Remedição</a>
+      <a href="#status"><span class="nav-dot"></span> Status</a>
+      <a href="#ajuda"><span class="nav-dot"></span> Ajuda</a>
+    </div>
+  </nav>
+  <img src="../assets/eleven-brands-logo.png" alt="Eleven Brands" class="nav-brand-logo">
+</header>
+<div class="nav-menu-panel" id="nav-menu-panel"></div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- COVER -->
+  <div class="cover">
+    <div class="cover-label">Operacional · Eleven Brands · OrganiHaus</div>
+    <h1>Chamados FBA</h1>
+    <p class="cover-sub">Como abrir e registrar os chamados de taxa da Amazon a partir do que os robôs preparam todo mês. Guia para quem assume a operação, sem pré-requisito técnico.</p>
+    <div class="cover-tags">
+      <span class="cover-tag">Reembolso</span>
+      <span class="cover-tag">Remedição</span>
+      <span class="cover-tag">Amazon Seller Central</span>
+      <span class="cover-tag">ClickUp</span>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="doc-body">
+
+    <!-- 01 -->
+    <div class="section" id="resumo">
+      <div class="section-header">
+        <span class="section-number">01</span>
+        <span class="section-title">Em 30 segundos</span>
+      </div>
+      <div class="prose">
+        <p><strong>O que é este projeto.</strong> Robôs automáticos conferem as taxas que a Amazon cobra para enviar cada produto da OrganiHaus. Quando a Amazon erra, isso é dinheiro nosso que pode voltar, ou uma cobrança errada que precisa ser corrigida.</p>
+        <p><strong>O que os robôs já fazem sozinhos.</strong> Uma vez por mês eles calculam tudo e deixam prontos, no ClickUp, os casos que valem a pena, já com a carta e os números.</p>
+        <p><strong>O seu papel.</strong> Pegar cada caso, abrir o chamado na Amazon e registrar o resultado. Você não precisa entender de código nem do cálculo.</p>
+      </div>
+      <div class="callout">
+        <div class="callout-icon">💡</div>
+        <div class="callout-text">Os robôs fazem a parte difícil (achar e provar o erro). Você faz a parte humana (falar com a Amazon e registrar). É um trabalho de poucas vezes por mês.</div>
+      </div>
+    </div>
+
+    <!-- 02 -->
+    <div class="section" id="tipos">
+      <div class="section-header">
+        <span class="section-number">02</span>
+        <span class="section-title">Os dois tipos de chamado</span>
+      </div>
+      <div class="prose">
+        <p>Existem <strong>dois fluxos diferentes</strong>, cada um vindo de um robô. A diferença principal é <strong>o que você pede à Amazon</strong> e <strong>onde você registra o resultado</strong>.</p>
+      </div>
+      <div class="flow-grid">
+        <div class="flow-card refund">
+          <div class="flow-card-head"><span class="flow-ic">💸</span><div><div class="flow-kicker">Fluxo A</div><div class="flow-name">Reembolso <span>(refund)</span></div></div></div>
+          <dl>
+            <dt>O que é</dt><dd>A Amazon cobrou taxa a mais em pedidos passados. O chamado pede <strong>só o dinheiro de volta</strong>.</dd>
+            <dt>O robô entrega</dt><dd>As <strong>tarefas de maior valor</strong> no ClickUp (as top 15 por valor a reembolsar), cada uma com <strong>carta em inglês</strong> e o valor já no nome da tarefa.</dd>
+            <dt>Onde registra</dt><dd>Na aba <span class="mono">db_refund_cases</span> da planilha <span class="mono">FUP Remeasurement Cases.xlsm</span> (Case ID, Outcome, valor reembolsado e a resposta da Amazon), além de mover o <strong>status</strong> da subtarefa no ClickUp.</dd>
+          </dl>
+        </div>
+        <div class="flow-card remeas">
+          <div class="flow-card-head"><span class="flow-ic">📐</span><div><div class="flow-kicker">Fluxo B</div><div class="flow-name">Remedição <span>(remeasurement)</span></div></div></div>
+          <dl>
+            <dt>O que é</dt><dd>A Amazon mediu o produto errado e por isso cobra taxa errada. O chamado pede <strong>remedir (cubiscan) e reembolsar</strong>.</dd>
+            <dt>O robô entrega</dt><dd>Uma lista de SKUs candidatos, por região, no ClickUp.</dd>
+            <dt>Onde registra</dt><dd>Numa <strong>planilha separada</strong> (FUP Remeasurement Cases).</dd>
+          </dl>
+        </div>
+      </div>
+      <div class="callout blue">
+        <div class="callout-icon">🧭</div>
+        <div class="callout-text"><strong>A diferença em uma frase:</strong> reembolso = "devolvam o que cobraram a mais"; remedição = "meçam o produto certo, corrijam a taxa e devolvam o que cobraram a mais". Os dois registram na mesma planilha (abas diferentes): reembolso na aba <span class="mono">db_refund_cases</span>, remedição na aba <span class="mono">db_remeasurement_cases</span>.</div>
+      </div>
+    </div>
+
+    <!-- 03 -->
+    <div class="section" id="quando">
+      <div class="section-header">
+        <span class="section-number">03</span>
+        <span class="section-title">Quando e onde aparecem</span>
+      </div>
+      <div class="prose">
+        <p>Cada robô roda <strong>uma vez por mês</strong>, numa segunda-feira por volta do meio-dia. A <strong>remedição</strong> sai sempre na segunda-feira da <strong>segunda semana (dias 8 a 14)</strong>. O <strong>reembolso</strong> sai uma vez no mês, geralmente já na primeira segunda-feira. Na prática: <strong>a partir da segunda semana do mês</strong>, os casos do mês já estão prontos no ClickUp — é quando conferir.</p>
+      </div>
+      <div class="timeline">
+        <div class="tl-step"><div class="tl-node"></div><div class="tl-day">1ª segunda do mês</div><div class="tl-label">O reembolso do mês costuma sair aqui.</div></div>
+        <div class="tl-step on"><div class="tl-node"></div><div class="tl-day">2ª semana (8–14, seg)</div><div class="tl-label">A remedição sai; a essa altura todos os casos do mês estão prontos.</div></div>
+        <div class="tl-step"><div class="tl-node"></div><div class="tl-day">A partir daí</div><div class="tl-label">Você abre os chamados na Amazon.</div></div>
+        <div class="tl-step"><div class="tl-node"></div><div class="tl-day">Semanas seguintes</div><div class="tl-label">Você acompanha e registra a resposta.</div></div>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Fluxo</th><th>Onde no ClickUp</th><th>Quantos por mês</th></tr></thead>
+        <tbody>
+          <tr><td>Reembolso</td><td>Subtarefas da task <a href="https://app.clickup.com/t/31030239/86ajrv44q">Refund Audit – Monthly Runs</a> (lista To Do List – Inventory).</td><td>Top 15 por valor</td></tr>
+          <tr><td>Remedição</td><td>Subtarefas por região (US/CA/GB/EU) sob a task <a href="https://app.clickup.com/t/31030239/86ahvfwfp">Auditor de Fee</a>, na execução “Execução AAAA-MM-DD” do mês.</td><td>Até 10 por região</td></tr>
+        </tbody>
+      </table>
+      <div class="callout amber">
+        <div class="callout-icon">🗓️</div>
+        <div class="callout-text">A remedição traz <strong>até 10 casos por região por mês</strong> (o robô prioriza os de maior valor); o <strong>reembolso traz os 15 casos de maior valor</strong> do mês (para não poluir a task com dezenas de casos pequenos). Num mês sem erro relevante pode não vir nenhum caso, e isso é normal.</div>
+      </div>
+    </div>
+
+    <!-- 04 -->
+    <div class="section" id="refund">
+      <div class="section-header">
+        <span class="section-number">04</span>
+        <span class="section-title">Fluxo A — Reembolso</span>
+      </div>
+      <div class="prose">
+        <p>Cada subtarefa de reembolso já traz, separado por uma linha divisória: em cima os <strong>dados internos</strong> (em português, só para você); embaixo a <strong>carta pronta em inglês</strong> para a Amazon.</p>
+      </div>
+      <div class="info-card letter">
+        <div class="info-card-title">Exemplo do conteúdo da tarefa</div>
+        <div class="letter-meta">Metadados internos · SKU: US-OHFB-3VH-1511L · País: US · <strong>Overcharge total a reembolsar: $ 84,20</strong></div>
+        <div class="letter-body">Dear Seller Support,<br><br>The FBA Fulfillment Fee charged for ASIN B0… (SKU US-OHFB-3VH-1511L) does not match the expected fee based on its dimensions and weight…<br><br><span class="letter-dim">Affected orders:<br>- 2026-06-01 | Order 111-… | Expected fee $5.00 | Charged fee $6.50<br>- 2026-06-02 | Order 222-… | Expected fee $5.00 | Charged fee $6.50</span><br><br>We kindly request reimbursement of the overcharged fulfillment fees totaling <span class="letter-hl">$84.20</span>… Thank you.</div>
+      </div>
+      <ol class="steps refund">
+        <li><h4>Abra a subtarefa e leia o valor</h4><p>O <strong>valor total a reembolsar</strong> já aparece no <strong>nome da tarefa</strong> (e também na linha interna em português, com o país).</p></li>
+        <li><h4>Copie a carta em inglês</h4><p>De “Dear Seller Support,” até o fim. Não precisa traduzir nem reescrever.</p></li>
+        <li><h4>Abra o chamado no Amazon Seller Central</h4><p>Em <a href="https://sellercentral.amazon.com/help/center?redirectSource=Hill">Ajuda / Obter suporte</a>, escolha <strong>“Submit a reimbursement claim dispute”</strong> (a opção <strong>“FBA product weights and dimensions”</strong> também serve). Cole a carta.</p></li>
+        <li><h4>Informe o valor e anexe o CSV, se houver</h4><p>Confirme o valor do reembolso. Se a tarefa tiver um anexo CSV (casos com mais de 20 pedidos), anexe-o ao chamado.</p></li>
+        <li><h4>Registre o desfecho</h4><p>Mude o <strong>status</strong> da subtarefa no ClickUp (ver seção 06) e lance a linha do caso na aba <span class="mono">db_refund_cases</span> da planilha <span class="mono">FUP Remeasurement Cases.xlsm</span>: <strong>Case ID</strong> (nº do caso Amazon), <strong>Outcome</strong>, <strong>valor reembolsado</strong> e a <strong>resposta</strong> da Amazon. É de lá que sai o acompanhamento do que a Amazon devolveu.</p></li>
+      </ol>
+      <div class="callout amber">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-text"><strong>O número que importa:</strong> o valor destacado na carta (“reimbursement… totaling”) já está calculado. Não arredonde nem mude.</div>
+      </div>
+    </div>
+
+    <!-- 05 -->
+    <div class="section" id="remeas">
+      <div class="section-header">
+        <span class="section-number">05</span>
+        <span class="section-title">Fluxo B — Remedição</span>
+      </div>
+      <div class="prose">
+        <p>Aqui o robô aponta <strong>SKUs cuja medida na Amazon parece errada</strong>. Você pede à Amazon para remedir o produto (cubiscan) e devolver o que foi cobrado a mais. O registro <strong>não é no ClickUp</strong>, é na planilha <span class="mono">FUP Remeasurement Cases.xlsm</span> (pasta Remeasure › Remeasure FUP Tool).</p>
+      </div>
+      <ol class="steps remeas">
+        <li><h4>Abra a execução da região no ClickUp</h4><p>Nas subtarefas por região (US/CA/GB/EU) do <a href="https://app.clickup.com/t/31030239/86ahvfwfp">Auditor de Fee</a>, a execução do mês lista os SKUs candidatos (com anexo XLSX/CSV). Trabalhe os SKUs marcados como <strong>elegíveis</strong>, respeitando o limite mensal de cada região.</p></li>
+        <li><h4>Registre o SKU na planilha primeiro</h4><p>Na aba <span class="mono">db_remeasurement_cases</span>, digite o <strong>SKU</strong>. As colunas <em>Region, ASIN, FNSKU, Subject e Case Text</em> se preenchem sozinhas (são fórmulas). A <strong>Case Text</strong> é a carta pronta.</p></li>
+        <li><h4>Abra o chamado no Amazon Seller Central</h4><p>Em <a href="https://sellercentral.amazon.com/help/center?redirectSource=Hill">Ajuda / Obter suporte</a>, escolha <strong>“FBA product weights and dimensions” → Remeasure and reimburse…</strong>. Cole a <strong>Case Text</strong> da planilha.</p></li>
+        <li><h4>Volte à planilha e registre o caso</h4><p>Preencha <strong>Case ID</strong> (nº do caso da Amazon), <strong>Date Created</strong> e <strong>Status = Follow-Up</strong> (caso ainda aberto).</p></li>
+        <li><h4>Ao fechar, atualize o resultado</h4><p>Quando a Amazon responder: <strong>Date Closed</strong>, <strong>Status</strong> (OK quando resolvido) e <strong>Outcome</strong>. Se houve reembolso, preencha <strong>Refunded Amount</strong> e <strong>Currency</strong>.</p></li>
+      </ol>
+      <div class="callout blue">
+        <div class="callout-icon">🔁</div>
+        <div class="callout-text"><strong>Manter a planilha em dia importa:</strong> enquanto um SKU está com <strong>Status = Follow-Up</strong>, o robô entende que já existe um chamado aberto e não sugere o mesmo SKU de novo. Se você não registrar, ele pode reaparecer e virar chamado duplicado.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-title">Valores dos campos de dropdown na planilha</div>
+        <div class="rules-list">
+          <div class="rule-item"><span class="rule-dot"></span><span><strong>Status:</strong> Follow-Up (aberto) · OK (resolvido) · Cancelled · Unresponsive · Amazon Automation · Negative</span></div>
+          <div class="rule-item"><span class="rule-dot"></span><span><strong>Outcome:</strong> Positive · No Change · Negative · No Inventory</span></div>
+          <div class="rule-item"><span class="rule-dot"></span><span><strong>Currency:</strong> USD · CAD · GBP · EUR · MXN</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 06 -->
+    <div class="section" id="status">
+      <div class="section-header">
+        <span class="section-number">06</span>
+        <span class="section-title">Status no ClickUp</span>
+      </div>
+      <div class="prose">
+        <p>São os status usados em todas as listas da empresa. Para os chamados de <strong>reembolso</strong>, mova a subtarefa conforme você trabalha:</p>
+      </div>
+      <div class="rules-list">
+        <div class="rule-item"><span class="rule-dot" style="background:var(--neutral)"></span><span><strong>inbox</strong> — ainda não visto</span></div>
+        <div class="rule-item"><span class="rule-dot amber"></span><span><strong>to do</strong> — visto, ainda não começou</span></div>
+        <div class="rule-item"><span class="rule-dot" style="background:var(--blue-gray)"></span><span><strong>in progress</strong> — chamado aberto / em andamento</span></div>
+        <div class="rule-item"><span class="rule-dot" style="background:var(--positive)"></span><span><strong>completed</strong> — resolvido</span></div>
+      </div>
+      <div class="prose"><p class="fine">Existem também <span class="mono">on hold</span>, <span class="mono">postponed</span> e <span class="mono">awaiting review</span> para situações específicas. Para <strong>remedição</strong>, o acompanhamento de cada caso é na planilha (coluna Status), não nos status do ClickUp.</p></div>
+    </div>
+
+    <!-- 07 -->
+    <div class="section" id="ciclo">
+      <div class="section-header">
+        <span class="section-number">07</span>
+        <span class="section-title">O ciclo completo</span>
+      </div>
+      <div class="cycle">
+        <div class="cyc-node"><span class="cyc-ic">🤖</span><div><h4>Robôs rodam (1x/mês)</h4><p>Preparam os casos de reembolso (ClickUp) e a lista de remedição (por região).</p></div></div>
+        <div class="cyc-arrow">↓</div>
+        <div class="cyc-node refund"><span class="cyc-ic">💸</span><div><h4>Reembolso: abre o chamado, registra na planilha</h4><p>Copia a carta, pede o valor na Amazon, lança o desfecho na aba <span class="mono">db_refund_cases</span> e move o status no ClickUp.</p></div></div>
+        <div class="cyc-node remeas"><span class="cyc-ic">📐</span><div><h4>Remedição: registra o SKU na planilha, abre o chamado</h4><p>Digita o SKU, cola a Case Text na Amazon, anota Case ID e Status na planilha.</p></div></div>
+        <div class="cyc-arrow">↓</div>
+        <div class="cyc-node"><span class="cyc-ic">⏳</span><div><h4>Amazon analisa</h4><p>Pode pedir mais informações. Responda usando os dados do próprio caso.</p></div></div>
+        <div class="cyc-arrow">↓</div>
+        <div class="cyc-branch">
+          <div class="cyc-node pos"><span class="cyc-ic">✅</span><div><h4>Resolvido</h4><p>Reembolso: status <em>completed</em> + Outcome na aba <span class="mono">db_refund_cases</span>. Remedição: Status <em>OK</em> + Outcome na aba <span class="mono">db_remeasurement_cases</span>.</p></div></div>
+          <div class="cyc-node neg"><span class="cyc-ic">↩️</span><div><h4>Negado</h4><p>Registre o motivo e avise o Lucca — alguns casos dá para reabrir.</p></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 08 -->
+    <div class="section" id="ajuda">
+      <div class="section-header">
+        <span class="section-number">08</span>
+        <span class="section-title">Quando pedir ajuda</span>
+      </div>
+      <div class="callout">
+        <div class="callout-icon">🆘</div>
+        <div class="callout-text"><strong>Fale com o Lucca se:</strong> a carta parecer estranha, os números não baterem, a Amazon negar o caso, ou você ficar em dúvida em qualquer ponto. Nunca invente um valor nem reescreva a carta por conta própria — na dúvida, pergunte.</div>
+      </div>
+    </div>
+
+  </div><!-- /doc-body -->
+
+  <div class="footer">
+    Operacional · Eleven Brands · Chamados FBA · 2026
+  </div>
+
+</div><!-- /main -->
+
+<script src="../assets/nav.js"></script>
+
+</body>
+</html>

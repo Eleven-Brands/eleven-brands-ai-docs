@@ -12,6 +12,7 @@ const DOCS = [
     category: 'Operacional',
     items: [
       { title: 'Automações Ativas', file: 'operacional/automations.html' },
+      { title: 'Chamados FBA', file: 'operacional/chamados_fba.html' },
       { title: 'Trilha de Formação — Agentes de IA', file: 'operacional/recommended_courses.html' },
     ],
   },
