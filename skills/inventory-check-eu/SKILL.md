@@ -156,15 +156,18 @@ order, headers, or the formatting rules below unless the requester explicitly as
   2. Cell text contains `"Inactive"` → fill `FFFFFF00`
   3. Cell text contains `"Active"` → fill `FF00B050`
 
-Write a build script (e.g. `/home/claude/build_report.py`) that:
-1. Loads the captured row data (write it to a JSON file first if it's easier to hand off than
-   inlining it in the script)
-2. Creates a new workbook, writes the header row, then the data rows in order
-3. Applies the 3 conditional formatting rules above via `openpyxl.formatting.rule`
-4. Saves to `/mnt/user-data/outputs/eu_inventory_check_<YYYY-MM-DD>.xlsx` (today's date, not the
-   procedure's internal data date)
+**Use `references/build_report.py`** — the tested, exact-structure build script for this report.
+Never rewrite or reshape this logic inline in a one-off script; if the output ever needs to change,
+fix `references/build_report.py` directly, the same way `presentation-creator`'s
+`slide-templates.js` is treated.
 
-Run the script, then confirm the file exists and has the expected row count before delivering it.
+1. Write the captured row data (a JSON list of objects, keys matching the header row above) to
+   `/home/claude/rows.json`
+2. Copy `references/build_report.py` to `/home/claude/build_report.py`
+3. Run `python /home/claude/build_report.py`
+4. The output lands at `/mnt/user-data/outputs/eu_inventory_check_<YYYY-MM-DD>.xlsx` (today's date,
+   not the procedure's internal data date) — confirm the file exists and has the expected row count
+   before delivering it
 
 ### 3. Deliver
 
