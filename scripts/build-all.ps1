@@ -16,6 +16,7 @@ Write-Host ""
 & "$PSScriptRoot\build-powerbi-query.ps1"
 & "$PSScriptRoot\build-dashboard-guide.ps1"
 & "$PSScriptRoot\build-token-optimizer.ps1"
+& "$PSScriptRoot\build-eu-inventory-check.ps1"
 
 # Sync shared references to Claude Code
 $REFS_DEST = Join-Path $HOME ".claude\references"
