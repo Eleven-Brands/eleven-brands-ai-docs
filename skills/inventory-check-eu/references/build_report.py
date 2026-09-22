@@ -19,7 +19,7 @@ from pathlib import Path
 
 from openpyxl import Workbook
 from openpyxl.formatting.rule import CellIsRule, FormulaRule
-from openpyxl.styles import Border, Font, PatternFill, Side
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 
 ROWS_PATH = Path("/home/claude/rows.json")
 OUTPUT_DIR = Path("/mnt/user-data/outputs")
@@ -43,6 +43,13 @@ THIN_BORDER = Border(
     top=Side(style="thin"), bottom=Side(style="thin"),
 )
 HEADER_FONT = Font(bold=True)
+
+# Vertical middle for the whole table. Horizontal: eu_inventory/gb_inventory
+# centered, country columns (F:P) right-aligned, everything else left/default.
+ALIGN_DEFAULT = Alignment(vertical="center")
+ALIGN_CENTER = Alignment(horizontal="center", vertical="center")
+ALIGN_RIGHT = Alignment(horizontal="right", vertical="center")
+CENTERED_COLUMNS = {"eu_inventory", "gb_inventory"}
 
 # Fixed widths for the non-country columns (A-E). Country columns (F-P) all
 # use COUNTRY_COLUMN_WIDTH instead.
@@ -77,10 +84,27 @@ def build(rows: list[dict]) -> Path:
     for r in range(1, last_row + 1):
         ws.row_dimensions[r].height = ROW_HEIGHT
         for c in range(1, len(HEADER) + 1):
-            ws.cell(row=r, column=c).border = THIN_BORDER
+            cell = ws.cell(row=r, column=c)
+            cell.border = THIN_BORDER
+            if c >= COUNTRY_COL_START:
+                cell.alignment = ALIGN_RIGHT
+            elif HEADER[c - 1] in CENTERED_COLUMNS:
+                cell.alignment = ALIGN_CENTER
+            else:
+                cell.alignment = ALIGN_DEFAULT
 
     for c in range(1, len(HEADER) + 1):
         ws.cell(row=1, column=c).font = HEADER_FONT
+
+    sku_col = HEADER.index("sku") + 1
+    for r in range(1, last_row + 1):
+        ws.cell(row=r, column=sku_col).font = HEADER_FONT
+
+    # Applied last so it overrides the per-column alignment above: every
+    # header cell is centered both horizontally and vertically, regardless
+    # of what its column's data rows use.
+    for c in range(1, len(HEADER) + 1):
+        ws.cell(row=1, column=c).alignment = ALIGN_CENTER
 
     # Rule 1: literal 0 -> red font on red fill
     ws.conditional_formatting.add(

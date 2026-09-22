@@ -158,7 +158,12 @@ order, headers, or the formatting rules below unless the requester explicitly as
 - **Column widths:** `asin`, `sku_type`, `eu_inventory`, `gb_inventory` = `15`; `sku` = `40`;
   every country column (`F:P`) = `18`
 - **Row height `21`** for every row, **thin borders** on every cell in `A1:P{last_row}`
-- **Header row (row 1) is bold**
+- **Header row (row 1) is bold**, and the entire `sku` column is bold too
+- **Alignment**: vertical `center` (middle) for every cell in the table; horizontal `center` for
+  `eu_inventory`/`gb_inventory`; horizontal `right` for every country column (`F:P`); everything
+  else left/default. **Applied last, overriding all of the above**: the header row (row 1) is
+  centered both horizontally and vertically in every column, regardless of that column's data-row
+  alignment
 
 **Use `references/build_report.py`** — the tested, exact-structure build script for this report.
 Never rewrite or reshape this logic inline in a one-off script; if the output ever needs to change,
