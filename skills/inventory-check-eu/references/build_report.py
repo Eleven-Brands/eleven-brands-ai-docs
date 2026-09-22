@@ -65,7 +65,7 @@ COLUMN_WIDTHS = {
 def build(rows: list[dict]) -> Path:
     wb = Workbook()
     ws = wb.active
-    ws.title = "Sheet1"
+    ws.title = "main"
 
     ws.append(HEADER)
     for row in rows:
@@ -105,6 +105,11 @@ def build(rows: list[dict]) -> Path:
     # of what its column's data rows use.
     for c in range(1, len(HEADER) + 1):
         ws.cell(row=1, column=c).alignment = ALIGN_CENTER
+
+    # Freeze row 1 so it stays visible when scrolling, and add filter
+    # dropdown arrows on the header row (equivalent to Ctrl+Shift+L).
+    ws.freeze_panes = "A2"
+    ws.auto_filter.ref = f"A1:P{last_row}"
 
     # Rule 1: literal 0 -> red font on red fill
     ws.conditional_formatting.add(

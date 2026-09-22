@@ -144,7 +144,8 @@ Before writing any code, read `/mnt/skills/public/xlsx/SKILL.md` for the `openpy
 conventions used across Eleven Brands skills.
 
 **Visual Template Lock** — the following structure is locked and must be reproduced exactly, since
-it matches the team's existing reference template (`eu_inventory_check.xlsx`). Never change column
+it matches the team's existing reference template (`eu_inventory_check.xlsx`). Sheet name is `main`.
+Never change column
 order, headers, or the formatting rules below unless the requester explicitly asks for an override:
 
 - **Header row (exact order):** `asin, sku, sku_type, eu_inventory, gb_inventory, GB, DE, ES, FR,
@@ -164,6 +165,8 @@ order, headers, or the formatting rules below unless the requester explicitly as
   else left/default. **Applied last, overriding all of the above**: the header row (row 1) is
   centered both horizontally and vertically in every column, regardless of that column's data-row
   alignment
+- **Row 1 frozen** (`freeze_panes = "A2"`) and **AutoFilter enabled** on `A1:P{last_row}` — the
+  equivalent of selecting the header row and pressing Ctrl+Shift+L
 
 **Use `references/build_report.py`** — the tested, exact-structure build script for this report.
 Never rewrite or reshape this logic inline in a one-off script; if the output ever needs to change,
