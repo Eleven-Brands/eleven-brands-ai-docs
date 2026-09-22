@@ -1,4 +1,4 @@
-$SKILL = "eu-inventory-check"
+$SKILL = "inventory-check-eu"
 $ROOT = Split-Path -Parent $PSScriptRoot
 
 # Paths

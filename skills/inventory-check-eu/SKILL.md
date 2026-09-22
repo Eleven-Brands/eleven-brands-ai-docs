@@ -81,7 +81,8 @@ Action: call amazon-sp-api-openbridge.1_gold_commercial.sp_eu_listing_inventory_
 Covers: BE, DE, ES, FR, GB, IE, IT, NL, PL, SE, TR (listing status + price)
         + pooled eu_inventory / gb_inventory totals
 Output file: eu_inventory_check_<today's date>.xlsx
-Note: reflects live BigQuery data as of right now, not a cached/scheduled snapshot
+Note: [first run this conversation: "reflects live BigQuery data as of right now"] /
+      [reused run: "reuses the data from this conversation's earlier run at <time>, not re-queried"]
 ─────────────────────────────────────────────────
 Shall I proceed?
 ```
@@ -102,7 +103,26 @@ confirm the exact change before running — do not silently filter or reshape th
 
 ### 1. Run the Check
 
-Call the stored procedure directly with the BigQuery tool available in this environment:
+**Reuse today's run first — but only automatically if it really was today.** Before calling `CALL`,
+check whether this skill has already run successfully earlier in this same conversation:
+
+- If it has, **and** that earlier run's `jobId` was captured on today's calendar date, do not call
+  `CALL` again — automatically reuse that `jobId` and re-fetch its results (the same completed
+  job's result table, not a re-execution) instead. The procedure scans several GB of underlying
+  tables, so a second call for a second request in the same sitting is wasted cost and time when
+  the data hasn't changed.
+- If it has, but that earlier run happened on an **earlier calendar date** (the conversation has
+  spanned multiple days), do **not** silently reuse it and do **not** silently re-run it either —
+  ask the requester: *"The last run of this report in this conversation was on [date] — want me to
+  reuse that data, or run it fresh against today's numbers?"* Proceed only after they choose.
+- If re-fetching a reused job's results fails for any reason (job expired, results no longer
+  available), fall back to calling `CALL` again rather than failing the request.
+
+This reuse is scoped to **this conversation only** — there is no storage that persists across
+separate chats, so a new conversation always calls `CALL` fresh regardless of what day it is.
+
+If this is the first run in the conversation (or the fallback above applies), call the stored
+procedure directly with the BigQuery tool available in this environment:
 
 ```sql
 CALL `amazon-sp-api-openbridge.1_gold_commercial.sp_eu_listing_inventory_check`()
@@ -110,10 +130,11 @@ CALL `amazon-sp-api-openbridge.1_gold_commercial.sp_eu_listing_inventory_check`(
 
 This is a `CALL`, not a plain `SELECT` — use the BigQuery tool variant that can execute a `CALL`
 statement (its body is a single, read-only `SELECT`; the procedure itself performs no writes).
-Capture the full result set — expect roughly 1,500-2,000 rows.
+Capture the full result set — expect roughly 1,500-2,000 rows — **and note the `jobId` from the
+response** so a later request in this same conversation can reuse it per the rule above.
 
 If the call fails (permission error, procedure not found, etc.), surface the exact BigQuery
-error message to the requester and tell tehem to contact the Head of Data for permissions.
+error message to the requester and tell them to contact the Head of Data for permissions.
 Do not retry blindly or fall back to writing the underlying query by hand — the stored 
 procedure is the single source of truth for this report's logic.
 
@@ -169,5 +190,6 @@ Present the finished file. In the same message, report:
 After delivering the file:
 - Always close with: *"Want me to run this again, filter to specific countries, or adjust anything
   about the format?"*
-- Be prepared to re-run on request — this report has no caching, so re-running always reflects the
-  latest BigQuery data
+- Be prepared to re-run on request — within the same conversation, a re-run reuses the first run's
+  job results (see the reuse rule under Core Capabilities) rather than calling the procedure again;
+  a fresh conversation always calls it live
