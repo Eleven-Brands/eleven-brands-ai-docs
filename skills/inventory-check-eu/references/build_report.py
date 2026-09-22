@@ -19,8 +19,7 @@ from pathlib import Path
 
 from openpyxl import Workbook
 from openpyxl.formatting.rule import CellIsRule, FormulaRule
-from openpyxl.styles import Font, PatternFill
-from openpyxl.styles.differential import DifferentialStyle
+from openpyxl.styles import Border, Font, PatternFill, Side
 
 ROWS_PATH = Path("/home/claude/rows.json")
 OUTPUT_DIR = Path("/mnt/user-data/outputs")
@@ -37,6 +36,24 @@ HEADER = [
 COUNTRY_COL_START = 6
 COUNTRY_COL_END = 16
 
+COUNTRY_COLUMN_WIDTH = 18
+ROW_HEIGHT = 21
+THIN_BORDER = Border(
+    left=Side(style="thin"), right=Side(style="thin"),
+    top=Side(style="thin"), bottom=Side(style="thin"),
+)
+HEADER_FONT = Font(bold=True)
+
+# Fixed widths for the non-country columns (A-E). Country columns (F-P) all
+# use COUNTRY_COLUMN_WIDTH instead.
+COLUMN_WIDTHS = {
+    "asin": 15,
+    "sku": 40,
+    "sku_type": 15,
+    "eu_inventory": 15,
+    "gb_inventory": 15,
+}
+
 
 def build(rows: list[dict]) -> Path:
     wb = Workbook()
@@ -49,6 +66,21 @@ def build(rows: list[dict]) -> Path:
 
     last_row = len(rows) + 1  # +1 for the header row
     country_range = f"F2:P{last_row}"
+
+    for name, width in COLUMN_WIDTHS.items():
+        col = HEADER.index(name) + 1
+        ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = width
+
+    for col in range(COUNTRY_COL_START, COUNTRY_COL_END + 1):
+        ws.column_dimensions[ws.cell(row=1, column=col).column_letter].width = COUNTRY_COLUMN_WIDTH
+
+    for r in range(1, last_row + 1):
+        ws.row_dimensions[r].height = ROW_HEIGHT
+        for c in range(1, len(HEADER) + 1):
+            ws.cell(row=r, column=c).border = THIN_BORDER
+
+    for c in range(1, len(HEADER) + 1):
+        ws.cell(row=1, column=c).font = HEADER_FONT
 
     # Rule 1: literal 0 -> red font on red fill
     ws.conditional_formatting.add(

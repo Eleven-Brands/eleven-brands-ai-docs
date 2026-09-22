@@ -155,6 +155,10 @@ order, headers, or the formatting rules below unless the requester explicitly as
   1. Cell value literal `0` → font `FF9C0006` on fill `FFC00000`
   2. Cell text contains `"Inactive"` → fill `FFFFFF00`
   3. Cell text contains `"Active"` → fill `FF00B050`
+- **Column widths:** `asin`, `sku_type`, `eu_inventory`, `gb_inventory` = `15`; `sku` = `40`;
+  every country column (`F:P`) = `18`
+- **Row height `21`** for every row, **thin borders** on every cell in `A1:P{last_row}`
+- **Header row (row 1) is bold**
 
 **Use `references/build_report.py`** — the tested, exact-structure build script for this report.
 Never rewrite or reshape this logic inline in a one-off script; if the output ever needs to change,
