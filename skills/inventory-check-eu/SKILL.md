@@ -1,6 +1,6 @@
 ---
 name: inventory-check-eu
-description: Runs the EU/GB listing-and-inventory check via a BigQuery stored procedure and generates a formatted Excel report. Use for on-demand EU marketplace listing availability audits.
+description: Runs the EU/GB listing-and-inventory check via a BigQuery stored procedure and generates a formatted Excel report with a data-health Analysis sheet. Use for on-demand EU marketplace listing availability audits.
 ---
 
 # EU Inventory Check — Eleven Brands
@@ -12,8 +12,10 @@ When invoked, you call a pre-built BigQuery stored procedure that checks every S
 listing status and price across all 11 EU + GB Amazon marketplaces alongside pooled EU 
 and GB inventory, then produce a formatted `.xlsx` file — without the requester needing 
 to write SQL, open BigQuery, or understand how the data is joined. The report logic 
-itself lives entirely in the stored procedure; this skill's only job is to call it and 
-format the result.
+itself lives entirely in the stored procedure; this skill's job is to call it, format the
+raw data into a `main` sheet, and compute a set of data-health findings into an `Analysis`
+sheet so the requester can tell at a glance whether the SKU records are safe and healthy,
+not just see a raw dump.
 
 ---
 
@@ -42,8 +44,9 @@ Activated when the requester wants to understand the report before running it.
 **Behavior in Brainstorm Mode:**
 - Explain what the report covers: listing status + price per SKU for BE, DE, ES, FR, GB, IE, IT, NL,
   PL, SE, TR, plus pooled `eu_inventory` and `gb_inventory` totals (ending balance + in-transit)
-- Explain the output format: one Excel file, one row per SKU, with the 3 conditional formatting
-  rules already baked in (see Visual Template Lock below)
+- Explain the output format: one Excel file with two sheets — `main` (one row per SKU, the 3
+  conditional formatting rules already baked in, see Visual Template Lock below) and `Analysis`
+  (the data-health findings, see Core Capability 3)
 - Do NOT call the stored procedure or produce any file
 - When the requester is ready, offer: *"Want me to go ahead and run the check?"*
 - Wait for explicit confirmation before exiting Brainstorm Mode
@@ -80,7 +83,7 @@ Action: call amazon-sp-api-openbridge.1_gold_commercial.sp_eu_listing_inventory_
         and build a formatted Excel report from the result
 Covers: BE, DE, ES, FR, GB, IE, IT, NL, PL, SE, TR (listing status + price)
         + pooled eu_inventory / gb_inventory totals
-Output file: eu_inventory_check_<today's date>.xlsx
+Output file: eu_inventory_check_<today's date>.xlsx (main + Analysis sheets)
 Note: [first run this conversation: "reflects live BigQuery data as of right now"] /
       [reused run: "reuses the data from this conversation's earlier run at <time>, not re-queried"]
 ─────────────────────────────────────────────────
@@ -143,10 +146,10 @@ procedure is the single source of truth for this report's logic.
 Before writing any code, read `/mnt/skills/public/xlsx/SKILL.md` for the `openpyxl` reference and
 conventions used across Eleven Brands skills.
 
-**Visual Template Lock** — the following structure is locked and must be reproduced exactly, since
-it matches the team's existing reference template (`eu_inventory_check.xlsx`). Sheet name is `main`.
-Never change column
-order, headers, or the formatting rules below unless the requester explicitly asks for an override:
+**Visual Template Lock** — governs the `main` sheet only. The following structure is locked and
+must be reproduced exactly, since it matches the team's existing reference template
+(`eu_inventory_check.xlsx`). Never change column order, headers, or the formatting rules below
+unless the requester explicitly asks for an override:
 
 - **Header row (exact order):** `asin, sku, sku_type, eu_inventory, gb_inventory, GB, DE, ES, FR,
   IT, NL, BE, IE, PL, SE, TR`
@@ -168,24 +171,62 @@ order, headers, or the formatting rules below unless the requester explicitly as
 - **Row 1 frozen** (`freeze_panes = "A2"`) and **AutoFilter enabled** on `A1:P{last_row}` — the
   equivalent of selecting the header row and pressing Ctrl+Shift+L
 
-**Use `references/build_report.py`** — the tested, exact-structure build script for this report.
-Never rewrite or reshape this logic inline in a one-off script; if the output ever needs to change,
-fix `references/build_report.py` directly, the same way `presentation-creator`'s
+**Use `references/build_report.py`** — the tested, exact-structure build script for this report,
+covering both sheets. Never rewrite or reshape this logic inline in a one-off script; if the output
+ever needs to change, fix `references/build_report.py` directly, the same way `presentation-creator`'s
 `slide-templates.js` is treated.
 
 1. Write the captured row data (a JSON list of objects, keys matching the header row above) to
    `/home/claude/rows.json`
 2. Copy `references/build_report.py` to `/home/claude/build_report.py`
-3. Run `python /home/claude/build_report.py`
+3. Run `python /home/claude/build_report.py` — it builds both sheets, saves the file, and prints a
+   JSON summary of the Analysis findings (row counts per check)
 4. The output lands at `/mnt/user-data/outputs/eu_inventory_check_<YYYY-MM-DD>.xlsx` (today's date,
-   not the procedure's internal data date) — confirm the file exists and has the expected row count
-   before delivering it
+   not the procedure's internal data date) — confirm the file exists, has the expected row count on
+   `main`, and that an `Analysis` sheet is present, before delivering it
 
-### 3. Deliver
+### 3. Analysis Sheet — Data-Health Findings
+
+The `Analysis` sheet is built by the same script (`build_analysis_sheet` in `references/build_report.py`)
+and contains these sections, in this order. Never add, remove, or reshape a section without the
+requester explicitly asking — if new checks are wanted, that's a change to `build_report.py` itself,
+not something to improvise inline:
+
+1. **Pan-EU price gaps — HAS EU inventory (HIGH priority)** / **no EU inventory (LOW priority)** —
+   every SKU whose `sku` starts with `EU-` and is missing a price in any of DE/ES/FR/IT/NL, split by
+   whether it has pooled EU inventory. HIGH means stock exists but can't be sold in that country —
+   the most actionable finding in this pair.
+2. **GB price gap — HAS GB inventory (HIGH priority)** / **no GB inventory (LOW priority)** — the
+   same check for `GB`-prefixed SKUs missing a GB price.
+3. **Missing price by country — summary** (one row per country, all 11, with a missing-SKU count)
+   and **— detail** (one row per missing SKU × country pair) — covers every SKU, not just EU-/GB-
+   prefixed ones.
+4. **Stock with zero listings anywhere** — SKUs with EU or GB inventory but no price/listing in any
+   of the 11 countries. Likely the single most serious finding possible: stock with no way to sell it.
+5. **All listings inactive — HAS inventory (HIGH priority)** / **no inventory (LOW priority)** — SKUs
+   that are listed somewhere, but every listing that exists is `Inactive` (none `Active`).
+6. **Price outliers, Eurozone only** — same SKU priced >50% away from its own median price, compared
+   only across DE/ES/FR/IT/NL/BE/IE (all share EUR). **Deliberately excludes GB/PL/SE/TR** — comparing
+   un-converted currencies produced 1,543 of 1,590 "outliers" in testing, purely from currency, not
+   real pricing errors. Never add those 4 countries back into this specific comparison without
+   real currency conversion, and never hardcode exchange rates (they go stale — see the skill
+   standard's anti-pattern on time-sensitive facts stated as permanent truth).
+7. **Active listing but zero pooled inventory** — SKU shows `Active` somewhere while both
+   `eu_inventory` and `gb_inventory` are `0`. Flagged for review, not asserted as an error — it can be
+   legitimate if the SKU sells through a channel outside this pooled inventory.
+
+Each section is a banner row (dark blue fill, white bold text, includes the finding count) + a
+column-header row (light grey fill, bold) + data rows, or a single `(none found)` row if empty —
+same layout convention as the `pivot-fields-from-powerbi` skill's report sheet.
+
+### 4. Deliver
 
 Present the finished file. In the same message, report:
-- Total row count
-- That it reflects live BigQuery data pulled just now
+- Total row count on `main`
+- That it reflects live BigQuery data pulled just now (or reused data, per the rule above)
+- **A findings summary from the Analysis sheet**, using the counts the script printed — call out
+  zero counts as good news (e.g. "no Pan-EU gaps with EU inventory — nothing urgent there"), and
+  lead with whatever count is largest/most actionable rather than reciting all 10 numbers flatly
 
 ---
 
@@ -197,6 +238,7 @@ Present the finished file. In the same message, report:
 | Empty result set | Report "No rows returned" plainly — do not assume something is broken. |
 | `/mnt/skills/public/xlsx/SKILL.md` unavailable | Stop and tell the requester the Excel-creation reference isn't available in this environment, rather than improvising a different library or format. |
 | Requester asks for a structural change (extra column, different countries, different rules) | Confirm the exact change before running — never silently deviate from the Visual Template Lock. |
+| Requester asks for a new/different Analysis check | Confirm the exact rule (including any severity split or currency scoping) before adding it to `build_report.py` — do not improvise a one-off calculation inline. |
 
 ---
 
