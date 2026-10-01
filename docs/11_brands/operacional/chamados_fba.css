@@ -1,0 +1,138 @@
+/* ============================================================
+   Chamados FBA — estilos específicos do documento
+   Usa os tokens do style.css compartilhado. Site light-only.
+   Sage = fluxo Reembolso · Blue-gray = fluxo Remedição
+   ============================================================ */
+
+.mono { font-family: var(--font-mono); font-size: 0.92em; color: var(--text-title); }
+.fine { font-size: 12px; color: var(--gray-mid); }
+
+/* ── Comparação dos dois fluxos ── */
+.flow-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 16px;
+}
+.flow-card {
+  background: var(--bg-visual);
+  border: 1px solid var(--border);
+  border-top-width: 3px;
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+.flow-card.refund { border-top-color: var(--sage); }
+.flow-card.remeas { border-top-color: var(--blue-gray); }
+.flow-card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.flow-ic {
+  width: 38px; height: 38px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+.flow-card.refund .flow-ic { background: rgba(104,144,126,0.10); }
+.flow-card.remeas .flow-ic { background: rgba(102,129,151,0.10); }
+.flow-kicker {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--gray-mid);
+}
+.flow-name { font-family: var(--font-serif); font-size: 18px; color: var(--text-title); }
+.flow-name span { font-family: var(--font-mono); font-size: 11px; color: var(--gray-mid); }
+.flow-card dl { margin: 0; display: grid; gap: 10px; }
+.flow-card dt {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--gray-mid);
+}
+.flow-card dd { margin: 3px 0 0; font-size: 13px; color: var(--text-label); line-height: 1.6; }
+
+@media (max-width: 640px) { .flow-grid { grid-template-columns: 1fr; } }
+
+/* ── Linha do tempo mensal ── */
+.timeline {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+  margin-top: 20px;
+}
+.tl-step { position: relative; padding: 0 10px; text-align: center; }
+.tl-step::before {
+  content: ''; position: absolute; top: 9px; left: 50%; right: -50%;
+  height: 2px; background: var(--border);
+}
+.tl-step:last-child::before { display: none; }
+.tl-node {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--bg-visual); border: 2px solid var(--border);
+  margin: 0 auto 12px; position: relative; z-index: 1;
+}
+.tl-step.on .tl-node { border-color: var(--sage); background: var(--sage); }
+.tl-step.on .tl-node::after {
+  content: ''; position: absolute; inset: -6px; border-radius: 50%;
+  border: 2px solid var(--sage); animation: tl-ping 2.2s ease-out infinite;
+}
+@keyframes tl-ping { 0% { transform: scale(.7); opacity: .7; } 100% { transform: scale(1.5); opacity: 0; } }
+.tl-day { font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--text-title); }
+.tl-label { font-size: 12px; color: var(--gray-mid); margin-top: 3px; line-height: 1.4; }
+
+@media (max-width: 620px) {
+  .timeline { grid-template-columns: 1fr; gap: 14px; }
+  .tl-step { text-align: left; display: grid; grid-template-columns: 24px 1fr; gap: 12px; padding: 0; }
+  .tl-step::before { display: none; }
+  .tl-node { margin: 2px 0 0; }
+}
+
+/* ── Carta de exemplo ── */
+.letter .letter-meta {
+  font-family: var(--font-mono); font-size: 11px; color: var(--gray-mid);
+  border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 12px; line-height: 1.5;
+}
+.letter .letter-meta strong { color: var(--text-title); }
+.letter .letter-body { font-size: 13px; color: var(--text-label); line-height: 1.65; }
+.letter .letter-dim { color: var(--gray-mid); font-size: 12px; }
+.letter .letter-hl { background: rgba(227,160,8,0.16); padding: 1px 5px; border-radius: 4px; font-weight: 600; color: var(--text-title); }
+
+/* ── Passos numerados ── */
+.steps { list-style: none; counter-reset: step; display: grid; gap: 12px; margin: 18px 0 0; padding: 0; }
+.steps li {
+  counter-increment: step; position: relative;
+  background: var(--bg-visual); border: 1px solid var(--border); border-radius: 10px;
+  padding: 16px 20px 16px 58px;
+}
+.steps li::before {
+  content: counter(step); position: absolute; left: 16px; top: 15px;
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 13px; color: #fff;
+}
+.steps.refund li::before { background: var(--sage); }
+.steps.remeas li::before { background: var(--blue-gray); }
+.steps h4 { font-size: 14px; color: var(--text-title); margin-bottom: 3px; }
+.steps p { font-size: 13px; color: var(--text-label); line-height: 1.6; }
+
+/* ── Ciclo ── */
+.cycle { display: grid; gap: 10px; margin-top: 16px; }
+.cyc-node {
+  background: var(--bg-visual); border: 1px solid var(--border); border-radius: 10px;
+  padding: 13px 18px; display: grid; grid-template-columns: 38px 1fr; gap: 14px; align-items: center;
+}
+.cyc-node.refund { border-left: 3px solid var(--sage); }
+.cyc-node.remeas { border-left: 3px solid var(--blue-gray); }
+.cyc-node.pos { border-left: 3px solid var(--positive); }
+.cyc-node.neg { border-left: 3px solid var(--negative); }
+.cyc-ic {
+  width: 38px; height: 38px; border-radius: 9px; background: var(--bg-page);
+  border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 17px;
+}
+.cyc-node h4 { font-size: 13px; color: var(--text-title); }
+.cyc-node p { font-size: 12px; color: var(--gray-mid); line-height: 1.5; margin-top: 2px; }
+.cyc-arrow { text-align: center; color: var(--gray-mid); font-size: 16px; line-height: 1; }
+.cyc-branch { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 620px) { .cyc-branch { grid-template-columns: 1fr; } }
+
+/* ── Tabela: quebra em telas estreitas ── */
+@media (max-width: 620px) {
+  .data-table, .data-table tbody, .data-table tr, .data-table td, .data-table th { display: block; width: 100%; }
+  .data-table thead { display: none; }
+  .data-table td { border-bottom: 1px solid #f0f0f0; }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) { .tl-step.on .tl-node::after { animation: none; } }

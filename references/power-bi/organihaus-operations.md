@@ -2076,7 +2076,7 @@ CALCULATE(
 ```
 
 
-## Fontes das Tabelas (107 tabelas)
+## Fontes das Tabelas (95 tabelas)
 
 
 ### `Calendar`
@@ -2099,11 +2099,6 @@ CALCULATE(
 **Modo:** `directQuery`  
 **Colunas:** `inventory_region` string, `inventory_country` string, `fulfillment_center_id` string, `city` string, `state` string, `state_abreviation` string, `country_name` string, `country` string, `zip` string, `address` string, `latitude` string, `longitude` string, `state_country` string, `fc_city_state` string, `Country Region (US/CA Only)` string  
 
-### `dim_awd_fee_type`
-
-**Modo:** `directQuery`  
-**Colunas:** `fee_type_report` string, `fee_type` string  
-
 ### `dim_bar_chart_aging_projection`
 
 **Modo:** `directQuery`  
@@ -2114,54 +2109,15 @@ CALCULATE(
 **Modo:** `directQuery`  
 **Colunas:** `Date aux` dateTime, `Week Number 544` string, `Month Number 544` string, `Year 544` string, `Year-Week 544` string, `Year-Month 544` string, `Year` int64, `Month` int64, `Start of Week` dateTime, `End of Week` dateTime, `Day of Week` int64, `Start of Month` dateTime, `Start of Quarter` dateTime, `Start of Year` dateTime, `Day of Month` int64, `Quarter` int64, `Year-Month` string, `Month Name` string, `is_future` boolean, `End of Month` dateTime, `Month Abrev` string  
 
-### `dim_order_amz_id`
-
-**Modo:** `import`  
-**Colunas:** `Order Id` string, `Amazon Shipment Id` string, `Key Column: Region | SKU` string  
-```powerquery
-let
-    Source = fact_Order_Transfer_Details,
-    columnSelection = Table.SelectColumns(Source,{"Order Id", "Amazon Shipment Id", "Key Column: Region | SKU"}),
-    #"Removed Duplicates" = Table.Distinct(columnSelection)
-in
-    #"Removed Duplicates"
-```
-
-
 ### `dim_order_IDs`
 
 **Modo:** `directQuery`  
 **Colunas:** `Order Id` string, `Region` string, `Type` string  
 
-### `dim_SCPR_category`
-
-**Modo:** `directQuery`  
-**Colunas:** `Category` string, `Attribute` string, `Description` string, `Short Name` string, `Weight` int64  
-
-### `dim_SCPR_factory`
-
-**Modo:** `directQuery`  
-**Colunas:** `Name` string, `Type` string  
-
-### `dim_SCPR_freight`
-
-**Modo:** `directQuery`  
-**Colunas:** `Name` string, `Type` string  
-
-### `dim_SCPR_type`
-
-**Modo:** `directQuery`  
-**Colunas:** `Name` string, `Type` string  
-
 ### `dim_skus_aux`
 
 **Modo:** `directQuery`  
 **Colunas:** `Base SKU` string, `SKU` string, `FNSKU` string, `Inventory Region` string, `Sales Region` string, `Country` string, `Amazon Family` string, `Marketplace` string, `ASIN` string, `Image URL` string, `Brand - Code` string, `Brand - Name` string, `Product General Type - Code` string, `Product General Type - Name` string, `Product Specific Type - Code` string, `Product Specific Type - Name` string, `Product Type Complete - Name` string, `Product Size - Code` string, `Product Size - Name` string, `Product Color - Code` string, `Product Color - Name` string, `Product Color - Pattern` string, `Product Set - Quantity` string, `Generic Family` string, `Core Family` string, `Specific Family` string, `Native Family` string, `Inner Type` string, `Units / Carton` int64, `Carton Weight (kg)` double, `Carton Dimensions (cm) Length` double, `Carton Dimensions (cm) Width` double, `Carton Dimensions (cm) Height` double, `Carton CBM` double, `AWD - Units / Carton` int64, `AWD - Carton Weight (kg)` double, `AWD - Carton Dimensions (cm) Length` double, `AWD - Carton Dimensions (cm) Width` double, `AWD - Carton Dimensions (cm) Height` double, `AWD - Carton CBM` double, `Units / Package` int64, `Package Weight (kg)` double, `Package Dimensions (cm) Length` double, `Package Dimensions (cm) Width` double, `Package Dimensions (cm) Height` double, `Item Dimensions (cm) Length` string, `Item Dimensions (cm) Width` string, `Item Dimensions (cm) Height` string, `Item Dimensions (in) Length` string, `Item Dimensions (in) Width` string, `Item Dimensions (in) Height` string, `is_grade_and_resell` boolean, `Grade` string, `Key Column: Sales Region | SKU` string, `Key Column: Sales Region | ASIN` string, `Key Column: Sales Region | FNSKU` string, `Key Column: Sales Region | Amazon Family` string, `Key Column: Sales Region | Country | SKU` string, `Key Column: Inventory Region | SKU` string, `Key Column: Inventory Region | ASIN` string, `Key Column: Inventory Region | FNSKU` string, `Key Column: Country | SKU` string, `Key Column: Country | ASIN` string, `Key Column: Country | FNSKU` string, `Key Column: Marketplace | SKU` string, `Key Column: Marketplace | ASIN` string, `Key Column: Marketplace | FNSKU` string, `Sales Region | Base SKU` string, `Inventory Region | Base SKU` string, `Country | SKU` string, `Country | Native Family` string, `Refresh Date` dateTime, `Average Weekly Units` int64, `Average Weekly Revenue` int64, `Revenue% Co.` double, `Units% Family` double, `ABC Co. Revenue` string, `ABC Family Units` string, `ABC Family Search Rank` string, `Final ABC Classification` string, `item_name` string, `item_description` string, `current_price` double, `open_date` string, `fulfillment_channel` string, `status` string, `Rope or Fabric` string, `SKU Consertado` string, `Key Column: Inventory Region | SKU Consertado` string, `Package CBM` double, `Package Cubic Feet` double, `ABC Profitability` string, `Life Cycle` string, `Reorder Region` string, `Reorder Region | Base SKU` string, `ABC Sales` string  
-
-### `dim_sponsored_ads`
-
-**Modo:** `directQuery`  
-**Colunas:** `sponsored_ads_type` string, `sponsored_ads` string, `sponsored_ads_report` string  
 
 ### `dim_td_fulfillment_centers_address`
 
@@ -2169,7 +2125,7 @@ in
 **Colunas:** `Country Region (US/CA Only)` string, `inventory_region` string, `inventory_country` string, `fulfillment_center_id` string, `city` string, `state` string, `state_abreviation` string, `country_name` string, `country` string, `zip` string, `address` string, `latitude` double, `longitude` double  
 ```powerquery
 let
-    Source = Csv.Document(File.Contents("G:\Shared drives\OrganiHaus\3.1 - OH Data & Reports\standalone_files\ref_fulfillment_centers_address.csv"),[Delimiter=",", Columns=13, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+    Source = Csv.Document(File.Contents("G:\Shared drives\OrganiHaus\3.1 - OH Data & Reports\standalone_files\fulfillment_centers_address.csv"),[Delimiter=",", Columns=13, Encoding=65001, QuoteStyle=QuoteStyle.None]),
     #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
     #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"inventory_region", type text}, {"inventory_country", type text}, {"fulfillment_center_id", type text}, {"city", type text}, {"state", type text}, {"state_abreviation", type text}, {"country_name", type text}, {"country", type text}, {"zip", type text}, {"address", type text}, {"latitude", type number}, {"longitude", type number}}),
     #"Removed Blank Rows" = Table.SelectRows(#"Changed Type", each not List.IsEmpty(List.RemoveMatchingItems(Record.FieldValues(_), {"", null}))),
@@ -2249,6 +2205,11 @@ in
 **Modo:** `directQuery`  
 **Colunas:** `unit_cost` double, `key_inventory_region_sku` string, `currency` string, `date` dateTime  
 
+### `fact_awd_estimated_future_daily_storage_fee`
+
+**Modo:** `directQuery`  
+**Colunas:** `date_daily_share_of_storage_fee` dateTime, `country` string, `sku` string, `key_marketplace_sku` string, `currency` string, `estimated_daily_storage_fee` double, `exchange_rate_to_usd` double, `exchange_rate_to_eur` double, `exchange_rate_to_gbp` double  
+
 ### `fact_awd_inventory_ledger_by_country`
 
 **Modo:** `directQuery`  
@@ -2257,22 +2218,22 @@ in
 ### `fact_awd_monthly_processing_fee`
 
 **Modo:** `directQuery`  
-**Colunas:** `fee_type` string, `key_inventory_country_sku` string, `currency` string, `promotion_amount` double, `tax_amount` double, `month_of_charge` dateTime, `fee_amount` double, `box_qty` int64  
+**Colunas:** `key_inventory_country_sku` string, `transaction_date` dateTime, `month_of_charge` dateTime, `total_charged_amount` double, `exchange_rate_to_usd` double, `exchange_rate_to_eur` double  
 
 ### `fact_awd_monthly_storage_fee`
 
 **Modo:** `directQuery`  
-**Colunas:** `currency` string, `key_inventory_country_sku` string, `date` dateTime, `daily_charged_amount` double  
+**Colunas:** `date_daily_share_of_storage_fee` dateTime, `estimated_daily_storage_fee` double, `exchange_rate_to_usd` double, `exchange_rate_to_eur` double, `exchange_rate_to_gbp` double, `key_inventory_country_sku` string  
 
 ### `fact_awd_monthly_transportation_fee`
 
 **Modo:** `directQuery`  
-**Colunas:** `fee_type` string, `key_inventory_country_sku` string, `currency` string, `promotion_amount` double, `tax_amount` double, `month_of_charge` dateTime, `fee_amount` double  
+**Colunas:** `key_inventory_country_sku` string, `transaction_date` dateTime, `month_of_charge` dateTime, `total_charged_amount` double, `exchange_rate_to_usd` double, `exchange_rate_to_eur` double, `exchange_rate_to_gbp` double  
 
 ### `fact_awd_transportation_measurements`
 
 **Modo:** `directQuery`  
-**Colunas:** `month_of_charge` dateTime, `key_inventory_country_sku` string, `longest_side` double, `median_side` double, `shortest_side` double, `unit_of_dimension` string, `unit_of_volume` string, `box_volume` double  
+**Colunas:** `key_inventory_country_sku` string, `longest_side` double, `median_side` double, `shortest_side` double, `unit_of_dimension` string, `unit_of_volume` string, `box_volume` double, `month_of_charge` dateTime  
 
 ### `fact_case_log`
 
@@ -2365,7 +2326,7 @@ in
 ### `fact_db_results_tio`
 
 **Modo:** `directQuery`  
-**Colunas:** `start_of_week` dateTime, `quantity_ordered_previously_3pl` double, `baseline_forecast` double, `demand_forecast` double, `ending_balance_considering_reorder_amz` double, `overstock` double, `quantity_ordered_previously_amz` double, `reorder_point` double, `target_ending_balance` double, `projected_sales_loss_if_not_reordered` double, `quantity_ordered_previously_awd` double, `ending_balance_considering_reorder_3pl` double, `mandatory_transfer_from_3pl_to_amz` double, `ending_balance` double, `storage_fee_amz` double, `overstock_with_3pl` double, `version_file` string, `key_inventory_region_sku` string  
+**Colunas:** `start_of_week` dateTime, `quantity_ordered_previously_3pl` double, `baseline_forecast` double, `demand_forecast` double, `ending_balance_considering_reorder_amz` double, `quantity_ordered_previously_amz` double, `reorder_point` double, `target_ending_balance` double, `projected_sales_loss_if_not_reordered` double, `quantity_ordered_previously_awd` double, `ending_balance_considering_reorder_3pl` double, `mandatory_transfer_from_3pl_to_amz` double, `ending_balance` double, `storage_fee_amz` double, `version_file` string, `key_inventory_region_sku` string, `projected_revenue_loss_if_not_reordered` double, `overstock_total` double, `overstock_amz` double, `overstock_3pl` double, `ending_balance_without_orders_amz` double, `ending_balance_without_orders_3pl` double, `week_index` string  
 
 ### `fact_db_results_VO`
 
@@ -2375,7 +2336,7 @@ in
 ### `fact_estimated_future_daily_storage_fee`
 
 **Modo:** `directQuery`  
-**Colunas:** `date` dateTime, `estimated_daily_storage_fee` double, `key_marketplace_sku` string  
+**Colunas:** `date_daily_share_of_storage_fee` dateTime, `estimated_daily_storage_fee` double, `key_marketplace_sku` string, `country` string, `sku` string, `currency` string, `exchange_rate_to_usd` double, `exchange_rate_to_eur` double, `exchange_rate_to_gbp` double  
 
 ### `fact_exchange_rates`
 
@@ -2390,7 +2351,7 @@ in
 ### `fact_fba_inventory`
 
 **Modo:** `directQuery`  
-**Colunas:** `date_fba_inventory` dateTime, `inv_age_000_to_030` int64, `inv_age_031_to_060` int64, `inv_age_061_to_090` int64, `inv_age_091_to_180` int64, `inv_age_181_to_270` int64, `inv_age_271_to_365` int64, `inv_age_365_plus` int64, `currency` string, `estimated_storage_cost_next_month` double, `estimated_quantity_ais_181_210` int64, `estimated_quantity_ais_211_240` int64, `estimated_quantity_ais_241_270` int64, `estimated_quantity_ais_271_300` int64, `estimated_quantity_ais_301_330` int64, `estimated_quantity_ais_331_365` int64, `estimated_quantity_ais_365_plus` int64, `estimated_value_ais_181_210` double, `estimated_value_ais_211_240` double, `estimated_value_ais_241_270` double, `estimated_value_ais_271_300` double, `estimated_value_ais_301_330` double, `estimated_value_ais_331_365` double, `estimated_value_ais_365_plus` double, `available` int64, `inbound_quantity` int64, `inbound_working` int64, `inbound_shipped` int64, `inbound_received` int64, `unfulfillable_quantity` int64, `key_inventory_region_sku` string, `reserved_customer_order` int64, `reserved_fc_processing` int64, `reserved_fc_transfer` int64, `total_reserved_quantity` int64  
+**Colunas:** `date_fba_inventory` string, `inv_age_000_to_030` int64, `inv_age_031_to_060` int64, `inv_age_061_to_090` int64, `inv_age_091_to_180` int64, `inv_age_181_to_270` int64, `inv_age_271_to_365` int64, `inv_age_365_plus` int64, `currency` string, `estimated_storage_cost_next_month` double, `estimated_quantity_ais_181_210` int64, `estimated_quantity_ais_211_240` int64, `estimated_quantity_ais_241_270` int64, `estimated_quantity_ais_271_300` int64, `estimated_quantity_ais_301_330` int64, `estimated_quantity_ais_331_365` int64, `estimated_quantity_ais_365_plus` int64, `estimated_value_ais_181_210` double, `estimated_value_ais_211_240` double, `estimated_value_ais_241_270` double, `estimated_value_ais_271_300` double, `estimated_value_ais_301_330` double, `estimated_value_ais_331_365` double, `estimated_value_ais_365_plus` double, `available` int64, `inbound_quantity` int64, `inbound_working` int64, `inbound_shipped` int64, `inbound_received` int64, `unfulfillable_quantity` int64, `key_inventory_region_sku` string, `reserved_customer_order` int64, `reserved_fc_processing` int64, `total_reserved_quantity` int64, `fc_transfer` int64, `reserved_staging` int64  
 
 ### `fact_fba_manage_inventory_real_time`
 
@@ -2451,7 +2412,7 @@ in
 **Colunas:** `amazon_shipment_id` string, `shipment_status` string, `key_inventory_region_sku` string, `fnsku` string, `quantity_in_case` int64, `quantity_shipped` int64, `quantity_received` int64, `quantity_discrepancy` int64  
 ```powerquery
 let
-    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Inventory.vw_full_inventory_amazon_inbound_shipments"),
+    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_gold_inventory.amazon_inbound_shipments_view"),
     #"Removed Other Columns" = Table.SelectColumns(Source,{"amazon_shipment_id", "shipment_status", "key_inventory_region_sku", "fnsku", "quantity_in_case", "quantity_shipped", "quantity_received", "quantity_discrepancy"}),
     #"Replaced Value" = Table.ReplaceValue(#"Removed Other Columns","_"," ",Replacer.ReplaceText,{"shipment_status"}),
     #"Capitalized Each Word" = Table.TransformColumns(#"Replaced Value",{{"shipment_status", Text.Proper, type text}})
@@ -2509,67 +2470,13 @@ in
 **Modo:** `directQuery`  
 **Colunas:** `Order Id` string, `Supplier` string, `Order Status` string, `Alibaba Order` string, `EXW Price` decimal, `Invoice USD` decimal, `Balance Provision USD` decimal, `Inspection Cost USD` decimal, `Entry Country` string, `Freight Forwarder` string, `Carrier` string, `Freight Provision USD` decimal, `Customs Exam Charges Provision USD` decimal, `CBM` double, `Order Creation` dateTime, `Order Date` dateTime, `Agreed - Pick up Date` dateTime, `Agreed - Established Time of Departure (ETD)` dateTime, `Agreed - Established Time of Arrival (ETA)` dateTime, `Agreed - Delivery Date` dateTime, `Actual - Pick up Date` dateTime, `Actual - Departure Date` dateTime, `Actual - Arrival at Port Date` dateTime, `Actual - Delivery Date` dateTime, `Total Lead Time (Days)` int64, `Ocean Time (days)` int64, `Last Leg (days)` int64, `Production Lead Time (days)` int64, `Handling Lead Time (days)` int64, `Delay - Pick up (Days)` int64, `Delay - Delivery (Days)` int64, `Delay - Departure (Days)` int64, `Delay - Arrival (Days)` int64, `Freight_Delay_Column` int64, `Order Total Actual USD` decimal, `First Freight Provision USD` decimal, `Actual - CBM` double, `Inspection End Date` dateTime, `Sample Cost USD` double, `Pick up Cost USD` double, `EXW/Invoice USD` decimal, `Production Status` string, `Delivered Status` string, `Region` string  
 
-### `fact_Order_Transfer_Details`
-
-**Modo:** `import`  **Grupo:** `Fact`  
-**Colunas:** `Type` string, `Origin` string, `Deliver At Type` string, `Deliver At Location` string, `Order Id` string, `Amazon Shipment Id` string, `key_order_id_shipment_id` string, `Key Column: Region | SKU` string, `SKU` string, `Order Date` dateTime, `Delivery Date` dateTime, `Status` string, `Amazon Shipment Name` string, `Quantity` int64, `Units / Carton` int64, `Carton Count` double, `Carton CBM` double, `Total CBM` double, `Region` string, `Landed Cost Type` string, `Unit Transfer Cost Local Currency` double, `Total Transfer Cost Local Currency` double, `Unit Estimated 3pl Processing Fee` double, `Total Estimated 3pl Processing Fee` double, `Units Estimated 3pl Container Devanning` double, `Total Estimated 3pl Container Devanning` double, `Unit Inbound Placement Fee` double, `Total Unit Inbound Placement Fee` double, `unit_purchase_cost_local_currency` double, `total_purchase_cost_local_currency` double, `unit_landed_cost_local_currency` double, `total_landed_cost_local_currency` double  
-```powerquery
-let
-    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Google_Sheets.td_full_order_transfer_details"),
-
-    #"Renamed Columns" = Table.RenameColumns(Source,{{"key_inventory_region_sku", "Key Column: Region | SKU"}}),
-    // Renomear colunas para corresponder à Tabela 1
-    RenomearColunas = Table.RenameColumns(
-        #"Renamed Columns",
-        {
-            {"origin", "Origin"},
-            {"type", "Type"},
-            {"deliver_at_type", "Deliver At Type"},
-            {"deliver_at_location", "Deliver At Location"},
-            {"order_id", "Order Id"},
-            {"amazon_shipment_id", "Amazon Shipment Id"},
-            {"key_order_id_amazon_shipment_id", "key_order_id_shipment_id"},
-            {"Key Column: Region | SKU", "Key Column: Region | SKU"}, // Mantido igual
-            {"order_date", "Order Date"},
-            {"delivery_date", "Delivery Date"},
-            {"status", "Status"},
-            {"amazon_shipment_name", "Amazon Shipment Name"},
-            {"asin", "ASIN"}, // Nova coluna adicionada
-            {"sku", "SKU"},    // Nova coluna adicionada
-            {"quantity", "Quantity"},
-            {"units_per_carton", "Units / Carton"},
-            {"carton_count", "Carton Count"},
-            {"carton_cbm", "Carton CBM"},
-            {"total_cbm", "Total CBM"},
-            {"inventory_region", "Region"},
-            {"unit_purchase_cost_usd", "Unit Purchase Cost Local Currency"}, // USD → Local Currency
-            {"total_purchase_cost_usd", "Total Purchase Cost Local Currency"},
-            {"unit_landed_cost_usd", "Unit Landed Cost Local Currency"},
-            {"total_landed_cost_usd", "Total Landed Cost Local Currency"},
-            {"landed_cost_type", "Landed Cost Type"},
-            {"unit_transfer_cost_local_currency", "Unit Transfer Cost Local Currency"},
-            {"total_transfer_cost_local_currency", "Total Transfer Cost Local Currency"},
-            {"unit_estimated_3pl_processing_fee", "Unit Estimated 3pl Processing Fee"},
-            {"total_estimated_3pl_processing_fee", "Total Estimated 3pl Processing Fee"},
-            {"units_estimated_3pl_container_devanning", "Units Estimated 3pl Container Devanning"},
-            {"total_estimated_3pl_container_devanning", "Total Estimated 3pl Container Devanning"},
-            {"unit_inbound_placement_fee", "Unit Inbound Placement Fee"},
-            {"total_unit_inbound_placement_fee", "Total Unit Inbound Placement Fee"}
-        },
-        MissingField.Ignore // Ignora colunas não encontradas
-    )
-in
-    RenomearColunas
-```
-
-
 ### `fact_removal_replacement_orders`
 
 **Modo:** `import`  **Grupo:** `Fact`  
 **Colunas:** `amazon_order_id` string, `merchant_order_id` string, `replacement_order_id` string, `order_type` string, `replacement_type` string, `asin` string, `quantity` int64, `sales_country` string, `sales_marketplace` string, `replacement_purchase_date` dateTime, `purchase_date` dateTime, `sku` string, `sales_region` string, `key_sales_region_asin` string  
 ```powerquery
 let
-    Source = bigQuery_customFunction("amazon-sp-api-openbridge.2_Silver_Sales_Returns.vw_full_classified_orders"),
+    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_gold_commercial.amazon_classified_orders_view"),
     #"Filtered Rows" = Table.SelectRows(Source, each ([order_type] = "REMOVAL" or [order_type] = "REPLACEMENT")),
     #"Sorted Rows" = Table.Sort(#"Filtered Rows",{{"purchase_date", Order.Descending}}),
     #"Inserted Merged Column" = Table.AddColumn(#"Sorted Rows", "key_sales_region_asin", each Text.Combine({[sales_region], [asin]}, " | "), type text)
@@ -2581,27 +2488,22 @@ in
 ### `fact_sb_attributed_purchase`
 
 **Modo:** `directQuery`  
-**Colunas:** `sponsored_ads_type` string, `date_sb_attributed_purchase` dateTime, `currency` string, `campaign_name` string, `ad_group_name` string, `attribution_type` string, `key_marketplace_purchased_asin` string, `total_sales_14d` double, `total_orders_14d` int64, `total_units_sold_14d` int64, `new_to_brand_sales_14d` double, `new_to_brand_orders_14d` int64, `new_to_brand_units_sold_14d` int64, `new_to_brand_sales_percentage_14d` double, `new_to_brand_orders_percentage_14d` double, `new_to_brand_units_sold_percentage_14d` double  
+**Colunas:** `sponsored_ads_type` string, `date_sb_attributed_purchase` dateTime, `currency` string, `campaign_name` string, `ad_group_name` string, `attribution_type` string, `key_marketplace_purchased_asin` string, `total_sales_14d` double, `total_orders_14d` int64, `total_units_sold_14d` int64, `new_to_brand_sales_14d` double, `new_to_brand_orders_14d` int64, `new_to_brand_units_sold_14d` int64, `new_to_brand_sales_percentage_14d` double, `new_to_brand_orders_percentage_14d` double, `new_to_brand_units_sold_percentage_14d` double, `campaign_id` string, `campaign_name_last` string, `ad_group_id` string, `ad_group_name_last` string  
 
 ### `fact_sb_search_terms`
 
 **Modo:** `directQuery`  
-**Colunas:** `sponsored_ads_type` string, `date_sb_search_terms` dateTime, `marketplace` string, `currency` string, `campaign_name` string, `ad_group_name` string, `targeting` string, `match_type` string, `customer_search_term` string, `cost_type` string, `impressions` int64, `clicks` int64, `spend` double, `total_sales` double, `total_orders` int64, `total_units_sold` int64, `total_sales_clicks` double, `total_orders_clicks` int64  
+**Colunas:** `sponsored_ads_type` string, `date_sb_search_terms` dateTime, `marketplace` string, `currency` string, `campaign_name` string, `ad_group_name` string, `targeting` string, `match_type` string, `customer_search_term` string, `cost_type` string, `impressions` int64, `clicks` int64, `spend` double, `total_sales` double, `total_orders` int64, `total_units_sold` int64, `total_sales_clicks` double, `total_orders_clicks` int64, `campaign_id` string, `campaign_name_last` string, `ad_group_id` string, `ad_group_name_last` string, `targeting_id` string  
 
 ### `fact_sb_spend_by_sku`
 
 **Modo:** `directQuery`  
 **Colunas:** `date_sb` dateTime, `key_marketplace_asin` string, `currency_sb` string, `sb_orders` int64, `sb_sales` double, `sb_spend` double, `sponsored_ads_type` string  
 
-### `fact_SCPR_all_reviews`
-
-**Modo:** `directQuery`  
-**Colunas:** `Quarter` string, `Year` string, `Company Name` string, `Attribute` string, `Grade` int64, `Comment` string, `Weight` int64, `Category` string, `Period` string  
-
 ### `fact_sd_advertised_products`
 
 **Modo:** `directQuery`  
-**Colunas:** `date_sb_advertised_products` dateTime, `key_marketplace_advertised_sku` string, `campaign_name` string, `ad_group_name` string, `currency` string, `impressions` int64, `clicks` int64, `spend` double, `advertised_sku_orders_14d` int64, `advertised_sku_sales_14d` double, `advertised_sku_units_sold_14d` int64, `other_sku_orders_14d` int64, `other_sku_sales_14d` double, `other_sku_units_sold_14d` int64, `advertised_sku_new_to_brand_orders_14d` int64, `advertised_sku_new_to_brand_sales_14d` double, `advertised_sku_new_to_brand_units_sold_14d` int64, `other_sku_new_to_brand_orders_14d_clicks` int64, `other_sku_new_to_brand_sales_14d_clicks` double, `other_sku_new_to_brand_units_sold_14d_clicks` int64, `sponsored_ads_type` string  
+**Colunas:** `date_sb_advertised_products` dateTime, `key_marketplace_advertised_sku` string, `campaign_name` string, `ad_group_name` string, `currency` string, `impressions` int64, `clicks` int64, `spend` double, `advertised_sku_orders_14d` int64, `advertised_sku_sales_14d` double, `advertised_sku_units_sold_14d` int64, `other_sku_orders_14d` int64, `other_sku_sales_14d` double, `other_sku_units_sold_14d` int64, `advertised_sku_new_to_brand_orders_14d` int64, `advertised_sku_new_to_brand_sales_14d` double, `advertised_sku_new_to_brand_units_sold_14d` int64, `other_sku_new_to_brand_orders_14d_clicks` int64, `other_sku_new_to_brand_sales_14d_clicks` double, `other_sku_new_to_brand_units_sold_14d_clicks` int64, `sponsored_ads_type` string, `campaign_id` string, `campaign_name_last` string, `ad_group_id` string, `ad_group_name_last` string  
 
 ### `fact_seller_suport_cases`
 
@@ -2611,17 +2513,17 @@ in
 ### `fact_sp_advertised_products`
 
 **Modo:** `directQuery`  
-**Colunas:** `date_sp_advertised_products` dateTime, `key_marketplace_advertised_sku` string, `campaign_name` string, `ad_group_name` string, `currency` string, `impressions` int64, `clicks` int64, `spend` double, `advertised_sku_orders_7d` int64, `advertised_sku_sales_7d` double, `advertised_sku_units_sold_7d` int64, `other_sku_units_sold_7d` int64, `other_sku_sales_7d` double, `other_sku_orders_7d` int64, `sponsored_ads_type` string  
+**Colunas:** `date_sp_advertised_products` dateTime, `key_marketplace_advertised_sku` string, `campaign_name` string, `ad_group_name` string, `currency` string, `impressions` int64, `clicks` int64, `spend` double, `advertised_sku_orders_7d` int64, `advertised_sku_sales_7d` double, `advertised_sku_units_sold_7d` int64, `other_sku_units_sold_7d` int64, `other_sku_sales_7d` double, `other_sku_orders_7d` int64, `sponsored_ads_type` string, `campaign_id` string, `campaign_name_last` string, `ad_group_id` string, `ad_group_name_last` string  
 
 ### `fact_sp_purchased_products`
 
 **Modo:** `directQuery`  
-**Colunas:** `date_sp_purchased_products` dateTime, `campaign_name` string, `ad_group_name` string, `match_type` string, `currency` string, `key_marketplace_advertised_sku` string, `key_marketplace_purchased_asin` string, `units_sold_other_sku` int64, `orders_other_sku` int64, `sales_other_sku` double, `sponsored_ads_type` string, `targeting` string  
+**Colunas:** `date_sp_purchased_products` dateTime, `campaign_name` string, `ad_group_name` string, `match_type` string, `currency` string, `key_marketplace_advertised_sku` string, `key_marketplace_purchased_asin` string, `units_sold_other_sku` int64, `orders_other_sku` int64, `sales_other_sku` double, `sponsored_ads_type` string, `targeting` string, `campaign_id` string, `campaign_name_last` string, `ad_group_id` string, `ad_group_name_last` string, `targeting_id` string  
 
 ### `fact_sp_search_terms`
 
 **Modo:** `directQuery`  
-**Colunas:** `sponsored_ads_type` string, `date_sp_search_terms` dateTime, `marketplace` string, `currency` string, `campaign_name` string, `ad_group_name` string, `targeting` string, `match_type` string, `customer_search_term` string, `impressions` int64, `clicks` int64, `spend` double, `total_units_sold_7d` int64, `total_sales_7d` double, `total_orders_7d` int64, `advertised_sku_units_sold_7d` int64, `advertised_sku_sales_7d` double, `advertised_sku_orders_7d` int64, `other_sku_units_sold_7d` int64, `other_sku_sales_7d` double, `other_sku_orders_7d` int64  
+**Colunas:** `sponsored_ads_type` string, `date_sp_search_terms` dateTime, `marketplace` string, `currency` string, `campaign_name` string, `ad_group_name` string, `targeting` string, `match_type` string, `customer_search_term` string, `impressions` int64, `clicks` int64, `spend` double, `total_units_sold_7d` int64, `total_sales_7d` double, `total_orders_7d` int64, `advertised_sku_units_sold_7d` int64, `advertised_sku_sales_7d` double, `advertised_sku_orders_7d` int64, `other_sku_units_sold_7d` int64, `other_sku_sales_7d` double, `other_sku_orders_7d` int64, `campaign_id` string, `campaign_name_last` string, `ad_group_id` string, `adgroup_name_last` string, `targeting_id` string  
 
 ### `fact_storage_fee_daily`
 
@@ -2639,92 +2541,7 @@ in
 **Colunas:** `amazon_shipment_id` string, `key_inventory_region_sku` string, `quantity_shipped` int64, `quantity_received` int64, `quantity_discrepancy` int64, `last_shipment_status` string, `delivery_date` dateTime, `agreed_delivery_date` dateTime, `inventory_region` string, `type` string, `amazon_shipment_name` string, `order_id` string, `supplier` string, `freight_forwarder` string, `order_date` dateTime, `LT` int64, `current_status` string, `destination_fulfillment_center_id` string  
 ```powerquery
 let
-    Source = Value.NativeQuery(GoogleBigQuery.Database([Implementation="2.0"]){[Name="amazon-sp-api-openbridge"]}[Data], "WITH shipment_status_changes AS (
-  SELECT 
-    amazon_shipment_id,
-    amazon_shipment_name,
-    shipment_status,
-    DATE(snapshot_date) AS snapshot_date
-  FROM `amazon-sp-api-openbridge.1_Gold_Inventory.tb_log_full_inventory_amazon_inbound_shipments`
-),
-
-shipment_dates AS (
-  SELECT
-    amazon_shipment_id,
-    ANY_VALUE(amazon_shipment_name) AS amazon_shipment_name,
-    MIN(snapshot_date) AS transfer_date,
-    MIN(CASE WHEN shipment_status IN ('RECEIVING', 'CLOSED') THEN snapshot_date END) AS delivery_date,
-    DATE_ADD(MIN(snapshot_date), INTERVAL 13 DAY) AS agreed_delivery_date
-  FROM shipment_status_changes
-  GROUP BY amazon_shipment_id
-),
-
-sku_level AS (
-  SELECT
-    amazon_shipment_id,
-    amazon_shipment_name,
-    key_inventory_region_sku,
-    ANY_VALUE(quantity_shipped) AS quantity_shipped,
-    ANY_VALUE(quantity_received) AS quantity_received,
-    ANY_VALUE(quantity_discrepancy) AS quantity_discrepancy,
-    ANY_VALUE(shipment_status) AS last_shipment_status
-  FROM `amazon-sp-api-openbridge.1_Gold_Inventory.vw_full_inventory_amazon_inbound_shipments`
-  GROUP BY amazon_shipment_id, key_inventory_region_sku, amazon_shipment_name
-),
-
-type AS (
-  SELECT DISTINCT
-    a.amazon_shipment_id
-    , a.order_id
-    , a.type
-    , b.agreed_delivery_date
-    , b.delivery_date
-    , b.supplier
-    , b.freight_forwarder
-    , b.order_date
-  FROM `amazon-sp-api-openbridge.1_Gold_Google_Sheets.td_full_order_transfer_details` a
-
-  LEFT JOIN `amazon-sp-api-openbridge.1_Gold_Google_Sheets.td_full_order_records` b
-    ON a.order_id = b.order_id
-
-  WHERE a.amazon_shipment_id NOT IN ('','-')
-)
-
-SELECT DISTINCT
-  s.amazon_shipment_id,
-  S.amazon_shipment_name,
-  t.order_id,
-  t.supplier,
-  t.freight_forwarder,
-  s.key_inventory_region_sku,
-  s.quantity_shipped,
-  s.quantity_received,
-  s.quantity_discrepancy,
-  s.last_shipment_status,
-  c.shipment_status as current_status,
-  IFNULL(t.order_date, d.transfer_date) AS order_date,
-  IFNULL(d.delivery_date,t.delivery_date) AS delivery_date,
-  IFNULL(t.agreed_delivery_date,d.agreed_delivery_date) AS agreed_delivery_date,
-  CASE
-    WHEN IFNULL(d.delivery_date,t.delivery_date) IS NOT NULL
-      THEN DATE_DIFF(IFNULL(d.delivery_date,t.delivery_date),IFNULL(t.order_date, d.transfer_date),DAY)
-    ELSE DATE_DIFF(CURRENT_DATE(),IFNULL(t.order_date, d.transfer_date) , DAY)
-  END AS LT,
-  c.inventory_region,
-  c.destination_fulfillment_center_id,
-  t.type
-FROM sku_level s
-
-JOIN shipment_dates d
-  ON s.amazon_shipment_id = d.amazon_shipment_id
-  
-LEFT JOIN `amazon-sp-api-openbridge.1_Gold_Inventory.vw_full_inventory_amazon_inbound_shipments` c
-  ON s.amazon_shipment_id = c.amazon_shipment_id
-
-LEFT JOIN type t
-  ON s.amazon_shipment_id = t.amazon_shipment_id
-
-WHERE s.last_shipment_status <> 'CANCELLED'", null, [EnableFolding=true])
+    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_gold_inventory.amazon_inbound_transfers_view")
 in
     Source
 ```
@@ -2745,15 +2562,6 @@ in
 **Modo:** `directQuery`  
 **Colunas:** `Date` dateTime, `Key Column: Country | SKU` string, `Disposition` string, `starting_warehouse_balance` int64, `ending_plus_transit` int64, `Key Column: Country | ASIN` string, `Location Group` string  
 
-### `SCPR_Metrics`
-
-**Modo:** `directQuery`  
-
-### `shifting_fba_costs_aux_table`
-
-**Modo:** `directQuery`  
-**Colunas:** `Alert` string, `Order` int64  
-
 ### `SKUs`
 
 **Modo:** `directQuery`  
@@ -2764,25 +2572,10 @@ in
 **Modo:** `directQuery`  
 **Colunas:** `amazon_order_id` string, `date_all_orders` dateTime, `order_status` string, `item_status` string, `quantity_sku_analysis` int64, `item_status_cross_sales` string, `quantity_sku_cross_sales` int64, `is_same_sku` boolean, `key_sales_marketplace_sku_analysis` string, `key_sales_marketplace_sku_cross_sales` string  
 
-### `tab_parameters_measurements`
-
-**Modo:** `directQuery`  
-**Colunas:** `Type` string, `Order` int64  
-
 ### `td_full_order_transfer_details`
 
 **Modo:** `directQuery`  
 **Colunas:** `type` string, `origin` string, `deliver_at_type` string, `deliver_at_location` string, `order_id` string, `amazon_shipment_id` string, `key_order_id_amazon_shipment_id` string, `key_inventory_region_sku` string, `sku` string, `order_date` dateTime, `delivery_date` dateTime, `status` string, `amazon_shipment_name` string, `quantity` int64, `units_per_carton` int64, `carton_count` double, `carton_cbm` double, `total_cbm` double, `inventory_region` string, `landed_cost_type` string, `unit_transfer_cost_local_currency` double, `total_transfer_cost_local_currency` double, `unit_estimated_3pl_processing_fee` double, `total_estimated_3pl_processing_fee` double, `units_estimated_3pl_container_devanning` double, `total_estimated_3pl_container_devanning` double, `unit_inbound_placement_fee` double, `total_unit_inbound_placement_fee` double, `unit_purchase_cost_local_currency` double, `total_purchase_cost_local_currency` double, `unit_landed_cost_local_currency` double, `total_landed_cost_local_currency` double  
-
-### `The Date Picker`
-
-**Modo:** `directQuery`  
-**Colunas:** `Name` string, `Ordinal` int64  
-
-### `z.dynamic_coupon_usage_percentage`
-
-**Modo:** `directQuery`  
-**Colunas:** `Coupon Usage (%)` double  
 
 ### `z.dynamic_Fees_absolute`
 
@@ -2828,6 +2621,11 @@ in
 
 **Modo:** `directQuery`  
 **Colunas:** `field_picker_ads_performance` string, `field_picker_ads_performance Fields` string, `field_picker_ads_performance Order` int64  
+
+### `z.dynamic_parameter_difference_year_over_year`
+
+**Modo:** `directQuery`  
+**Colunas:** `z.dynamic_parameter_difference_year_over_year` string, `z.dynamic_parameter_difference_year_over_year Fields` string, `z.dynamic_parameter_difference_year_over_year Order` int64, `Theme` string  
 
 ### `z.dynamic_parameter_low_stock_tacos_acos`
 
