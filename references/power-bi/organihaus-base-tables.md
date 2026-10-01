@@ -381,7 +381,7 @@ O modelo usa **chaves compostas concatenadas** com separador ` | `. Ha 9 variaco
 
 ---
 
-## Medidas DAX — Measurement Table (771 medidas)
+## Medidas DAX — Measurement Table (786 medidas)
 
 
 ### 3PL Reports
@@ -1229,6 +1229,44 @@ VAR _value = [%_ppc_tacos_over_net_revenue_promotion_tax]
 
 
     VAR _ui_ux ="TACOS (Net of VAT): " & _valueFormated
+
+RETURN
+    _ui_ux
+```
+
+#### `ux_ui_%_revenue_loss_month_over_month_mom`
+
+**Depende de medidas:** `[%_revenue_loss_month_over_month_mom]`  
+```dax
+VAR _value = [%_revenue_loss_month_over_month_mom]
+    VAR _valueFormated = FORMAT(_value, "0.0%") 
+    VAR _arrowUpDown =     
+        IF (
+            _value >= 0
+            , UNICHAR ( 9650 )
+            , UNICHAR ( 9660 )
+        )
+
+    VAR _ui_ux = _arrowUpDown & " " & _valueFormated
+
+RETURN
+    _ui_ux
+```
+
+#### `ux_ui_%_revenue_loss_year_over_year_yoy`
+
+**Depende de medidas:** `[%_revenue_loss_year_over_year_yoy]`  
+```dax
+VAR _value = [%_revenue_loss_year_over_year_yoy]
+    VAR _valueFormated = FORMAT(_value, "0.0%") 
+    VAR _arrowUpDown =     
+        IF (
+            _value >= 0
+            , UNICHAR ( 9650 )
+            , UNICHAR ( 9660 )
+        )
+
+    VAR _ui_ux = _arrowUpDown & " " & _valueFormated
 
 RETURN
     _ui_ux
@@ -2998,12 +3036,12 @@ IF(
 
 #### `$_awd_storage_fee`
 
-**Depende de colunas:** `'fact_awd_monthly_storage_fee'[daily_charged_amount]`  
+**Depende de medidas:** `[$_awd_storage_fee_actual]`, `[$_awd_storage_fee_forecast]`  
 ```dax
-VAR _result = SUM( 'fact_awd_monthly_storage_fee'[daily_charged_amount] )
+VAR _awd_storage_fee = [$_awd_storage_fee_actual] + [$_awd_storage_fee_forecast]
 
 RETURN
-    _result
+    _awd_storage_fee
 ```
 
 #### `$_awd_transportation_processing_fees`
@@ -3016,32 +3054,42 @@ RETURN
 
 #### `$_awd_transportation_fee`
 
-**Depende de colunas:** `'Calendar'[Start of Month]`, `'fact_awd_monthly_transportation_fee'[fee_amount]`, `'fact_awd_monthly_transportation_fee'[promotion_amount]`, `'fact_awd_monthly_transportation_fee'[tax_amount]`  
+**Depende de colunas:** `'fact_awd_monthly_transportation_fee'[total_charged_amount]`  
 ```dax
-VAR _daysInMonth = DAY(ENDOFMONTH('Calendar'[Start of Month])) -- Calculate the days in the related month
-    
+VAR _result = SUM( 'fact_awd_monthly_transportation_fee'[total_charged_amount] )
+
 RETURN
-    SUMX(
-        'fact_awd_monthly_transportation_fee'
-        ,   ('fact_awd_monthly_transportation_fee'[fee_amount]
-        -   'fact_awd_monthly_transportation_fee'[promotion_amount] 
-        +   'fact_awd_monthly_transportation_fee'[tax_amount])/_daysInMonth
-    )
+    _result
 ```
 
 #### `$_awd_processing_fee`
 
-**Depende de colunas:** `'Calendar'[Start of Month]`, `'fact_awd_monthly_processing_fee'[fee_amount]`, `'fact_awd_monthly_processing_fee'[promotion_amount]`, `'fact_awd_monthly_processing_fee'[tax_amount]`  
+**Depende de colunas:** `'fact_awd_monthly_processing_fee'[total_charged_amount]`  
 ```dax
-VAR _daysInMonth = DAY(ENDOFMONTH('Calendar'[Start of Month])) -- Calculate the days in the related month
-    
+VAR _result = SUM( 'fact_awd_monthly_processing_fee'[total_charged_amount])
+
 RETURN
-    SUMX(
-        'fact_awd_monthly_processing_fee',
-        ('fact_awd_monthly_processing_fee'[fee_amount] 
-        - 'fact_awd_monthly_processing_fee'[promotion_amount] 
-        + 'fact_awd_monthly_processing_fee'[tax_amount]) / _daysInMonth
-    )
+    _result
+```
+
+#### `%_awd_storage_fee_over_revenue`
+
+**Depende de medidas:** `[$_awd_storage_fee]`, `[$_revenue]`  
+```dax
+DIVIDE(
+    [$_awd_storage_fee]
+    , [$_revenue]
+)
+```
+
+#### `%_awd_storage_fee_over_net_revenue`
+
+**Depende de medidas:** `[$_awd_storage_fee]`, `[$_net_revenue]`  
+```dax
+VAR _div = DIVIDE( [$_awd_storage_fee], [$_net_revenue] ) 
+
+RETURN
+    _div
 ```
 
 #### `u_awd_processing_fee_quantity`
@@ -3064,7 +3112,7 @@ RETURN
     _total_units
 ```
 
-#### `$_avg_awd_storage_fee`
+#### `$_awd_storage_fee_avg`
 
 **Depende de medidas:** `[$_awd_storage_fee]`  
 **Depende de colunas:** `'Calendar'[Date]`  
@@ -3073,6 +3121,94 @@ VAR TotalFees = [$_awd_storage_fee]
 VAR TotalDays = COUNTROWS( VALUES('Calendar'[Date]) )
 RETURN
     DIVIDE(TotalFees, TotalDays)
+```
+
+#### `%_awd_storage_fee_over_net_revenue_promotion_tax`
+
+**Depende de medidas:** `[$_awd_storage_fee]`, `[$_net_revenue_promotion_tax]`  
+**Depende de colunas:** `AllOrders[tax_within_price]`, `Mirrors[%_awd_storage_fee_over_net_revenue]`  
+```dax
+// VAT-exclusive denominator so EU/UK is comparable to US/CA/MX.
+    // Mirrors [%_awd_storage_fee_over_net_revenue] but divides by
+    // [$_net_revenue_promotion_tax], which strips f.AllOrders[tax_within_price].
+
+    VAR _div = DIVIDE( [$_awd_storage_fee], [$_net_revenue_promotion_tax] )
+
+RETURN
+    _div
+```
+
+#### `$_awd_storage_fee_usd`
+
+**Depende de colunas:** `'fact_awd_estimated_future_daily_storage_fee'[estimated_daily_storage_fee]`, `'fact_awd_estimated_future_daily_storage_fee'[exchange_rate_to_usd]`, `'fact_awd_monthly_storage_fee'[estimated_daily_storage_fee]`, `'fact_awd_monthly_storage_fee'[exchange_rate_to_usd]`  
+```dax
+VAR _actualUSD =
+    SUMX('fact_awd_monthly_storage_fee',
+        'fact_awd_monthly_storage_fee'[estimated_daily_storage_fee] * 'fact_awd_monthly_storage_fee'[exchange_rate_to_usd])
+VAR _forecastUSD =
+    SUMX('fact_awd_estimated_future_daily_storage_fee',
+        'fact_awd_estimated_future_daily_storage_fee'[estimated_daily_storage_fee] * 'fact_awd_estimated_future_daily_storage_fee'[exchange_rate_to_usd])
+RETURN _actualUSD + _forecastUSD
+```
+
+#### `%_awd_storage_fee_over_net_revenue_promotion_tax_usd`
+
+**Depende de medidas:** `[$_awd_storage_fee_usd]`  
+**Depende de colunas:** `'f.AllOrders'[currency]`, `'f.AllOrders'[date_all_orders]`, `'f.AllOrders'[item_price]`, `'f.AllOrders'[item_promotion_discount]`, `'f.AllOrders'[tax_within_price]`, `'fact_exchange_rates'[date]`, `'fact_exchange_rates'[exchange_rate]`, `'fact_exchange_rates'[ticker]`  
+```dax
+// AWD estimated (actual + forecast) em USD, sobre net revenue VAT-exclusive em USD. Base de comparacao AWD. Auditoria 2026-09-30.
+VAR _netRevPTUSD =
+    SUMX(
+        SUMMARIZE('f.AllOrders', 'f.AllOrders'[currency], 'f.AllOrders'[date_all_orders]),
+        VAR cur = 'f.AllOrders'[currency]
+        VAR dt  = 'f.AllOrders'[date_all_orders]
+        VAR amt = CALCULATE( SUM('f.AllOrders'[item_price]) - SUM('f.AllOrders'[item_promotion_discount]) - SUM('f.AllOrders'[tax_within_price]) )
+        VAR tk  = cur & "USD"
+        VAR rr  = MAXX(TOPN(1, FILTER(ALL('fact_exchange_rates'), 'fact_exchange_rates'[ticker]=tk && 'fact_exchange_rates'[date]<=dt), 'fact_exchange_rates'[date], DESC), 'fact_exchange_rates'[exchange_rate])
+        VAR rfb = MAXX(TOPN(1, FILTER(ALL('fact_exchange_rates'), 'fact_exchange_rates'[ticker]=tk), 'fact_exchange_rates'[date], DESC), 'fact_exchange_rates'[exchange_rate])
+        RETURN amt * IF(cur="USD", 1, COALESCE(rr, rfb))
+    )
+RETURN DIVIDE( [$_awd_storage_fee_usd], _netRevPTUSD )
+```
+
+#### `$_awd_storage_fee_actual`
+
+**Depende de colunas:** `'fact_awd_monthly_storage_fee'[estimated_daily_storage_fee]`  
+```dax
+VAR _result = SUM( 'fact_awd_monthly_storage_fee'[estimated_daily_storage_fee] )
+
+RETURN
+    _result
+```
+
+#### `$_awd_storage_fee_forecast`
+
+**Depende de colunas:** `'fact_awd_estimated_future_daily_storage_fee'[estimated_daily_storage_fee]`  
+```dax
+VAR _result = SUM( 'fact_awd_estimated_future_daily_storage_fee'[estimated_daily_storage_fee] )
+
+RETURN
+    _result
+```
+
+#### `%_awd_storage_fee_actual_over_net_revenue`
+
+**Depende de medidas:** `[$_awd_storage_fee_actual]`, `[$_net_revenue]`  
+```dax
+VAR _div = DIVIDE( [$_awd_storage_fee_actual], [$_net_revenue] ) 
+
+RETURN
+    _div
+```
+
+#### `%_awd_storage_fee_forecast_over_net_revenue`
+
+**Depende de medidas:** `[$_awd_storage_fee_forecast]`, `[$_net_revenue]`  
+```dax
+VAR _div = DIVIDE( [$_awd_storage_fee_forecast], [$_net_revenue] ) 
+
+RETURN
+    _div
 ```
 
 
@@ -3494,57 +3630,44 @@ RETURN
 ```
 
 
-### Fees\Storage Fee\AWD
-
-#### `%_awd_storage_fee_over_revenue`
-
-**Depende de medidas:** `[$_awd_storage_fee]`, `[$_revenue]`  
-```dax
-DIVIDE(
-    [$_awd_storage_fee]
-    , [$_revenue]
-)
-```
-
-
 ### Fees\Storage Fee\Amazon
 
-#### `$_estimated_storage_fee`
+#### `$_amz_storage_fee`
 
-**Depende de medidas:** `[$_estimated_storage_fee_actual]`, `[$_estimated_storage_fee_forecast]`  
+**Depende de medidas:** `[$_amz_storage_fee_actual]`, `[$_amz_storage_fee_forecast]`  
 ```dax
-VAR _storage_fee = [$_estimated_storage_fee_actual] + [$_estimated_storage_fee_forecast]
+VAR _storage_fee = [$_amz_storage_fee_actual] + [$_amz_storage_fee_forecast]
 
 RETURN
     _storage_fee
 ```
 
-#### `%_estimated_storage_fee_over_revenue`
+#### `%_amz_storage_fee_over_revenue`
 
-**Depende de medidas:** `[$_estimated_storage_fee]`, `[$_revenue]`  
+**Depende de medidas:** `[$_amz_storage_fee]`, `[$_revenue]`  
 ```dax
 DIVIDE(
-    [$_estimated_storage_fee]
+    [$_amz_storage_fee]
     , [$_revenue]
 )
 ```
 
 #### `%_storage_fee_per_day_over_total_revenue`
 
-**Depende de medidas:** `[$_estimated_storage_fee]`, `[$_revenue]`  
+**Depende de medidas:** `[$_amz_storage_fee]`, `[$_revenue]`  
 ```dax
 DIVIDE(
-    [$_estimated_storage_fee]
+    [$_amz_storage_fee]
     , [$_revenue]
 )
 ```
 
-#### `$_estimated_storage_fee_per_unit_sold`
+#### `$_amz_storage_fee_per_unit_sold`
 
-**Depende de medidas:** `[$_estimated_storage_fee]`, `[u_units_sold]`  
+**Depende de medidas:** `[$_amz_storage_fee]`, `[u_units_sold]`  
 ```dax
 DIVIDE(
-    [$_estimated_storage_fee]
+    [$_amz_storage_fee]
     , [u_units_sold]
 )
 ```
@@ -3556,25 +3679,25 @@ DIVIDE(
 SUM ( 'fact_storage_fee_measurements'[quantity_on_hand] )
 ```
 
-#### `$_estimated_storage_fee_share`
+#### `$_amz_storage_fee_share`
 
-**Depende de medidas:** `[$_estimated_storage_fee]`  
+**Depende de medidas:** `[$_amz_storage_fee]`  
 **Depende de colunas:** `SKUs[Native Family]`, `SKUs[SKU]`  
 ```dax
 VAR ShareNativeLevel = 
 DIVIDE(
-    [$_estimated_storage_fee],
+    [$_amz_storage_fee],
     CALCULATE(
-        [$_estimated_storage_fee],
+        [$_amz_storage_fee],
         ALLSELECTED(SKUs[Native Family])
     )
 )
 
 VAR ShareSKULevel = 
 DIVIDE(
-    [$_estimated_storage_fee],
+    [$_amz_storage_fee],
     CALCULATE(
-        [$_estimated_storage_fee],
+        [$_amz_storage_fee],
         ALLSELECTED(SKUs[SKU])
     )
 )
@@ -3853,9 +3976,9 @@ SWITCH(
 )
 ```
 
-#### `$_estimated_storage_fee_last_45_days`
+#### `$_amz_storage_fee_last_45_days`
 
-**Depende de medidas:** `[$_estimated_storage_fee]`  
+**Depende de medidas:** `[$_amz_storage_fee]`  
 **Depende de colunas:** `'Calendar'[Date]`  
 ```dax
 VAR _maxDate =
@@ -3866,28 +3989,28 @@ VAR _maxDate =
 
 RETURN
     CALCULATE (
-        [$_estimated_storage_fee],
+        [$_amz_storage_fee],
         DATESINPERIOD ( 'Calendar'[Date], _maxDate ,-45 , DAY )
     )
 ```
 
-#### `$_estimated_storage_fee_actual`
+#### `$_amz_storage_fee_actual`
 
 **Depende de colunas:** `'fact_storage_fee_daily'[estimated_daily_storage_fee]`  
 ```dax
 SUM ( 'fact_storage_fee_daily'[estimated_daily_storage_fee] )
 ```
 
-#### `$_estimated_storage_fee_forecast`
+#### `$_amz_storage_fee_forecast`
 
 **Depende de colunas:** `fact_estimated_future_daily_storage_fee[estimated_daily_storage_fee]`  
 ```dax
 SUM ( fact_estimated_future_daily_storage_fee[estimated_daily_storage_fee] )
 ```
 
-#### `%_estimated_storage_fee_over_revenue_moving_average_21_days`
+#### `%_amz_storage_fee_over_revenue_moving_average_21_days`
 
-**Depende de medidas:** `[$_estimated_storage_fee]`, `[$_revenue]`  
+**Depende de medidas:** `[$_amz_storage_fee]`, `[$_revenue]`  
 **Depende de colunas:** `'Calendar'[Date]`, `'Inventory Ledger'[Date]`  
 ```dax
 VAR _timeFrame = 21
@@ -3900,7 +4023,7 @@ VAR _timeFrame = 21
             DATEADD(_lastDate, - 1, DAY)
         )
 
-    VAR _totalStorageFee = SUMX ( _datesBetween, [$_estimated_storage_fee] )
+    VAR _totalStorageFee = SUMX ( _datesBetween, [$_amz_storage_fee] )
     VAR _totalRevenue = SUMX ( _datesBetween, [$_revenue] )
 
     VAR _movingAverage = DIVIDE( _totalStorageFee, _totalRevenue )
@@ -3911,32 +4034,12 @@ _movingAverage
 
 #### `%_amz_storage_fee_over_net_revenue`
 
-**Depende de medidas:** `[$_estimated_storage_fee]`, `[$_net_revenue]`  
+**Depende de medidas:** `[$_amz_storage_fee]`, `[$_net_revenue]`  
 ```dax
-VAR _div = DIVIDE( [$_estimated_storage_fee], [$_net_revenue] ) 
+VAR _div = DIVIDE( [$_amz_storage_fee], [$_net_revenue] ) 
 
 RETURN
     _div
-```
-
-#### `%_awd_storage_fee_over_net_revenue`
-
-**Depende de medidas:** `[$_awd_storage_fee]`, `[$_net_revenue]`  
-```dax
-VAR _div = DIVIDE( [$_awd_storage_fee], [$_net_revenue] ) 
-
-RETURN
-    _div
-```
-
-#### `%_estimated_storage_fee_over_net_revenue`
-
-**Depende de medidas:** `[$_estimated_storage_fee]`, `[$_net_revenue]`  
-```dax
-DIVIDE(
-    [$_estimated_storage_fee]
-    , [$_net_revenue]
-)
 ```
 
 #### `u_avg_quantity_on_hand_storage_fee`
@@ -3946,12 +4049,12 @@ DIVIDE(
 AVERAGE ( 'fact_storage_fee_measurements'[quantity_on_hand] )
 ```
 
-#### `$_avg_estimated_storage_fee`
+#### `$_amz_storage_fee_avg`
 
-**Depende de medidas:** `[$_estimated_storage_fee]`  
+**Depende de medidas:** `[$_amz_storage_fee]`  
 **Depende de colunas:** `'Calendar'[Date]`  
 ```dax
-VAR TotalFees = [$_estimated_storage_fee]
+VAR TotalFees = [$_amz_storage_fee]
 VAR TotalDays = COUNTROWS( VALUES('Calendar'[Date]) )
 RETURN
     DIVIDE(TotalFees, TotalDays)
@@ -3959,44 +4062,138 @@ RETURN
 
 #### `%_amz_storage_fee_over_net_revenue_promotion_tax`
 
-**Depende de medidas:** `[$_estimated_storage_fee]`, `[$_net_revenue_promotion_tax]`  
+**Depende de medidas:** `[$_amz_storage_fee]`, `[$_net_revenue_promotion_tax]`  
 **Depende de colunas:** `AllOrders[tax_within_price]`, `Mirrors[%_amz_storage_fee_over_net_revenue]`  
 ```dax
 // VAT-exclusive denominator so EU/UK is comparable to US/CA/MX.
     // Mirrors [%_amz_storage_fee_over_net_revenue] but divides by
     // [$_net_revenue_promotion_tax], which strips f.AllOrders[tax_within_price].
 
-    VAR _div = DIVIDE( [$_estimated_storage_fee], [$_net_revenue_promotion_tax] )
+    VAR _div = DIVIDE( [$_amz_storage_fee], [$_net_revenue_promotion_tax] )
 
 RETURN
     _div
 ```
 
-#### `%_awd_storage_fee_over_net_revenue_promotion_tax`
+#### `%_amz_storage_fee_over_revenue_usd`
 
-**Depende de medidas:** `[$_awd_storage_fee]`, `[$_net_revenue_promotion_tax]`  
-**Depende de colunas:** `AllOrders[tax_within_price]`, `Mirrors[%_awd_storage_fee_over_net_revenue]`  
+**Depende de colunas:** `'f.AllOrders'[currency]`, `'f.AllOrders'[date_all_orders]`, `'f.AllOrders'[item_price]`, `'fact_estimated_future_daily_storage_fee'[estimated_daily_storage_fee]`, `'fact_estimated_future_daily_storage_fee'[exchange_rate_to_usd]`, `'fact_exchange_rates'[date]`, `'fact_exchange_rates'[exchange_rate]`, `'fact_exchange_rates'[ticker]`, `'fact_storage_fee_daily'[currency]`, `'fact_storage_fee_daily'[date_daily_share_of_storage_fee]`, `'fact_storage_fee_daily'[estimated_daily_storage_fee]`  
 ```dax
-// VAT-exclusive denominator so EU/UK is comparable to US/CA/MX.
-    // Mirrors [%_awd_storage_fee_over_net_revenue] but divides by
-    // [$_net_revenue_promotion_tax], which strips f.AllOrders[tax_within_price].
+VAR _feeActualUSD =
+    SUMX(
+        SUMMARIZE('fact_storage_fee_daily',
+            'fact_storage_fee_daily'[currency],
+            'fact_storage_fee_daily'[date_daily_share_of_storage_fee]),
+        VAR cur = 'fact_storage_fee_daily'[currency]
+        VAR dt  = 'fact_storage_fee_daily'[date_daily_share_of_storage_fee]
+        VAR amt = CALCULATE(SUM('fact_storage_fee_daily'[estimated_daily_storage_fee]))
+        VAR tk  = cur & "USD"
+        VAR rr  = MAXX(TOPN(1, FILTER(ALL('fact_exchange_rates'),
+                        'fact_exchange_rates'[ticker]=tk && 'fact_exchange_rates'[date]<=dt),
+                     'fact_exchange_rates'[date], DESC), 'fact_exchange_rates'[exchange_rate])
+        VAR rfb = MAXX(TOPN(1, FILTER(ALL('fact_exchange_rates'),
+                        'fact_exchange_rates'[ticker]=tk),
+                     'fact_exchange_rates'[date], DESC), 'fact_exchange_rates'[exchange_rate])
+        RETURN amt * IF(cur="USD", 1, COALESCE(rr, rfb))
+    )
+VAR _feeForecastUSD =
+    SUMX('fact_estimated_future_daily_storage_fee',
+        'fact_estimated_future_daily_storage_fee'[estimated_daily_storage_fee]
+        * 'fact_estimated_future_daily_storage_fee'[exchange_rate_to_usd])
+VAR _revUSD =
+    SUMX(
+        SUMMARIZE('f.AllOrders',
+            'f.AllOrders'[currency],
+            'f.AllOrders'[date_all_orders]),
+        VAR cur = 'f.AllOrders'[currency]
+        VAR dt  = 'f.AllOrders'[date_all_orders]
+        VAR amt = CALCULATE(SUM('f.AllOrders'[item_price]))
+        VAR tk  = cur & "USD"
+        VAR rr  = MAXX(TOPN(1, FILTER(ALL('fact_exchange_rates'),
+                        'fact_exchange_rates'[ticker]=tk && 'fact_exchange_rates'[date]<=dt),
+                     'fact_exchange_rates'[date], DESC), 'fact_exchange_rates'[exchange_rate])
+        VAR rfb = MAXX(TOPN(1, FILTER(ALL('fact_exchange_rates'),
+                        'fact_exchange_rates'[ticker]=tk),
+                     'fact_exchange_rates'[date], DESC), 'fact_exchange_rates'[exchange_rate])
+        RETURN amt * IF(cur="USD", 1, COALESCE(rr, rfb))
+    )
+RETURN DIVIDE(_feeActualUSD + _feeForecastUSD, _revUSD)
+```
 
-    VAR _div = DIVIDE( [$_awd_storage_fee], [$_net_revenue_promotion_tax] )
+#### `$_amz_storage_fee_usd`
+
+**Depende de colunas:** `'fact_estimated_future_daily_storage_fee'[estimated_daily_storage_fee]`, `'fact_estimated_future_daily_storage_fee'[exchange_rate_to_usd]`, `'fact_exchange_rates'[date]`, `'fact_exchange_rates'[exchange_rate]`, `'fact_exchange_rates'[ticker]`, `'fact_storage_fee_daily'[currency]`, `'fact_storage_fee_daily'[date_daily_share_of_storage_fee]`, `'fact_storage_fee_daily'[estimated_daily_storage_fee]`  
+```dax
+VAR _forecastUSD =
+    SUMX('fact_estimated_future_daily_storage_fee',
+        'fact_estimated_future_daily_storage_fee'[estimated_daily_storage_fee]
+        * 'fact_estimated_future_daily_storage_fee'[exchange_rate_to_usd])
+VAR _actualUSD =
+    SUMX(
+        SUMMARIZE('fact_storage_fee_daily', 'fact_storage_fee_daily'[currency], 'fact_storage_fee_daily'[date_daily_share_of_storage_fee]),
+        VAR cur = 'fact_storage_fee_daily'[currency]
+        VAR dt = 'fact_storage_fee_daily'[date_daily_share_of_storage_fee]
+        VAR amt = CALCULATE(SUM('fact_storage_fee_daily'[estimated_daily_storage_fee]))
+        VAR tk = cur & "USD"
+        VAR rr = MAXX(TOPN(1, FILTER(ALL('fact_exchange_rates'), 'fact_exchange_rates'[ticker]=tk && 'fact_exchange_rates'[date]<=dt), 'fact_exchange_rates'[date], DESC), 'fact_exchange_rates'[exchange_rate])
+        VAR rfb = MAXX(TOPN(1, FILTER(ALL('fact_exchange_rates'), 'fact_exchange_rates'[ticker]=tk), 'fact_exchange_rates'[date], DESC), 'fact_exchange_rates'[exchange_rate])
+        RETURN amt * IF(cur="USD", 1, COALESCE(rr, rfb))
+    )
+RETURN _forecastUSD + _actualUSD
+```
+
+#### `$_amz_storage_fee_share_usd`
+
+**Depende de medidas:** `[$_amz_storage_fee_usd]`  
+**Depende de colunas:** `SKUs[Native Family]`, `SKUs[SKU]`  
+```dax
+VAR ShareNativeLevel = DIVIDE([$_amz_storage_fee_usd], CALCULATE([$_amz_storage_fee_usd], ALLSELECTED(SKUs[Native Family])))
+VAR ShareSKULevel = DIVIDE([$_amz_storage_fee_usd], CALCULATE([$_amz_storage_fee_usd], ALLSELECTED(SKUs[SKU])))
+RETURN
+    SWITCH(TRUE(), ISINSCOPE(SKUs[SKU]), ShareSKULevel, ISINSCOPE(SKUs[Native Family]), ShareNativeLevel, "-")
+```
+
+#### `%_amz_storage_fee_over_net_revenue_promotion_tax_usd`
+
+**Depende de medidas:** `[$_amz_storage_fee_usd]`  
+**Depende de colunas:** `'f.AllOrders'[currency]`, `'f.AllOrders'[date_all_orders]`, `'f.AllOrders'[item_price]`, `'f.AllOrders'[item_promotion_discount]`, `'f.AllOrders'[tax_within_price]`, `'fact_exchange_rates'[date]`, `'fact_exchange_rates'[exchange_rate]`, `'fact_exchange_rates'[ticker]`  
+```dax
+VAR _netRevPTUSD =
+    SUMX(
+        SUMMARIZE('f.AllOrders', 'f.AllOrders'[currency], 'f.AllOrders'[date_all_orders]),
+        VAR cur = 'f.AllOrders'[currency]
+        VAR dt  = 'f.AllOrders'[date_all_orders]
+        VAR amt = CALCULATE(
+                      SUM('f.AllOrders'[item_price])
+                      - SUM('f.AllOrders'[item_promotion_discount])
+                      - SUM('f.AllOrders'[tax_within_price]) )
+        VAR tk  = cur & "USD"
+        VAR rr  = MAXX(TOPN(1, FILTER(ALL('fact_exchange_rates'),
+                        'fact_exchange_rates'[ticker]=tk && 'fact_exchange_rates'[date]<=dt),
+                     'fact_exchange_rates'[date], DESC), 'fact_exchange_rates'[exchange_rate])
+        VAR rfb = MAXX(TOPN(1, FILTER(ALL('fact_exchange_rates'),
+                        'fact_exchange_rates'[ticker]=tk),
+                     'fact_exchange_rates'[date], DESC), 'fact_exchange_rates'[exchange_rate])
+        RETURN amt * IF(cur="USD", 1, COALESCE(rr, rfb))
+    )
+RETURN DIVIDE( [$_amz_storage_fee_usd], _netRevPTUSD )
+```
+
+#### `%_amz_storage_fee_actual_over_net_revenue`
+
+**Depende de medidas:** `[$_amz_storage_fee_actual]`, `[$_net_revenue]`  
+```dax
+VAR _div = DIVIDE( [$_amz_storage_fee_actual], [$_net_revenue] ) 
 
 RETURN
     _div
 ```
 
-#### `%_estimated_storage_fee_over_net_revenue_promotion_tax`
+#### `%_amz_storage_fee_forecast_over_net_revenue`
 
-**Depende de medidas:** `[$_estimated_storage_fee]`, `[$_net_revenue_promotion_tax]`  
-**Depende de colunas:** `AllOrders[tax_within_price]`, `Mirrors[%_estimated_storage_fee_over_net_revenue]`  
+**Depende de medidas:** `[$_amz_storage_fee_forecast]`, `[$_net_revenue]`  
 ```dax
-// VAT-exclusive denominator so EU/UK is comparable to US/CA/MX.
-    // Mirrors [%_estimated_storage_fee_over_net_revenue] but divides by
-    // [$_net_revenue_promotion_tax], which strips f.AllOrders[tax_within_price].
-
-    VAR _div = DIVIDE( [$_estimated_storage_fee], [$_net_revenue_promotion_tax] )
+VAR _div = DIVIDE( [$_amz_storage_fee_forecast], [$_net_revenue] ) 
 
 RETURN
     _div
@@ -6316,11 +6513,11 @@ RETURN
 
 #### `%_aging_surcharge_over_normal_storage_fee`
 
-**Depende de medidas:** `[$_aging_surcharge_actual_projection]`, `[$_estimated_storage_fee_actual]`  
+**Depende de medidas:** `[$_aging_surcharge_actual_projection]`, `[$_amz_storage_fee_actual]`  
 ```dax
 DIVIDE (
     [$_aging_surcharge_actual_projection],
-    [$_estimated_storage_fee_actual]
+    [$_amz_storage_fee_actual]
 )
 ```
 
@@ -8998,13 +9195,6 @@ RETURN
         IntervalTable,
         [Interval]
     )
-```
-
-#### `average_grade`
-
-**Depende de colunas:** `'fact_SCPR_all_reviews'[Grade]`  
-```dax
-AVERAGE('fact_SCPR_all_reviews'[Grade])
 ```
 
 #### `Average_Order_Interval`
@@ -12433,7 +12623,7 @@ RETURN
 
 #### `$_operational_profit`
 
-**Depende de medidas:** `[$_awd_storage_fee]`, `[$_cogs]`, `[$_estimated_storage_fee]`, `[$_net_revenue_promotion_tax]`, `[$_ppc_spend]`, `[$_referral_fee]`, `[$_total_fba_fee_fee_preview]`  
+**Depende de medidas:** `[$_amz_storage_fee]`, `[$_awd_storage_fee]`, `[$_cogs]`, `[$_net_revenue_promotion_tax]`, `[$_ppc_spend]`, `[$_referral_fee]`, `[$_total_fba_fee_fee_preview]`  
 ```dax
 VAR _profit = (
         [$_net_revenue_promotion_tax] 
@@ -12441,7 +12631,7 @@ VAR _profit = (
         - [$_total_fba_fee_fee_preview] 
         - [$_referral_fee] 
         - [$_ppc_spend] 
-        - [$_estimated_storage_fee]
+        - [$_amz_storage_fee]
         - [$_awd_storage_fee]
     )
 
@@ -12491,7 +12681,7 @@ CALCULATE(
 
 #### `$_operational_profit_before_awd`
 
-**Depende de medidas:** `[$_cogs]`, `[$_estimated_storage_fee]`, `[$_net_revenue_promotion_tax]`, `[$_ppc_spend]`, `[$_referral_fee]`, `[$_total_fba_fee_fee_preview]`  
+**Depende de medidas:** `[$_amz_storage_fee]`, `[$_cogs]`, `[$_net_revenue_promotion_tax]`, `[$_ppc_spend]`, `[$_referral_fee]`, `[$_total_fba_fee_fee_preview]`  
 ```dax
 VAR _profit = (
         [$_net_revenue_promotion_tax] 
@@ -12499,7 +12689,7 @@ VAR _profit = (
         - [$_total_fba_fee_fee_preview] 
         - [$_referral_fee] 
         - [$_ppc_spend] 
-        - [$_estimated_storage_fee]
+        - [$_amz_storage_fee]
     )
 
 RETURN
@@ -14204,8 +14394,76 @@ return
     _result
 ```
 
+#### `u_tio_overstock_amz`
 
-## Fontes das Tabelas (91 tabelas)
+**Depende de colunas:** `'fact_db_results_tio'[overstock_amz]`, `'fact_db_results_tio'[start_of_week]`  
+```dax
+VAR _result =
+        CALCULATE(
+            SUM( 'fact_db_results_tio'[overstock_amz] )
+            , FILTER(
+                'fact_db_results_tio'
+                , 'fact_db_results_tio'[start_of_week] = MAX ( 'fact_db_results_tio'[start_of_week] )
+            )
+        )
+
+return
+    _result
+```
+
+#### `u_tio_overstock_3pl`
+
+**Depende de colunas:** `'fact_db_results_tio'[overstock_3pl]`, `'fact_db_results_tio'[start_of_week]`  
+```dax
+VAR _result =
+        CALCULATE(
+            SUM( 'fact_db_results_tio'[overstock_3pl] )
+            , FILTER(
+                'fact_db_results_tio'
+                , 'fact_db_results_tio'[start_of_week] = MAX ( 'fact_db_results_tio'[start_of_week] )
+            )
+        )
+
+return
+    _result
+```
+
+#### `u_tio_ending_balance_without_orders_amz`
+
+**Depende de colunas:** `'fact_db_results_tio'[ending_balance_without_orders_amz]`, `'fact_db_results_tio'[start_of_week]`  
+```dax
+VAR _result =
+        CALCULATE(
+            SUM( 'fact_db_results_tio'[ending_balance_without_orders_amz] )
+            , FILTER(
+                'fact_db_results_tio'
+                , 'fact_db_results_tio'[start_of_week] = MAX ( 'fact_db_results_tio'[start_of_week] )
+            )
+        )
+
+return
+    _result
+```
+
+#### `u_tio_ending_balance_without_orders_3pl`
+
+**Depende de colunas:** `'fact_db_results_tio'[ending_balance_without_orders_3pl]`, `'fact_db_results_tio'[start_of_week]`  
+```dax
+VAR _result =
+        CALCULATE(
+            SUM( 'fact_db_results_tio'[ending_balance_without_orders_3pl] )
+            , FILTER(
+                'fact_db_results_tio'
+                , 'fact_db_results_tio'[start_of_week] = MAX ( 'fact_db_results_tio'[start_of_week] )
+            )
+        )
+
+return
+    _result
+```
+
+
+## Fontes das Tabelas (80 tabelas)
 
 
 ### `Calendar`
@@ -14285,7 +14543,7 @@ GENERATESERIES(0.05, 0.105, 0.005)
 **Colunas:** `amazon_order_id` string, `merchant_order_id` string, `order_status` string, `is_business_order` boolean, `order_id_SK` int64, `date_all_orders` dateTime, `sales_marketplace` string, `sales_channel_temporary` string  
 ```powerquery
 let
-    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Aux.vw_full_dimension_amazon_order_id")
+    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_gold_aux.amazon_order_id_dimension_view")
 in
     Source
 ```
@@ -14297,7 +14555,7 @@ in
 **Colunas:** `inventory_region` string, `inventory_country` string, `fulfillment_center_id` string, `city` string, `state` string, `state_abreviation` string, `country_name` string, `country` string, `zip` string, `address` string, `latitude` string, `longitude` string, `state_country` string, `fc_city_state` string, `Country Region (US/CA Only)` string  
 ```powerquery
 let
-    Source = Csv.Document(File.Contents(path_to_files & "standalone_files\ref_fulfillment_centers_address.csv"),[Delimiter=","]),
+    Source = Csv.Document(File.Contents(path_to_files & "standalone_files\fulfillment_centers_address.csv"),[Delimiter=","]),
     #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
     #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{
         {"fulfillment_center_id", type text}, {"state", type text}
@@ -14310,18 +14568,6 @@ let
     #"Replaced Value" = Table.ReplaceValue(#"Filtered Rows","1-Jan","JAN1",Replacer.ReplaceText,{"fulfillment_center_id"})
 in
     #"Replaced Value"
-```
-
-
-### `dim_awd_fee_type`
-
-**Modo:** `import`  **Grupo:** `Dimensions`  
-**Colunas:** `fee_type_report` string, `fee_type` string  
-```powerquery
-let
-    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("VcuxCoAgEADQX5Gb6yOkVFxUvIMGkZCQaNFQ/5+GIGh/LwRAsp4rsUshYAK+rWxmOGpLZ2YyZ4hTAPLcoLOeOGlrfpRaKv2ubaRx1fIN5+0iELVRP+1aPXLvVzlfGR8=", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [fee_type_report = _t, fee_type = _t])
-in
-    Source
 ```
 
 
@@ -14364,74 +14610,6 @@ in
 ```
 
 
-### `dim_SCPR_category`
-
-**Modo:** `import`  **Grupo:** `LOG\SCPR`  
-**Colunas:** `Category` string, `Attribute` string, `Description` string, `Short Name` string, `Weight` int64  
-```powerquery
-let  
-    Fonte = Excel.Workbook(File.Contents(path_to_files & "standalone_files\db_supply_chain_performance_review.xlsx"), null, true),
-    Category_Sheet = Fonte{[Item="Category",Kind="Sheet"]}[Data],
-    #"Tipo Alterado" = Table.TransformColumnTypes(Category_Sheet,{{"Column1", type text}, {"Column2", type text}, {"Column3", type text}}),
-    #"Cabeçalhos Promovidos" = Table.PromoteHeaders(#"Tipo Alterado", [PromoteAllScalars=true]),
-    #"Tipo Alterado1" = Table.TransformColumnTypes(#"Cabeçalhos Promovidos",{{"Category", type text}, {"Attribute", type text}, {"Description", type text}}),
-    #"Coluna Condicional Adicionada" = Table.AddColumn(#"Tipo Alterado1", "Weight", each if [Category] = "Payment Terms" then 3 else 1),
-    #"Tipo Alterado2" = Table.TransformColumnTypes(#"Coluna Condicional Adicionada",{{"Weight", Int64.Type}})
-in
-    #"Tipo Alterado2"
-```
-
-
-### `dim_SCPR_factory`
-
-**Modo:** `import`  **Grupo:** `LOG\SCPR`  
-**Colunas:** `Name` string, `Type` string  
-```powerquery
-let
-    Fonte = Excel.Workbook(File.Contents(path_to_files & "\standalone_files\db_supply_chain_performance_review.xlsx"), null, true),
-    Type_Sheet = Fonte{[Item="Type",Kind="Sheet"]}[Data],
-    #"Tipo Alterado" = Table.TransformColumnTypes(Type_Sheet,{{"Column1", type text}, {"Column2", type text}}),
-    #"Cabeçalhos Promovidos" = Table.PromoteHeaders(#"Tipo Alterado", [PromoteAllScalars=true]),
-    #"Tipo Alterado1" = Table.TransformColumnTypes(#"Cabeçalhos Promovidos",{{"Name", type text}, {"Type", type text}}),
-    #"Linhas Filtradas" = Table.SelectRows(#"Tipo Alterado1", each ([Type] = "Factory"))
-in
-    #"Linhas Filtradas"
-```
-
-
-### `dim_SCPR_freight`
-
-**Modo:** `import`  **Grupo:** `LOG\SCPR`  
-**Colunas:** `Name` string, `Type` string  
-```powerquery
-let
-    Fonte = Excel.Workbook(File.Contents(path_to_files & "\standalone_files\db_supply_chain_performance_review.xlsx"), null, true),
-    Type_Sheet = Fonte{[Item="Type",Kind="Sheet"]}[Data],
-    #"Tipo Alterado" = Table.TransformColumnTypes(Type_Sheet,{{"Column1", type text}, {"Column2", type text}}),
-    #"Cabeçalhos Promovidos" = Table.PromoteHeaders(#"Tipo Alterado", [PromoteAllScalars=true]),
-    #"Tipo Alterado1" = Table.TransformColumnTypes(#"Cabeçalhos Promovidos",{{"Name", type text}, {"Type", type text}}),
-    #"Linhas Filtradas" = Table.SelectRows(#"Tipo Alterado1", each ([Type] = "Freight Forwarder"))
-in
-    #"Linhas Filtradas"
-```
-
-
-### `dim_SCPR_type`
-
-**Modo:** `import`  **Grupo:** `LOG\SCPR`  
-**Colunas:** `Name` string, `Type` string  
-```powerquery
-let
-    Fonte = Excel.Workbook(File.Contents(path_to_files & "\standalone_files\db_supply_chain_performance_review.xlsx"), null, true),
-    Type_Sheet = Fonte{[Item="Type",Kind="Sheet"]}[Data],
-    #"Tipo Alterado" = Table.TransformColumnTypes(Type_Sheet,{{"Column1", type text}, {"Column2", type text}}),
-    #"Cabeçalhos Promovidos" = Table.PromoteHeaders(#"Tipo Alterado", [PromoteAllScalars=true]),
-    #"Tipo Alterado1" = Table.TransformColumnTypes(#"Cabeçalhos Promovidos",{{"Name", type text}, {"Type", type text}})
-in
-    #"Tipo Alterado1"
-```
-
-
 ### `dim_skus_aux`
 
 **Modo:** `import`  **Grupo:** `Dimensions`  
@@ -14439,18 +14617,6 @@ in
 ```powerquery
 let
     Source = SKUs
-in
-    Source
-```
-
-
-### `dim_sponsored_ads`
-
-**Modo:** `import`  **Grupo:** `Dimensions`  
-**Colunas:** `sponsored_ads_type` string, `sponsored_ads` string, `sponsored_ads_report` string  
-```powerquery
-let
-    Source = bigQuery_customFunction("amazon-sp-api-openbridge.3_Bronze_Aux.td_sponsored_ads")
 in
     Source
 ```
@@ -14948,7 +15114,7 @@ in
 **Colunas:** `marketplace` string, `date` dateTime, `parent_asin` string, `child_asin` string, `mobile_app_sessions` int64, `browser_sessions` int64, `total_sessions` int64, `mobile_app_page_views` int64, `browser_page_views` int64, `total_page_views` int64, `units_ordered` int64, `ordered_product_sales` double, `total_order_items` int64, `ordered_product_sales_currency_code` string, `key_country_asin` string, `buy_box_percentage` double  
 ```powerquery
 let
-    Source = bigQuery_customFunction("amazon-sp-api-openbridge.2_Silver_Business_Reports.vw_business_report_by_child"),
+    Source = bigQuery_customFunction("amazon-sp-api-openbridge.2_silver_commercial.amazon_business_report_by_child_view"),
     selectedColumns = Table.SelectColumns(Source,{"marketplace", "date", "parent_asin", "child_asin", "mobile_app_sessions", "browser_sessions", "total_sessions", "mobile_app_page_views", "browser_page_views", "total_page_views", "buy_box_percentage", "units_ordered", "ordered_product_sales", "total_order_items", "ordered_product_sales_currency_code"}),
     insertedKeyColumn = Table.AddColumn(selectedColumns, "key_country_asin", each Text.Combine({[marketplace], [child_asin]}, " | "), type text),
     #"Divided Column" = Table.TransformColumns(insertedKeyColumn, {{"buy_box_percentage", each _ / 100, type number}})
@@ -15031,6 +15197,23 @@ in
 ```
 
 
+### `fact_awd_estimated_future_daily_storage_fee`
+
+**Modo:** `import`  **Grupo:** `Amazon\AWD`  
+**Colunas:** `date_daily_share_of_storage_fee` dateTime, `country` string, `sku` string, `key_marketplace_sku` string, `currency` string, `estimated_daily_storage_fee` double, `exchange_rate_to_usd` double, `exchange_rate_to_eur` double, `exchange_rate_to_gbp` double  
+```powerquery
+let
+    Source = GoogleBigQuery.Database([Implementation="2.0", UseStorageApi=false, BillingProject="amazon-sp-api-openbridge"]),
+    #"amazon-sp-api-openbridge_Database" = Source{[Name="amazon-sp-api-openbridge",Kind="Database"]}[Data],
+    #"1_gold_fees_Schema" = #"amazon-sp-api-openbridge_Database"{[Name="1_gold_fees",Kind="Schema"]}[Data],
+    awd_estimated_future_daily_storage_fee_view_View = #"1_gold_fees_Schema"{[Name="awd_estimated_future_daily_storage_fee_view",Kind="View"]}[Data],
+    #"Filtered Rows" = Table.SelectRows(awd_estimated_future_daily_storage_fee_view_View, each ([has_actual_invoice] = false)),
+    #"Removed Columns" = Table.RemoveColumns(#"Filtered Rows",{"has_actual_invoice"})
+in
+    #"Removed Columns"
+```
+
+
 ### `fact_awd_inventory_ledger_by_country`
 
 **Modo:** `import`  **Grupo:** `Amazon\Fulfillment\reports_fulfillment`  
@@ -15063,40 +15246,61 @@ in
 ### `fact_awd_monthly_processing_fee`
 
 **Modo:** `import`  **Grupo:** `Amazon\AWD`  
-**Colunas:** `fee_type` string, `key_inventory_country_sku` string, `currency` string, `promotion_amount` double, `tax_amount` double, `month_of_charge` dateTime, `fee_amount` double, `total_units` int64  
+**Colunas:** `key_inventory_country_sku` string, `transaction_date` dateTime, `month_of_charge` dateTime, `total_charged_amount` double, `exchange_rate_to_usd` double, `exchange_rate_to_eur` double  
 ```powerquery
 let
-    Source = raw_awdMonthlyProcessingFee,
-    merged_units_per_carton = Table.NestedJoin(Source, {"key_inventory_country_sku"}, units_per_carton, {"key_country_sku"}, "units_per_carton", JoinKind.LeftOuter),
-    expanded_units_per_carton = Table.ExpandTableColumn(merged_units_per_carton, "units_per_carton", {"units_per_carton"}, {"units_per_carton"}),
-    added_total_units = Table.AddColumn(expanded_units_per_carton, "total_units", each [box_qty] * [units_per_carton], Int64.Type),
-    selectImportantColumns = Table.SelectColumns(added_total_units,{"month_of_charge", "fee_type", "key_inventory_country_sku", "currency", "fee_amount", "promotion_amount", "tax_amount", "total_units"})
+//     Source = raw_awdMonthlyProcessingFee,
+//     merged_units_per_carton = Table.NestedJoin(Source, {"key_inventory_country_sku"}, units_per_carton, {"key_country_sku"}, "units_per_carton", JoinKind.LeftOuter),
+//     expanded_units_per_carton = Table.ExpandTableColumn(merged_units_per_carton, "units_per_carton", {"units_per_carton"}, {"units_per_carton"}),
+//     added_total_units = Table.AddColumn(expanded_units_per_carton, "total_units", each [box_qty] * [units_per_carton], Int64.Type),
+//     selectImportantColumns = Table.SelectColumns(added_total_units,{"month_of_charge", "fee_type", "key_inventory_country_sku", "currency", "fee_amount", "promotion_amount", "tax_amount", "total_units"})
+// in
+//     selectImportantColumns
+
+
+
+    Source = GoogleBigQuery.Database([Implementation="2.0", UseStorageApi=false, BillingProject="amazon-sp-api-openbridge"]),
+    #"amazon-sp-api-openbridge_Database" = Source{[Name="amazon-sp-api-openbridge",Kind="Database"]}[Data],
+    #"1_gold_fees_Schema" = #"amazon-sp-api-openbridge_Database"{[Name="1_gold_fees",Kind="Schema"]}[Data],
+    awd_daily_processing_fee_view_View = #"1_gold_fees_Schema"{[Name="awd_daily_processing_fee_view",Kind="View"]}[Data],
+    select_columns = Table.SelectColumns(awd_daily_processing_fee_view_View,{"transaction_date", "month_of_charge", "key_inventory_country_sku", "total_charged_amount", "exchange_rate_to_usd", "exchange_rate_to_eur"})
 in
-    selectImportantColumns
+    select_columns
 ```
 
 
 ### `fact_awd_monthly_storage_fee`
 
 **Modo:** `import`  **Grupo:** `Amazon\AWD`  
-**Colunas:** `currency` string, `key_inventory_country_sku` string, `date` dateTime, `daily_charged_amount` double  
+**Colunas:** `date_daily_share_of_storage_fee` dateTime, `estimated_daily_storage_fee` double, `exchange_rate_to_usd` double, `exchange_rate_to_eur` double, `exchange_rate_to_gbp` double, `key_inventory_country_sku` string  
 ```powerquery
+let
+// //     Source = raw_awdMonthlyStorageFee,
+// //     selectImportantColumns = Table.SelectColumns(Source,{"month_of_charge", "key_inventory_country_sku", "currency", "monthly_average_utilized_volume", "fee_type", "fee_amount", "promotion_amount", "tax_amount"})
+// // in
+// //     selectImportantColumns
+
+
 // let
 //     Source = raw_awdMonthlyStorageFee,
-//     selectImportantColumns = Table.SelectColumns(Source,{"month_of_charge", "key_inventory_country_sku", "currency", "monthly_average_utilized_volume", "fee_type", "fee_amount", "promotion_amount", "tax_amount"})
+//     selectImportantColumns = Table.SelectColumns(Source,{"key_inventory_country_sku", "total_charged_amount", "currency", "month_of_charge"}),
+//     added_days_in_month = Table.AddColumn(selectImportantColumns, "days_in_month", each Date.DaysInMonth([month_of_charge]), Int64.Type),
+//     added_dates_list = Table.AddColumn(added_days_in_month, "date", each List.Dates([month_of_charge], [days_in_month], #duration(1,0,0,0))),
+//     expnded_dates_list = Table.ExpandListColumn(added_dates_list, "date"),
+//     changed_type_date = Table.TransformColumnTypes(expnded_dates_list,{{"date", type date}}),
+//     added_daily_charged_amount = Table.AddColumn(changed_type_date, "daily_charged_amount", each [total_charged_amount]/[days_in_month], type number),
+//     select_columns = Table.SelectColumns(added_daily_charged_amount,{"date", "key_inventory_country_sku", "currency", "daily_charged_amount"})
 // in
-//     selectImportantColumns
+//     select_columns
 
 
-let
-    Source = raw_awdMonthlyStorageFee,
-    selectImportantColumns = Table.SelectColumns(Source,{"key_inventory_country_sku", "total_charged_amount", "currency", "month_of_charge"}),
-    added_days_in_month = Table.AddColumn(selectImportantColumns, "days_in_month", each Date.DaysInMonth([month_of_charge]), Int64.Type),
-    added_dates_list = Table.AddColumn(added_days_in_month, "date", each List.Dates([month_of_charge], [days_in_month], #duration(1,0,0,0))),
-    expnded_dates_list = Table.ExpandListColumn(added_dates_list, "date"),
-    changed_type_date = Table.TransformColumnTypes(expnded_dates_list,{{"date", type date}}),
-    added_daily_charged_amount = Table.AddColumn(changed_type_date, "daily_charged_amount", each [total_charged_amount]/[days_in_month], type number),
-    select_columns = Table.SelectColumns(added_daily_charged_amount,{"date", "key_inventory_country_sku", "currency", "daily_charged_amount"})
+
+    Source = GoogleBigQuery.Database([Implementation="2.0", UseStorageApi=false, BillingProject="amazon-sp-api-openbridge"]),
+    #"amazon-sp-api-openbridge_Database" = Source{[Name="amazon-sp-api-openbridge",Kind="Database"]}[Data],
+    #"1_gold_fees_Schema" = #"amazon-sp-api-openbridge_Database"{[Name="1_gold_fees",Kind="Schema"]}[Data],
+    awd_daily_storage_fee_view_View = #"1_gold_fees_Schema"{[Name="awd_daily_storage_fee_view",Kind="View"]}[Data],
+    key_inventory_country_sku = Table.AddColumn(awd_daily_storage_fee_view_View, "key_inventory_country_sku", each [country] & " | " & [sku], type text),   
+    select_columns = Table.SelectColumns(key_inventory_country_sku,{"date_daily_share_of_storage_fee", "key_inventory_country_sku", "estimated_daily_storage_fee", "exchange_rate_to_usd", "exchange_rate_to_eur", "exchange_rate_to_gbp"})
 in
     select_columns
 ```
@@ -15105,64 +15309,84 @@ in
 ### `fact_awd_monthly_transportation_fee`
 
 **Modo:** `import`  **Grupo:** `Amazon\AWD`  
-**Colunas:** `fee_type` string, `key_inventory_country_sku` string, `currency` string, `promotion_amount` double, `tax_amount` double, `month_of_charge` dateTime, `fee_amount` double, `total_units` int64  
+**Colunas:** `key_inventory_country_sku` string, `transaction_date` dateTime, `month_of_charge` dateTime, `total_charged_amount` double, `exchange_rate_to_usd` double, `exchange_rate_to_eur` double, `exchange_rate_to_gbp` double  
 ```powerquery
 let
-    Source = raw_awdMonthlyTransportationFee,
-    merged_units_per_carton = Table.NestedJoin(Source, {"key_inventory_country_sku"}, units_per_carton, {"key_country_sku"}, "units_per_carton", JoinKind.LeftOuter),
-    expanded_units_per_carton = Table.ExpandTableColumn(merged_units_per_carton, "units_per_carton", {"units_per_carton"}, {"units_per_carton"}),
-    added_total_units = Table.AddColumn(expanded_units_per_carton, "total_units", each [box_qty] * [units_per_carton], Int64.Type),
-    selectImportantColumns = Table.SelectColumns(added_total_units,{"month_of_charge", "fee_type", "key_inventory_country_sku", "currency", "fee_amount", "promotion_amount", "tax_amount", "total_units"})
+//     Source = raw_awdMonthlyTransportationFee,
+//     merged_units_per_carton = Table.NestedJoin(Source, {"key_inventory_country_sku"}, units_per_carton, {"key_country_sku"}, "units_per_carton", JoinKind.LeftOuter),
+//     expanded_units_per_carton = Table.ExpandTableColumn(merged_units_per_carton, "units_per_carton", {"units_per_carton"}, {"units_per_carton"}),
+//     added_total_units = Table.AddColumn(expanded_units_per_carton, "total_units", each [box_qty] * [units_per_carton], Int64.Type),
+//     selectImportantColumns = Table.SelectColumns(added_total_units,{"month_of_charge", "fee_type", "key_inventory_country_sku", "currency", "fee_amount", "promotion_amount", "tax_amount", "total_units"})
+// in
+//     selectImportantColumns
+
+
+    Source = GoogleBigQuery.Database([Implementation="2.0", UseStorageApi=false, BillingProject="amazon-sp-api-openbridge"]),
+    #"amazon-sp-api-openbridge_Database" = Source{[Name="amazon-sp-api-openbridge",Kind="Database"]}[Data],
+    #"1_gold_fees_Schema" = #"amazon-sp-api-openbridge_Database"{[Name="1_gold_fees",Kind="Schema"]}[Data],
+    awd_daily_transportation_fee_view_View = #"1_gold_fees_Schema"{[Name="awd_daily_transportation_fee_view",Kind="View"]}[Data],
+    select_columns = Table.SelectColumns(awd_daily_transportation_fee_view_View,{"transaction_date", "month_of_charge", "key_inventory_country_sku", "total_charged_amount", "exchange_rate_to_usd", "exchange_rate_to_eur", "exchange_rate_to_gbp"})
 in
-    selectImportantColumns
+    select_columns
 ```
 
 
 ### `fact_awd_transportation_measurements`
 
 **Modo:** `import`  **Grupo:** `Amazon\AWD`  
-**Colunas:** `month_of_charge` dateTime, `key_inventory_country_sku` string, `longest_side` double, `median_side` double, `shortest_side` double, `unit_of_dimension` string, `unit_of_volume` string, `box_volume` double  
+**Colunas:** `key_inventory_country_sku` string, `longest_side` double, `median_side` double, `shortest_side` double, `unit_of_dimension` string, `unit_of_volume` string, `box_volume` double, `month_of_charge` dateTime  
 ```powerquery
 let
-    Source = raw_awdMonthlyTransportationFee,
-    added_longest = Table.AddColumn(Source, "longest_side", each List.MaxN(
-   List.Sort(
-      {[length_per_box],[width_per_box],[height_per_box]},
-      Order.Descending
-   ),
-   3
-){0}, type number),
-    added_median = Table.AddColumn(added_longest, "median_side", each List.MaxN(
-   List.Sort(
-      {[length_per_box],[width_per_box],[height_per_box]},
-      Order.Descending
-   ),
-   3
-){1}, type number),
-    added_shortest = Table.AddColumn( added_median, "shortest_side", each List.MaxN(
-   List.Sort(
-      {[length_per_box],[width_per_box],[height_per_box]},
-      Order.Descending
-   ),
-   3
-){2}, type number),
-    added_box_volume = Table.AddColumn(added_shortest, "box_volume", each [longest_side]*[median_side]*[shortest_side]/1728, type number),
-    added_unit_of_dimension = Table.AddColumn(added_box_volume, "unit_of_dimension", each if [measurement_units] = "IN" then "inches" else "Possible Error", type text),
-    added_unit_of_volume = Table.AddColumn(added_unit_of_dimension, "unit_of_volume", each if [volume_units] = "Cu_ft" then "cubic feet" else "Possible Error", type text),
-    selectImportantColumns = Table.SelectColumns(added_unit_of_volume,{
-"month_of_charge", "key_inventory_country_sku", 
-"longest_side", "median_side", "shortest_side", "unit_of_dimension",
-"box_volume", "unit_of_volume"
-})
+//     Source = raw_awdMonthlyTransportationFee,
+//     added_longest = Table.AddColumn(Source, "longest_side", each List.MaxN(
+//    List.Sort(
+//       {[length_per_box],[width_per_box],[height_per_box]},
+//       Order.Descending
+//    ),
+//    3
+// ){0}, type number),
+//     added_median = Table.AddColumn(added_longest, "median_side", each List.MaxN(
+//    List.Sort(
+//       {[length_per_box],[width_per_box],[height_per_box]},
+//       Order.Descending
+//    ),
+//    3
+// ){1}, type number),
+//     added_shortest = Table.AddColumn( added_median, "shortest_side", each List.MaxN(
+//    List.Sort(
+//       {[length_per_box],[width_per_box],[height_per_box]},
+//       Order.Descending
+//    ),
+//    3
+// ){2}, type number),
+//     added_box_volume = Table.AddColumn(added_shortest, "box_volume", each [longest_side]*[median_side]*[shortest_side]/1728, type number),
+//     added_unit_of_dimension = Table.AddColumn(added_box_volume, "unit_of_dimension", each if [measurement_units] = "IN" then "inches" else "Possible Error", type text),
+//     added_unit_of_volume = Table.AddColumn(added_unit_of_dimension, "unit_of_volume", each if [volume_units] = "Cu_ft" then "cubic feet" else "Possible Error", type text),
+//     selectImportantColumns = Table.SelectColumns(added_unit_of_volume,{
+// "month_of_charge", "key_inventory_country_sku", 
+// "longest_side", "median_side", "shortest_side", "unit_of_dimension",
+// "box_volume", "unit_of_volume"
+// })
+// in
+//     selectImportantColumns
+
+
+
+
+
+    Source = GoogleBigQuery.Database([Implementation="2.0", UseStorageApi=false, BillingProject="amazon-sp-api-openbridge"]),
+    #"amazon-sp-api-openbridge_Database" = Source{[Name="amazon-sp-api-openbridge",Kind="Database"]}[Data],
+    #"1_gold_fees_Schema" = #"amazon-sp-api-openbridge_Database"{[Name="1_gold_fees",Kind="Schema"]}[Data],
+    awd_box_dimensions_view_View = #"1_gold_fees_Schema"{[Name="awd_box_dimensions_view",Kind="View"]}[Data]
 in
-    selectImportantColumns
+    awd_box_dimensions_view_View
 ```
 
 
 ### `fact_db_results_tio`
 
 **Modo:** `import`  **Grupo:** `'Standalone Files'`  
-**Colunas:** `start_of_week` dateTime, `quantity_ordered_previously_3pl` double, `baseline_forecast` double, `demand_forecast` double, `ending_balance_considering_reorder_amz` double, `quantity_ordered_previously_amz` double, `reorder_point` double, `target_ending_balance` double, `projected_sales_loss_if_not_reordered` double, `quantity_ordered_previously_awd` double, `ending_balance_considering_reorder_3pl` double, `mandatory_transfer_from_3pl_to_amz` double, `ending_balance` double, `storage_fee_amz` double, `version_file` string, `key_inventory_region_sku` string, `projected_revenue_loss_if_not_reordered` double, `overstock_total` double  
+**Colunas:** `start_of_week` dateTime, `quantity_ordered_previously_3pl` double, `baseline_forecast` double, `demand_forecast` double, `ending_balance_considering_reorder_amz` double, `quantity_ordered_previously_amz` double, `reorder_point` double, `target_ending_balance` double, `projected_sales_loss_if_not_reordered` double, `quantity_ordered_previously_awd` double, `ending_balance_considering_reorder_3pl` double, `mandatory_transfer_from_3pl_to_amz` double, `ending_balance` double, `storage_fee_amz` double, `version_file` string, `key_inventory_region_sku` string, `projected_revenue_loss_if_not_reordered` double, `overstock_total` double, `overstock_amz` double, `overstock_3pl` double, `ending_balance_without_orders_amz` double, `ending_balance_without_orders_3pl` double, `week_index` string  
 ```powerquery
 let
     Source = Folder.Files(rootPathLang & "OrganiHaus\5.2 - OH Inventory Management\TIO - Tool for Inventory Optimization\Logs de cálculo\Oficial_For_Orders"),
@@ -15173,24 +15397,30 @@ let
     #"Removed Other Columns1" = Table.SelectColumns(#"Renamed Columns1", {"Source.Name", "Transform File (2)"}),
     #"Expanded Transform File1" = Table.ExpandTableColumn(#"Removed Other Columns1", "Transform File (2)", {"ROW", "COLUMN", "Region", "Native Family", "Amazon Family", "ASIN", "SKU", "Master Box", "Carton CBM", "Last Cost", "LifeCycle", "ABC", "Supplier", "Basket Type", "Year-Week", "Start-Week-Date", "Version", "3PL Ending Balance", "3PL Ending Balance consid Land", "3PL Ending Balance consid repl ", "3PL Ending Balance without orde", "3PL Minimun Stock", "3PL Qty transf from 3PL within ", "3PL Quantity Ordered Previously", "3PL Start Balance", "3PL Transfers", "Baseline Forecast", "CBM Ending Balance considering ", "CBM Mandatory Replenish Product", "CBM Mandatory Replenishment", "CBM Mandatory Replenishment 3PL", "CBM Mandatory Replenishment AWD", "CBM Mandatory Replenishment ETD", "Demand Forecast", "Ending Balance", "Ending Balance considering Land", "Ending Balance considering reor", "Ending Balance without orders", "Ending Balance without orders c", "Estimated Revenue", "Mandatory Reorder EW", "Mandatory Reorder Landed", "Mandatory Reorder Payment Lande", "Mandatory Reorder Pickup EW", "Mandatory Reorder Pickup Landed", "Mandatory Reorder Request", "Mandatory Reorder Request 3PL", "Mandatory Reorder Request ETD", "Mandatory Reorder Request Produ", "Mandatory Reorder to 3PL", "Mandatory Replenishment", "Mandatory Replenishment Cos 3PL", "Mandatory Transfer from 3PL to ", "Minimum Stock AMZ", "Overstock 3PL", "Overstock AMZ", "Overstock Total", "Projected Revenue Loss if Not R", "Projected Revenue Loss with rep", "Projected Low Inventory if Not", "Projected Sales Loss if not rep", "Projected Sales Loss with rep", "Promotions Forecast", "Quantity Ordered Previously", "Quantity Ordered Previously AWD", "Reorder Point", "Starting Balance", "Starting Balance without orders", "Storage Fee 3PL", "Storage Fee AMZ", "Storage Fee Overstock 3PL", "Storage Fee Overstock AMZ", "Storage Fee Overstock Total", "Storage Fee Total", "Target Coverage", "Target Ending Balance", "Week Index"}, {"ROW", "COLUMN", "Region", "Native Family", "Amazon Family", "ASIN", "SKU", "Master Box", "Carton CBM", "Last Cost", "LifeCycle", "ABC", "Supplier", "Basket Type", "Year-Week", "Start-Week-Date", "Version", "3PL Ending Balance", "3PL Ending Balance consid Land", "3PL Ending Balance consid repl ", "3PL Ending Balance without orde", "3PL Minimun Stock", "3PL Qty transf from 3PL within ", "3PL Quantity Ordered Previously", "3PL Start Balance", "3PL Transfers", "Baseline Forecast", "CBM Ending Balance considering ", "CBM Mandatory Replenish Product", "CBM Mandatory Replenishment", "CBM Mandatory Replenishment 3PL", "CBM Mandatory Replenishment AWD", "CBM Mandatory Replenishment ETD", "Demand Forecast", "Ending Balance", "Ending Balance considering Land", "Ending Balance considering reor", "Ending Balance without orders", "Ending Balance without orders c", "Estimated Revenue", "Mandatory Reorder EW", "Mandatory Reorder Landed", "Mandatory Reorder Payment Lande", "Mandatory Reorder Pickup EW", "Mandatory Reorder Pickup Landed", "Mandatory Reorder Request", "Mandatory Reorder Request 3PL", "Mandatory Reorder Request ETD", "Mandatory Reorder Request Produ", "Mandatory Reorder to 3PL", "Mandatory Replenishment", "Mandatory Replenishment Cos 3PL", "Mandatory Transfer from 3PL to ", "Minimum Stock AMZ", "Overstock 3PL", "Overstock AMZ", "Overstock Total", "Projected Revenue Loss if Not R", "Projected Revenue Loss with rep", "Projected Low Inventory if Not", "Projected Sales Loss if not rep", "Projected Sales Loss with rep", "Promotions Forecast", "Quantity Ordered Previously", "Quantity Ordered Previously AWD", "Reorder Point", "Starting Balance", "Starting Balance without orders", "Storage Fee 3PL", "Storage Fee AMZ", "Storage Fee Overstock 3PL", "Storage Fee Overstock AMZ", "Storage Fee Overstock Total", "Storage Fee Total", "Target Coverage", "Target Ending Balance", "Week Index"}),
     #"Removed Other Columns2" = Table.SelectColumns(#"Expanded Transform File1", {
-"Source.Name", "Start-Week-Date", "Region", "SKU",
-"Ending Balance", "Ending Balance considering reor", "3PL Ending Balance consid repl ", "Demand Forecast", "Projected Sales Loss with rep", "Mandatory Transfer from 3PL to ", "Target Ending Balance", "Projected Revenue Loss if Not R", 
-"Baseline Forecast", "Overstock Total", "Quantity Ordered Previously", "Quantity Ordered Previously AWD", "3PL Quantity Ordered Previously", "Reorder Point", "Storage Fee AMZ"
+        // Row Keys
+        "Source.Name", "Start-Week-Date", "Region", "SKU", "Reorder Point", "Week Index",
+
+        // Ending Balance
+        "Ending Balance", "Ending Balance without orders", "Ending Balance considering reor", "3PL Ending Balance without orde", "3PL Ending Balance consid repl ", "Target Ending Balance", 
+
+        // Overstock
+        "Overstock AMZ", "Overstock 3PL", "Overstock Total", 
+
+        // Sales Loss
+        "Projected Sales Loss with rep", "Projected Revenue Loss if Not R",
+
+        // Ordered Previusly
+        "Quantity Ordered Previously", "Quantity Ordered Previously AWD", "3PL Quantity Ordered Previously", 
+
+        // Other Metrics
+        "Mandatory Transfer from 3PL to ", "Demand Forecast", "Baseline Forecast", "Storage Fee AMZ"
 }),
     #"Filtered Rows1" = Table.SelectRows(#"Removed Other Columns2", let earliest = List.Min(#"Removed Other Columns2"[#"Start-Week-Date"]) in each [#"Start-Week-Date"] <> earliest),
     #"Replaced Value" = Table.ReplaceValue(#"Filtered Rows1"," | ","-",Replacer.ReplaceText,{"SKU"}),
     #"Added Custom" = Table.AddColumn(#"Replaced Value", "key_inventory_region_sku", each [Region] & " | " &[SKU]),
-    #"Renamed Columns" = Table.RenameColumns(#"Added Custom",{{"Start-Week-Date", "start_of_week"}, {"Ending Balance", "ending_balance"}, {"Ending Balance considering reor", "ending_balance_considering_reorder_amz"}, {"3PL Ending Balance consid repl ", "ending_balance_considering_reorder_3pl"}, {"Demand Forecast", "demand_forecast"}, {"Projected Sales Loss with rep", "projected_sales_loss_if_not_reordered"}, {"Mandatory Transfer from 3PL to ", "mandatory_transfer_from_3pl_to_amz"}, {"Target Ending Balance", "target_ending_balance"}, {"Projected Revenue Loss if Not R", "projected_revenue_loss_if_not_reordered"}, 
-
-{"Baseline Forecast", "baseline_forecast"}, {"Quantity Ordered Previously", "quantity_ordered_previously_amz"}, {"Quantity Ordered Previously AWD", "quantity_ordered_previously_awd"}, {"3PL Quantity Ordered Previously", "quantity_ordered_previously_3pl"}, {"Reorder Point", "reorder_point"}, {"Storage Fee AMZ", "storage_fee_amz"}, {"Overstock Total", "overstock_total"}, {"Source.Name", "version_file"}}),
-    #"Removed Other Columns" = Table.SelectColumns(#"Renamed Columns",{
-    "version_file", "start_of_week", "key_inventory_region_sku", "ending_balance", "ending_balance_considering_reorder_amz", "ending_balance_considering_reorder_3pl", "demand_forecast", 
-    "projected_sales_loss_if_not_reordered", "mandatory_transfer_from_3pl_to_amz", "target_ending_balance", "projected_revenue_loss_if_not_reordered",
-    
-    "baseline_forecast", "overstock_total", "quantity_ordered_previously_amz", "quantity_ordered_previously_awd", 
-    "quantity_ordered_previously_3pl", "reorder_point", "storage_fee_amz"
-    }),
-    #"Changed Type" = Table.TransformColumnTypes(#"Removed Other Columns",{{"start_of_week", type date}, {"ending_balance", type number}, {"key_inventory_region_sku", type text}, {"ending_balance_considering_reorder_amz", type number}, {"ending_balance_considering_reorder_3pl", type number}, {"demand_forecast", type number}, {"projected_sales_loss_if_not_reordered", type number}, {"mandatory_transfer_from_3pl_to_amz", type number}, {"target_ending_balance", type number}, {"projected_revenue_loss_if_not_reordered", type number}, {"baseline_forecast", type number}, {"quantity_ordered_previously_amz", type number}, {"quantity_ordered_previously_awd", type number}, {"quantity_ordered_previously_3pl", type number}, {"reorder_point", type number}, {"storage_fee_amz", type number}, {"overstock_total", type number}})
+    #"Renamed Columns" = Table.RenameColumns(#"Added Custom",{{"Start-Week-Date", "start_of_week"}, {"Ending Balance", "ending_balance"}, {"Ending Balance considering reor", "ending_balance_considering_reorder_amz"}, {"3PL Ending Balance consid repl ", "ending_balance_considering_reorder_3pl"}, {"Demand Forecast", "demand_forecast"}, {"Projected Sales Loss with rep", "projected_sales_loss_if_not_reordered"}, {"Mandatory Transfer from 3PL to ", "mandatory_transfer_from_3pl_to_amz"}, {"Target Ending Balance", "target_ending_balance"}, {"Projected Revenue Loss if Not R", "projected_revenue_loss_if_not_reordered"}, {"Baseline Forecast", "baseline_forecast"}, {"Quantity Ordered Previously", "quantity_ordered_previously_amz"}, {"Quantity Ordered Previously AWD", "quantity_ordered_previously_awd"}, {"3PL Quantity Ordered Previously", "quantity_ordered_previously_3pl"}, {"Reorder Point", "reorder_point"}, {"Storage Fee AMZ", "storage_fee_amz"}, {"Overstock Total", "overstock_total"}, {"Source.Name", "version_file"}, {"Overstock AMZ", "overstock_amz"}, {"Overstock 3PL", "overstock_3pl"}, {"Ending Balance without orders", "ending_balance_without_orders_amz"}, {"3PL Ending Balance without orde", "ending_balance_without_orders_3pl"}, {"Week Index", "week_index"}}),
+    #"Removed Other Columns" = Table.SelectColumns(#"Renamed Columns",{"version_file", "start_of_week", "reorder_point", "week_index", "ending_balance", "ending_balance_without_orders_amz", "ending_balance_considering_reorder_amz", "ending_balance_without_orders_3pl", "ending_balance_considering_reorder_3pl", "target_ending_balance", "overstock_amz", "overstock_3pl", "overstock_total", "projected_sales_loss_if_not_reordered", "projected_revenue_loss_if_not_reordered", "quantity_ordered_previously_amz", "quantity_ordered_previously_awd", "quantity_ordered_previously_3pl", "mandatory_transfer_from_3pl_to_amz", "demand_forecast", "baseline_forecast", "storage_fee_amz", "key_inventory_region_sku"}),
+    #"Changed Type" = Table.TransformColumnTypes(#"Removed Other Columns",{{"start_of_week", type date}, {"ending_balance", type number}, {"key_inventory_region_sku", type text}, {"ending_balance_considering_reorder_amz", type number}, {"ending_balance_considering_reorder_3pl", type number}, {"demand_forecast", type number}, {"projected_sales_loss_if_not_reordered", type number}, {"mandatory_transfer_from_3pl_to_amz", type number}, {"target_ending_balance", type number}, {"projected_revenue_loss_if_not_reordered", type number}, {"baseline_forecast", type number}, {"quantity_ordered_previously_amz", type number}, {"quantity_ordered_previously_awd", type number}, {"quantity_ordered_previously_3pl", type number}, {"reorder_point", type number}, {"storage_fee_amz", type number}, {"overstock_total", type number}, {"ending_balance_without_orders_3pl", type number}, {"overstock_amz", type number}, {"overstock_3pl", type number}, {"ending_balance_without_orders_amz", type number}})
 in
     #"Changed Type"
 ```
@@ -15255,21 +15485,18 @@ in
 
 ### `fact_estimated_future_daily_storage_fee`
 
-**Modo:** `import`  **Grupo:** `'STAGING\Future Storage Fee'`  
-**Colunas:** `date` dateTime, `estimated_daily_storage_fee` double, `key_marketplace_sku` string  
+**Modo:** `import`  **Grupo:** `Amazon\Fulfillment\reports_fulfillment`  
+**Colunas:** `date_daily_share_of_storage_fee` dateTime, `estimated_daily_storage_fee` double, `key_marketplace_sku` string, `country` string, `sku` string, `currency` string, `exchange_rate_to_usd` double, `exchange_rate_to_eur` double, `exchange_rate_to_gbp` double  
 ```powerquery
 let
-    merged_daly_share_monthly_storage_fee = Table.NestedJoin(aux_dailyShareOfStorageFee, {"start_of_month_daily_share_of_storage_fee", "sku"}, fact_estimated_future_monthly_storage_fee, {"start_of_month", "sku"}, "fact_estimated_future_monthly_storage_fee", JoinKind.LeftOuter),
-    expanded_fact_estimated_future_monthly_storage_fee = Table.ExpandTableColumn(merged_daly_share_monthly_storage_fee, "fact_estimated_future_monthly_storage_fee", {"currency", "estimated_monthly_storage_fee"}, {"currency", "estimated_monthly_storage_fee"}),
-    filtered_stora_fee_blank = Table.SelectRows(expanded_fact_estimated_future_monthly_storage_fee, each [estimated_monthly_storage_fee] <> null and [estimated_monthly_storage_fee] <> ""),
-    
-    added_estimated_daily_storage_fee = Table.AddColumn(filtered_stora_fee_blank, "estimated_daily_storage_fee", each [daily_share_of_storage_fee] *[estimated_monthly_storage_fee], type number),
-    select_columns = Table.SelectColumns(added_estimated_daily_storage_fee,{"date_daily_share_of_storage_fee", "marketplace", "sku", "currency", "estimated_daily_storage_fee"}),
-    renamed_columns = Table.RenameColumns(select_columns,{{"date_daily_share_of_storage_fee", "date"}}),
-    #"Added Custom" = Table.AddColumn(renamed_columns, "key_marketplace_sku", each [marketplace] & " | " & [sku], type text),
-    #"Removed Other Columns" = Table.SelectColumns(#"Added Custom",{"date", "estimated_daily_storage_fee", "key_marketplace_sku"})
+    Source = GoogleBigQuery.Database([Implementation="2.0", UseStorageApi=false, BillingProject="amazon-sp-api-openbridge"]),
+    #"amazon-sp-api-openbridge_Database" = Source{[Name="amazon-sp-api-openbridge",Kind="Database"]}[Data],
+    #"1_gold_fees_Schema" = #"amazon-sp-api-openbridge_Database"{[Name="1_gold_fees",Kind="Schema"]}[Data],
+    amazon_estimated_future_daily_storage_fee_view_View = #"1_gold_fees_Schema"{[Name="amazon_estimated_future_daily_storage_fee_view",Kind="View"]}[Data],
+    #"Filtered Rows" = Table.SelectRows(amazon_estimated_future_daily_storage_fee_view_View, each ([has_actual_invoice] = false)),
+    #"Removed Columns" = Table.RemoveColumns(#"Filtered Rows",{"has_actual_invoice"})
 in
-    #"Removed Other Columns"
+    #"Removed Columns"
 ```
 
 
@@ -15487,7 +15714,7 @@ in
 ```powerquery
 // factOrderRecords
 let    
-    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Google_Sheets.td_full_order_records"),
+    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_gold_logistics.order_records"),
 
     RenameColumns = Table.RenameColumns(Source, {
             // Mapeamento direto
@@ -15668,59 +15895,6 @@ let
     Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_gold_ads.amazon_consolidated_sb_attributed_orders_sales_spend_view")
 in
     Source
-```
-
-
-### `fact_SCPR_all_reviews`
-
-**Modo:** `import`  **Grupo:** `LOG\SCPR`  
-**Colunas:** `Quarter` string, `Year` string, `Company Name` string, `Attribute` string, `Grade` int64, `Comment` string, `Weight` int64, `Category` string, `Period` string  
-```powerquery
-let
-Fonte = Excel.Workbook(File.Contents(path_to_files & "\standalone_files\db_supply_chain_performance_review.xlsx"), null, true),
-    #"Form Answers_Sheet" = Fonte{[Item="Form Answers",Kind="Sheet"]}[Data],
-    #"Cabeçalhos Promovidos" = Table.PromoteHeaders(#"Form Answers_Sheet", [PromoteAllScalars=true]),
-    #"Tipo Alterado" = Table.TransformColumnTypes(#"Cabeçalhos Promovidos",{{"Id", Int64.Type}, {"Start time", type datetime}, {"Completion time", type datetime}, {"Email", type text}, {"Name", type any}, {"Quarter", type any}, {"Year", type any}, {"Type", type any}, {"Company", type text}, {"Company1", type any}, {"Payment Terms & Conditions", type any}, {"Payment Terms & Conditions - Comment", type any}, {"Cost", type any}, {"Cost - Comment", type any}, {"Transparent cost composition", type any}, {"Transparent cost composition - Comment", type any}, {"Negotiation", type any}, {"Negotiation - Comment", type any}, {"Communication", Int64.Type}, {"Communication - Comment", type text}, {"Response Time", Int64.Type}, {"Response Time - Comment", type any}, {"Adherence to instructions (SLA)", Int64.Type}, {"Adherence to instructions (SLA) - Comment", type any}, {"On-time delivery / Efficient lead Time", Int64.Type}, {"On-time delivery / Efficient lead Time - Comment", type any}, {"Flexibility", Int64.Type}, {"Flexibility - Comment", type text}, {"Problem management", Int64.Type}, {"Problem management - Comment", type text}, {"Overall product and/or service quality", Int64.Type}, {"Overall product and/or service quality - Comment", type any}, {"Capacity to detect and solve issues", Int64.Type}, {"Capacity to detect and solve issues - Comment", type text}, {"Open for improvement & optimization", Int64.Type}, {"Open for improvement & optimization - Comment", type text}}),
-    #"Added Conditional Column" = Table.AddColumn(#"Tipo Alterado", "Company Name", each if [Company] = null then [Company1] else [Company]),
-    #"Removed Columns" = Table.RemoveColumns(#"Added Conditional Column",{"Completion time", "Email", "Name", "Company", "Company1"}),
-    #"Added Custom" = Table.ReplaceValue(
-            #"Removed Columns",
-            each [Quarter],
-            each 
-                if [Quarter] = null then 
-                    if Date.Month([Hora de início]) <= 3 then "Q1"
-                    else if Date.Month([Hora de início]) <= 6 then "Q2"
-                    else if Date.Month([Hora de início]) <= 9 then "Q3"
-                    else "Q4"
-                else [Quarter],
-            Replacer.ReplaceValue,
-            {"Quarter"} // Especifica que a substituição ocorre na coluna 'Quarter'
-        ),
-    #"Updated Year" = Table.ReplaceValue(
-            #"Added Custom",
-            each [Year],
-            each if [Year] = null then Date.Year([Hora de início]) else [Year],
-            Replacer.ReplaceValue,
-            {"Year"}
-        ),
-    #"Unpivoted Other Columns" = Table.UnpivotOtherColumns(#"Updated Year", {"Id", "Start time", "Type", "Company Name","Quarter","Year"}, "Attribute", "Value"),
-    principal = Table.SelectRows(#"Unpivoted Other Columns", each not Text.Contains([Attribute], "Comment")),
-    #"START - COMMENT" = Table.SelectRows(#"Unpivoted Other Columns", each Text.Contains([Attribute], "Comment")),
-    #"Extracted Text Before Delimiter" = Table.TransformColumns(#"START - COMMENT", {{"Attribute", each Text.BeforeDelimiter(_, "-"), type text}}),
-    #"Trimmed Text" = Table.TransformColumns(#"Extracted Text Before Delimiter",{{"Attribute", Text.Trim, type text}}),
-    #"Renamed Columns" = Table.RenameColumns(#"Trimmed Text",{{"Value", "Comment"}}),
-    #"end comment" = #"Renamed Columns",
-    #"Merged Queries" = Table.NestedJoin(principal, {"Id", "Type", "Attribute"}, #"end comment", {"Id", "Type", "Attribute"}, "Trimmed Text", JoinKind.LeftOuter),
-    #"Expanded Trimmed Text" = Table.ExpandTableColumn(#"Merged Queries", "Trimmed Text", {"Comment"}, {"Trimmed Text.Comment"}),
-    #"Renamed Columns1" = Table.RenameColumns(#"Expanded Trimmed Text",{{"Trimmed Text.Comment", "Comment"}, {"Value", "Grade"}}),
-    #"Changed Type1" = Table.TransformColumnTypes(#"Renamed Columns1",{{"Start time", type date}}),
-    #"Removed Columns1" = Table.RemoveColumns(#"Changed Type1",{"Start time","Type", "Id"}),
-    #"Tipo Alterado1" = Table.TransformColumnTypes(#"Removed Columns1",{{"Grade", Int64.Type}}),
-    #"Merged Queries1" = Table.NestedJoin(#"Tipo Alterado1", {"Attribute"}, dim_SCPR_category, {"Attribute"}, "SCPR_Category", JoinKind.LeftOuter),
-    #"Expanded SCPR_Category" = Table.ExpandTableColumn(#"Merged Queries1", "SCPR_Category", {"Category", "Weight"}, {"Category", "Weight"}),
-    #"Added Custom1" = Table.AddColumn(#"Expanded SCPR_Category", "Period", each [Year] & " " & [Quarter])
-in
-    #"Added Custom1"
 ```
 
 
@@ -15944,60 +16118,9 @@ in
 **Colunas:** `Date` dateTime, `Key Column: Country | SKU` string, `Disposition` string, `starting_warehouse_balance` int64, `ending_plus_transit` int64, `Key Column: Country | ASIN` string, `Location Group` string  
 ```powerquery
 let
-    #"Table Combine" = Table.Combine({raw_usCaMx_inventoryLedgerByCountry,raw_gbEu_inventoryLedgerByCountry}),
-    #"Key Column: Country | SKU" = Table.AddColumn(#"Table Combine", "Key Column: Country | SKU", each [Location] & " | " & [MSKU], type text),
-    #"Key Column: Country | ASIN" = Table.AddColumn(#"Key Column: Country | SKU", "Key Column: Country | ASIN", each [Location] & " | " & [ASIN
-], type text),
-    #"Removed Other Columns" = Table.SelectColumns(#"Key Column: Country | ASIN",{"Date", "Disposition", "Starting Warehouse Balance", "In Transit Between Warehouses", "Ending Warehouse Balance", "Key Column: Country | SKU", "Key Column: Country | ASIN"}),
-    #"Inserted Addition" = Table.AddColumn(#"Removed Other Columns", "Addition", each [In Transit Between Warehouses] + [Ending Warehouse Balance], Int64.Type),
-    #"Removed Columns" = Table.RemoveColumns(#"Inserted Addition",{"In Transit Between Warehouses", "Ending Warehouse Balance"}),
-    #"Reordered Columns" = Table.ReorderColumns(#"Removed Columns",{"Date", "Key Column: Country | SKU", "Key Column: Country | ASIN", "Disposition", "Starting Warehouse Balance", "Addition"}),
-    #"Renamed Columns1" = Table.RenameColumns(#"Reordered Columns",{{"Starting Warehouse Balance", "starting_warehouse_balance"}, {"Addition", "ending_plus_transit"}}),
-    #"Changed Type" = Table.TransformColumnTypes(#"Renamed Columns1",{{"Key Column: Country | SKU", type text}}),
-    #"Added Custom" = Table.AddColumn(#"Changed Type", "Location Group", each "Amazon", type text),
-    #"Appended Query" = Table.Combine({#"Added Custom", fact_BQ_inventory_ledger_summary_by_country}),
-    #"Removed Duplicates" = Table.Distinct(#"Appended Query")
+    Source = fact_BQ_inventory_ledger_summary_by_country
 in
-    #"Removed Duplicates"
-
-// //let
-//     Source = GoogleBigQuery.Database(),
-//     #"amazon-sp-api-openbridge" = Source{[Name="amazon-sp-api-openbridge"]}[Data],
-//     Gold_Layer_Schema = #"amazon-sp-api-openbridge"{[Name="Gold_Layer",Kind="Schema"]}[Data],
-//     vw_full_inventory_ledger_summary_by_country_View = Gold_Layer_Schema{[Name="vw_full_inventory_ledger_summary_by_country",Kind="View"]}[Data],
-//     #"Renamed Columns" = Table.RenameColumns(vw_full_inventory_ledger_summary_by_country_View,{{"key_column_inventory_country_sku", "Key Column: Country | SKU"}, {"date", "Date"}, {"disposition", "Disposition"}})
-// in
-//     #"Renamed Columns"
-```
-
-
-### `SCPR_Metrics`
-
-**Modo:** `import`  **Grupo:** `LOG\SCPR`  
-```powerquery
-let
-    Fonte = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i44FAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"Coluna 1" = _t]),
-    #"Colunas Removidas" = Table.RemoveColumns(Fonte,{"Coluna 1"})
-in
-    #"Colunas Removidas"
-```
-
-
-### `shifting_fba_costs_aux_table`
-
-**Modo:** `import`  
-**Colunas:** `Alert`, `Order`  
-```powerquery
-DATATABLE(
-    "Alert", STRING, "Order", INTEGER,
-    {
-        {"Red", 2},
-        {"Yellow", 3},
-        {"Red & Yellow",1 },
-        {"Green", 4},
-        {"All", 0}
-    }
-)
+    Source
 ```
 
 
@@ -16104,46 +16227,15 @@ in
 ```
 
 
-### `tab_parameters_measurements`
-
-**Modo:** `import`  
-**Colunas:** `Type`, `Order`  
-```powerquery
-DATATABLE(
-    "Type", STRING,
-    "Order", INTEGER,
-    {
-        {"Max", 1},
-        {"Med", 2},
-        {"Avg", 3},
-        {"Min", 4}
-    }
-)
-```
-
-
 ### `td_full_order_transfer_details`
 
 **Modo:** `import`  **Grupo:** `'Google Sheets - Inventory Tracker\Transfer Details'`  
 **Colunas:** `type` string, `origin` string, `deliver_at_type` string, `deliver_at_location` string, `order_id` string, `amazon_shipment_id` string, `key_order_id_amazon_shipment_id` string, `key_inventory_region_sku` string, `sku` string, `order_date` dateTime, `delivery_date` dateTime, `status` string, `amazon_shipment_name` string, `quantity` int64, `units_per_carton` int64, `carton_count` double, `carton_cbm` double, `total_cbm` double, `inventory_region` string, `landed_cost_type` string, `unit_transfer_cost_local_currency` double, `total_transfer_cost_local_currency` double, `unit_estimated_3pl_processing_fee` double, `total_estimated_3pl_processing_fee` double, `units_estimated_3pl_container_devanning` double, `total_estimated_3pl_container_devanning` double, `unit_inbound_placement_fee` double, `total_unit_inbound_placement_fee` double, `unit_purchase_cost_local_currency` double, `total_purchase_cost_local_currency` double, `unit_landed_cost_local_currency` double, `total_landed_cost_local_currency` double  
 ```powerquery
 let
-    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_Gold_Google_Sheets.td_full_order_transfer_details")
+    Source = bigQuery_customFunction("amazon-sp-api-openbridge.1_gold_logistics.order_and_transfer_details")
 in
     Source
-```
-
-
-### `The Date Picker`
-
-**Colunas:** `Name` string, `Ordinal` int64  
-
-### `z.dynamic_coupon_usage_percentage`
-
-**Modo:** `import`  
-**Colunas:** `Coupon Usage (%)`  
-```powerquery
-GENERATESERIES(0, 1, 0.01)
 ```
 
 
@@ -16155,7 +16247,7 @@ GENERATESERIES(0, 1, 0.01)
 {
     // Dynamic Parameter Selector of Amazon Fees Absolute Metrics ($ or u)
     ("Units Sold", NAMEOF('Measurement Table'[u_units_sold]), 0),
-    ("Storage Fee ($)", NAMEOF('Measurement Table'[$_estimated_storage_fee]), 1),
+    ("Storage Fee ($)", NAMEOF('Measurement Table'[$_amz_storage_fee]), 1),
     ("Quantity on Hand", NAMEOF('Measurement Table'[u_sum_quantity_on_hand_storage_fee]), 2),
     ("Inventory: Ending + Transit", NAMEOF('Measurement Table'[u_inventory_ending_plus_transit]), 3),
     ("None", NAMEOF([aux_blank_measure_slicer_filter]), 4)
@@ -16170,7 +16262,8 @@ GENERATESERIES(0, 1, 0.01)
 ```powerquery
 {
     // Dynamic Parameter Selector of Amazon Fees Relative Metrics (%)
-    ("% Storage Fee", NAMEOF('Measurement Table'[%_estimated_storage_fee_over_revenue]), 0),
+    ("% Storage Fee", NAMEOF('Measurement Table'[%_amz_storage_fee_over_revenue]), 0),
+    ("% Storage Fee USD", NAMEOF('Measurement Table'[%_amz_storage_fee_over_revenue_usd]), 0),
     ("None", NAMEOF('Measurement Table'[aux_blank_measure_slicer_filter]), 1)
 }
 ```
